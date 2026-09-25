@@ -5,6 +5,8 @@ import StaffSachManagement from "@/views/StaffSachManagement.vue";
 import StaffNhaXuatBanManagement from "@/views/StaffNhaXuatBanManagement.vue";
 import SachAdd from "@/views/SachAdd.vue";
 import SachEdit from "@/views/SachEdit.vue";
+import MuonSachManagement from "@/views/MuonSachManagement.vue";
+import NhanVienManagement from "@/views/NhanVienManagement.vue";
 
 const routes = [
   {
@@ -45,6 +47,18 @@ const routes = [
     path: "/nxb",
     name: "StaffNhaXuatBanManagement",
     component: StaffNhaXuatBanManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/muonsach",
+    name: "MuonSachManagement",
+    component: MuonSachManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/nhanvien",
+    name: "NhanVienManagement",
+    component: NhanVienManagement,
     meta: { requiresAuth: true }
   }
 ];

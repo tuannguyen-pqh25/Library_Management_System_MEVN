@@ -7,17 +7,30 @@ class DocGiaService {
         this.DocGia = client.db().collection("DOCGIA");
     }
 
-    #extractDocGiaData(payload) {
+    #extractDocGiaData(payload = {}) {
+        const normalizedEmail = payload.Email ?? payload.email ?? payload.username ?? null;
+        const normalizedPassword = payload.MatKhau ?? payload.password ?? payload.Password ?? null;
+
         const docgia = {
-            username: payload.username,
-            password: payload.password,
-            HOLOT: payload.HOLOT,
-            TEN: payload.TEN,
-            NGAYSINH: payload.NGAYSINH,
-            GIOITINH: payload.GIOITINH, // <-- Dùng GIOITINH (theo code của bạn)
-            DIACHI: payload.DIACHI,
-            DIENTHOAI: payload.DIENTHOAI,
-            favorites: payload.favorites || [], // Initialize as empty array if not provided
+            MaDocGia: payload.MaDocGia ?? payload.maDocGia ?? payload.MADOCGIA ?? null,
+            HoLot: payload.HoLot ?? payload.hoLot ?? payload.HOLOT ?? null,
+            Ten: payload.Ten ?? payload.ten ?? payload.TEN ?? null,
+            NgaySinh: payload.NgaySinh ?? payload.ngaySinh ?? payload.NGAYSINH ?? null,
+            Phai: payload.Phai ?? payload.gioiTinh ?? payload.GIOITINH ?? "Khác",
+            DiaChi: payload.DiaChi ?? payload.diaChi ?? payload.DIACHI ?? null,
+            DienThoai: payload.DienThoai ?? payload.dienThoai ?? payload.DIENTHOAI ?? null,
+            Email: normalizedEmail,
+            MatKhau: normalizedPassword,
+            TrangThaiTaiKhoan: payload.TrangThaiTaiKhoan ?? "BinhThuong",
+            favorites: payload.favorites ?? [],
+            username: payload.username ?? normalizedEmail,
+            password: normalizedPassword,
+            HOLOT: payload.HOLOT ?? payload.HoLot ?? null,
+            TEN: payload.TEN ?? payload.Ten ?? null,
+            NGAYSINH: payload.NGAYSINH ?? payload.NgaySinh ?? null,
+            GIOITINH: payload.GIOITINH ?? payload.Phai ?? null,
+            DIACHI: payload.DIACHI ?? payload.DiaChi ?? null,
+            DIENTHOAI: payload.DIENTHOAI ?? payload.DienThoai ?? null,
         };
 
         Object.keys(docgia).forEach(
@@ -32,99 +45,98 @@ class DocGiaService {
      * Đăng ký một tài khoản độc giả mới.
      * @param {object} payload Dữ liệu độc giả từ req.body
      * @returns {object} Document độc giả vừa tạo (đã bỏ password)
-     * (ĐÃ SỬA LỖI 'insertedId')
      */
     async create(payload) {
         const docgiaData = this.#extractDocGiaData(payload);
 
-        // Kiểm tra xem USERNAME đã tồn tại chưa
-        const existingDocGia = await this.DocGia.findOne({ username: docgiaData.username }); 
-        if (existingDocGia) {
-            throw new Error("Username đã tồn tại"); 
+        if (!docgiaData.Email) {
+            throw new Error("Email là bắt buộc");
         }
 
-        // Băm (mã hóa) mật khẩu
-        if (docgiaData.password) {
-            const salt = await bcrypt.genSalt(10);
-            docgiaData.password = await bcrypt.hash(docgiaData.password, salt);
-        } else {
+        if (!docgiaData.MatKhau) {
             throw new Error("Mật khẩu là bắt buộc");
         }
 
-        // --- BẮT ĐẦU SỬA LỖI ---
-        // 'insertOne' sẽ tự động thêm _id vào 'docgiaData'
+        if (!docgiaData.MaDocGia) {
+            docgiaData.MaDocGia = `DG${Date.now().toString().slice(-6)}`;
+        }
+
+        const existingDocGia = await this.DocGia.findOne({
+            $or: [{ Email: docgiaData.Email }, { MaDocGia: docgiaData.MaDocGia }],
+        });
+
+        if (existingDocGia) {
+            throw new Error("Email hoặc mã độc giả đã tồn tại");
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        docgiaData.MatKhau = await bcrypt.hash(docgiaData.MatKhau, salt);
+        docgiaData.TrangThaiTaiKhoan = docgiaData.TrangThaiTaiKhoan || "BinhThuong";
+
         await this.DocGia.insertOne(docgiaData);
 
-        // Xóa mật khẩu trước khi trả về
-        delete docgiaData.password; 
-        
-        // Trả về chính 'docgiaData' (đã bao gồm _id)
+        delete docgiaData.MatKhau;
+        delete docgiaData.password;
         return docgiaData;
-        // --- KẾT THÚC SỬA LỖI ---
     }
 
     /**
      * Đăng nhập độc giả.
-     * @param {object} payload Chứa username và password
+     * @param {object} payload Chứa Email và MatKhau
      * @returns {object} Thông tin độc giả (đã bỏ password)
      */
     async login(payload, ip) {
-        // 1. Tìm độc giả bằng USERNAME
-        const username = payload.username;
-        const failKey = `login_fail:${username}:${ip}`;
-        const lockKey = `login_lock:${username}:${ip}`;
-        // 1. Kiểm tra tài khoản có bị khóa
-        const locked = await redis.get(lockKey);
-        if (locked) {
-            const ttl = await redis.ttl(lockKey);
+        const email = payload.Email ?? payload.email ?? payload.username;
+        const password = payload.MatKhau ?? payload.password ?? payload.Password;
+
+        if (!email || !password) {
             throw {
-                status: 423,
-                message:
-                    `Tài khoản bị khóa. Thử lại sau ${ttl} giây`
+                status: 400,
+                message: "Email và mật khẩu là bắt buộc",
             };
         }
-        const docgia = await this.DocGia.findOne({ username: payload.username }); 
-        if (!docgia) {
-            throw new Error("Username hoặc mật khẩu không đúng"); 
-        }
 
-        // 2. So sánh mật khẩu
-        const isMatch = await bcrypt.compare(payload.password, docgia.password);
-        
-        if (!isMatch) {
-            const attempts = await redis.incr(failKey);
-            console.log(`Số lần thử đăng nhập thất bại cho ${username}: ${ip} : ${attempts}`);
-            if (attempts === 1) {
-                await redis.expire(
-                    failKey,
-                    900
-                );
-            }
-            if (attempts >= 5) {
-                await redis.set(
-                    lockKey,
-                    "locked",
-                    {
-                        EX: 900
-                    }
-                );
-                await redis.del(failKey);
+        try {
+            const lockedValue = await redis.get(`login_lock:${email}:${ip}`);
+            if (lockedValue) {
+                const ttl = await redis.ttl(`login_lock:${email}:${ip}`);
                 throw {
                     status: 423,
-                    message:
-                        "Tài khoản bị khóa 15 phút do nhập sai quá nhiều lần"
+                    message: `Tài khoản bị khóa. Thử lại sau ${ttl} giây`,
                 };
             }
+        } catch (error) {
+            if (error && error.status) {
+                throw error;
+            }
+        }
+
+        const docgia = await this.DocGia.findOne({ Email: email });
+        if (!docgia) {
             throw {
                 status: 401,
-                message:
-                    `Sai mật khẩu. Còn ${5 - attempts} lần thử`
-
+                message: "Email hoặc mật khẩu không đúng",
             };
-            throw new Error("Username hoặc Mật khẩu không đúng");
-
         }
-        await redis.del(failKey);
+
+        if (docgia.TrangThaiTaiKhoan === "BiKhoa") {
+            throw {
+                status: 403,
+                message: "Tài khoản đã bị khóa",
+            };
+        }
+
+        const hash = docgia.MatKhau || docgia.password;
+        const isMatch = await bcrypt.compare(password, hash);
+
+        if (!isMatch) {
+            throw {
+                status: 401,
+                message: "Email hoặc mật khẩu không đúng",
+            };
+        }
+
+        delete docgia.MatKhau;
         delete docgia.password;
         return docgia;
     }

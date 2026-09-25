@@ -13,6 +13,10 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const adminAuthRouter = require("./app/routes/admin/auth.route");
 const adminSachRouter = require("./app/routes/admin/sach.route");
 const adminNxbRouter = require("./app/routes/admin/nhaxuatban.route");
+const userAuthRouter = require("./app/routes/user/auth.route");
+const userSachRouter = require("./app/routes/user/sach.route");
+const userMuonRouter = require("./app/routes/user/muonsach.route");
+const userProfileRouter = require("./app/routes/user/profile.route");
 
 const docgiaRouter = require("./app/routes/docgia.route");
 const muonsachRouter = require("./app/routes/muonsach.route");
@@ -24,6 +28,12 @@ app.use("/api/admin/sach", adminSachRouter);
 app.use("/api/admin/nxb", adminNxbRouter);
 app.use("/api/admin/docgia", docgiaRouter);
 app.use("/api/admin/muonsach", muonsachRouter);
+
+// Namespace User
+app.use("/api/user/auth", userAuthRouter);
+app.use("/api/user", userProfileRouter);
+app.use("/api/user/sach", userSachRouter);
+app.use("/api/user/muon", userMuonRouter);
 
 // Các route chưa migrate (tạm giữ)
 app.use("/api/docgia", docgiaRouter);
