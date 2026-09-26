@@ -4,23 +4,23 @@ import http from "./http-common";
 
 class NhaXuatBanService {
   getAll() {
-    return http.get("/nhaxuatban");
+    return http.get("/nxb");
   }
 
   get(id) {
-    return http.get(`/nhaxuatban/${id}`);
+    return http.get(`/nxb/${id}`);
   }
 
   create(data) {
-    return http.post("/nhaxuatban", data);
+    return http.post("/nxb", data);
   }
 
   update(id, data) {
-    return http.put(`/nhaxuatban/${id}`, data);
+    return http.put(`/nxb/${id}`, data);
   }
 
   delete(id) {
-    return http.delete(`/nhaxuatban/${id}`);
+    return http.delete(`/nxb/${id}`);
   }
 }
 

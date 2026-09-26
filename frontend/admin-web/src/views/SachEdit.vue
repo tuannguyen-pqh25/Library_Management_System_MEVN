@@ -125,40 +125,40 @@
                  <div class="row g-3">
                      <div class="col-12">
                         <label class="form-label fw-bold text-dark small">Tên Sách <span class="text-danger">*</span></label>
-                        <Field name="TENSACH" type="text" class="form-control" placeholder="Nhập tên sách..." />
-                        <ErrorMessage name="TENSACH" class="text-danger small mt-1 fw-bold" />
+                        <Field name="TenSach" type="text" class="form-control" placeholder="Nhập tên sách..." />
+                        <ErrorMessage name="TenSach" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-md-6">
                         <label class="form-label fw-bold text-dark small">Tác Giả <span class="text-danger">*</span></label>
                         <div class="input-group">
                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-pen-nib text-secondary"></i></span>
-                           <Field name="TACGIA" type="text" class="form-control border-start-0 ps-0" placeholder="Tên tác giả" />
+                           <Field name="TacGia" type="text" class="form-control border-start-0 ps-0" placeholder="Tên tác giả" />
                         </div>
-                        <ErrorMessage name="TACGIA" class="text-danger small mt-1 fw-bold" />
+                        <ErrorMessage name="TacGia" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-md-6">
                         <label class="form-label fw-bold text-dark small">Mã NXB <span class="text-danger">*</span></label>
                         <div class="input-group">
                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-barcode text-secondary"></i></span>
-                           <Field name="MANXB" type="text" class="form-control border-start-0 ps-0" placeholder="Mã nhà xuất bản" />
+                           <Field name="MaNXB" type="text" class="form-control border-start-0 ps-0" placeholder="Mã nhà xuất bản" />
                         </div>
-                        <ErrorMessage name="MANXB" class="text-danger small mt-1 fw-bold" />
+                        <ErrorMessage name="MaNXB" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-md-6">
                         <label class="form-label fw-bold text-dark small">Thể Loại <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-tags text-secondary"></i></span>
-                            <Field name="THELOAI" type="text" class="form-control border-start-0 ps-0" placeholder="Ví dụ: Khoa học..." />
+                            <Field name="TheLoai" type="text" class="form-control border-start-0 ps-0" placeholder="Ví dụ: Khoa học..." />
                         </div>
-                        <ErrorMessage name="THELOAI" class="text-danger small mt-1 fw-bold" />
+                        <ErrorMessage name="TheLoai" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-md-6">
                         <label class="form-label fw-bold text-dark small">Đơn Giá <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <Field name="DONGIA" type="number" class="form-control border-end-0" placeholder="0" />
+                            <Field name="DonGia" type="number" class="form-control border-end-0" placeholder="0" />
                             <span class="input-group-text bg-light border-start-0 text-success fw-bold">VNĐ</span>
                         </div>
-                        <ErrorMessage name="DONGIA" class="text-danger small mt-1 fw-bold" />
+                        <ErrorMessage name="DonGia" class="text-danger small mt-1 fw-bold" />
                      </div>
                  </div>
               </div>
@@ -169,23 +169,23 @@
                  <div class="row g-3">
                      <div class="col-6 col-md-3">
                         <label class="form-label fw-bold text-dark small">Năm XB</label>
-                        <Field name="NAMXUATBAN" type="number" class="form-control" />
-                        <ErrorMessage name="NAMXUATBAN" class="text-danger small mt-1 fw-bold" />
+                        <Field name="NamXuatBan" type="number" class="form-control" />
+                        <ErrorMessage name="NamXuatBan" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-6 col-md-3">
                         <label class="form-label fw-bold text-dark small">Số Quyển</label>
-                        <Field name="SOQUYEN" type="number" class="form-control" />
-                        <ErrorMessage name="SOQUYEN" class="text-danger small mt-1 fw-bold" />
+                        <Field name="SoQuyen" type="number" class="form-control" />
+                        <ErrorMessage name="SoQuyen" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-6 col-md-3">
                         <label class="form-label fw-bold text-dark small">Số Trang</label>
-                        <Field name="SOTRANG" type="number" class="form-control" />
-                        <ErrorMessage name="SOTRANG" class="text-danger small mt-1 fw-bold" />
+                        <Field name="SoTrang" type="number" class="form-control" />
+                        <ErrorMessage name="SoTrang" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-6 col-md-3">
                         <label class="form-label fw-bold text-dark small">Ngôn Ngữ</label>
-                        <Field name="NGONNGU" type="text" class="form-control" placeholder="Tiếng Việt" />
-                        <ErrorMessage name="NGONNGU" class="text-danger small mt-1 fw-bold" />
+                        <Field name="NgonNgu" type="text" class="form-control" placeholder="Tiếng Việt" />
+                        <ErrorMessage name="NgonNgu" class="text-danger small mt-1 fw-bold" />
                      </div>
                  </div>
               </div>
@@ -194,8 +194,8 @@
               <div class="mb-3">
                  <h6 class="text-uppercase text-muted fw-bold small mb-3 border-bottom pb-2">Nội dung</h6>
                  <label class="form-label fw-bold text-dark small">Mô Tả Ngắn <span class="text-danger">*</span></label>
-                 <Field name="MOTA" as="textarea" class="form-control shadow-sm" rows="5" placeholder="Viết mô tả ngắn về nội dung sách..." />
-                 <ErrorMessage name="MOTA" class="text-danger small mt-1 fw-bold" />
+                 <Field name="MoTa" as="textarea" class="form-control shadow-sm" rows="5" placeholder="Viết mô tả ngắn về nội dung sách..." />
+                 <ErrorMessage name="MoTa" class="text-danger small mt-1 fw-bold" />
               </div>
 
             </div>
@@ -223,17 +223,17 @@ export default {
   },
   data() {
     const bookSchema = yup.object().shape({
-      TENSACH: yup.string().required("Tên sách là bắt buộc!"),
-      MANXB: yup.string().required("Mã NXB là bắt buộc!"),
-      TACGIA: yup.string().required("Tên tác giả là bắt buộc!"),
-      NAMXUATBAN: yup.number().required("Năm XB là bắt buộc!").typeError("Năm XB phải là số").min(1900),
-      SOQUYEN: yup.number().required("Số quyển là bắt buộc!").typeError("Số quyển phải là số").min(1),
-      DONGIA: yup.number().required("Đơn giá là bắt buộc!").typeError("Đơn giá phải là số").min(0),
+      TenSach: yup.string().required("Tên sách là bắt buộc!"),
+      MaNXB: yup.string().required("Mã NXB là bắt buộc!"),
+      TacGia: yup.string().required("Tên tác giả là bắt buộc!"),
+      NamXuatBan: yup.number().required("Năm XB là bắt buộc!").typeError("Năm XB phải là số").min(1900),
+      SoQuyen: yup.number().required("Số quyển là bắt buộc!").typeError("Số quyển phải là số").min(1),
+      DonGia: yup.number().required("Đơn giá là bắt buộc!").typeError("Đơn giá phải là số").min(0),
       HinhAnh: yup.string().url("Phải là URL hợp lệ").optional().nullable(),
-      SOTRANG: yup.number().optional().nullable().typeError("Số trang phải là số"),
-      NGONNGU: yup.string().optional().nullable(),
-      THELOAI: yup.string().optional().nullable(),
-      MOTA: yup.string().optional().nullable(),
+      SoTrang: yup.number().optional().nullable().typeError("Số trang phải là số"),
+      NgonNgu: yup.string().optional().nullable(),
+      TheLoai: yup.string().optional().nullable(),
+      MoTa: yup.string().optional().nullable(),
     });
 
     return {

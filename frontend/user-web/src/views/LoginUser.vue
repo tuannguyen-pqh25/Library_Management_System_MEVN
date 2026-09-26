@@ -1,75 +1,99 @@
 <template>
-  <div class="page-shell d-flex align-items-center justify-content-center">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-5">
-          <div class="card-surface p-4 p-md-5">
-            <div class="text-center mb-4">
-              <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-3" style="width: 54px; height: 54px;">
-                <i class="fa-solid fa-book"></i>
-              </div>
-              <h2 class="fw-bold mb-1">Đăng nhập</h2>
-              <p class="text-muted-custom mb-0">Chào mừng bạn quay lại thư viện</p>
+  <div class="container-fluid min-vh-100 d-flex flex-column flex-md-row p-0">
+    <!-- Left column: Visuals/Texture -->
+    <div class="col-12 col-md-5 col-lg-6 d-none d-md-flex align-items-center justify-content-center bg-primary text-white position-relative overflow-hidden">
+      <!-- Background pattern -->
+      <div class="position-absolute w-100 h-100 opacity-25" style="background-image: radial-gradient(#F6F1E7 1px, transparent 1px); background-size: 24px 24px;"></div>
+      <div class="z-1 text-center p-5">
+        <h1 class="font-display fw-bold mb-3 display-4">Thư Viện Số</h1>
+        <p class="font-body fs-5 opacity-75">Nền tảng quản lý mượn sách trực tuyến</p>
+      </div>
+    </div>
+
+    <!-- Right column: Form -->
+    <div class="col-12 col-md-7 col-lg-6 d-flex align-items-center justify-content-center bg-body p-4 p-sm-5">
+      <div class="w-100" style="max-width: 400px;">
+        <BaseCard class="border-0 shadow-none bg-transparent">
+          <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-white mb-3 shadow-sm" style="width: 60px; height: 60px;">
+              <i class="fa-solid fa-book-open fs-3"></i>
             </div>
-
-            <form @submit.prevent="handleLogin">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Email</label>
-                <input v-model="form.Email" type="email" class="form-control" placeholder="example@gmail.com" required />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Mật khẩu</label>
-                <input v-model="form.MatKhau" type="password" class="form-control" placeholder="••••••••" required />
-              </div>
-
-              <div v-if="errorMessage" class="alert alert-danger py-2 mb-3">{{ errorMessage }}</div>
-
-              <button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
-                {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
-              </button>
-            </form>
-
-            <div class="text-center small text-muted-custom">
-              Chưa có tài khoản?
-              <router-link class="text-decoration-none fw-semibold" to="/register">Đăng ký ngay</router-link>
-            </div>
+            <h2 class="font-display fw-bold mb-1">Đăng nhập</h2>
+            <p class="text-muted-custom font-body">Chào mừng bạn quay lại thư viện</p>
           </div>
-        </div>
+
+          <form @submit.prevent="handleLogin">
+            <BaseInput
+              v-model="form.Email"
+              label="Email"
+              type="email"
+              placeholder="example@gmail.com"
+              required
+            />
+
+            <BaseInput
+              v-model="form.MatKhau"
+              label="Mật khẩu"
+              type="password"
+              placeholder="••••••••"
+              required
+            />
+
+            <div v-if="errorMessage" class="alert alert-danger py-2 mb-3 font-body small">
+              {{ errorMessage }}
+            </div>
+
+            <BaseButton
+              type="submit"
+              variant="primary"
+              block
+              class="mt-4 mb-3 py-2 fs-5"
+              :disabled="loading"
+            >
+              {{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
+            </BaseButton>
+          </form>
+
+          <div class="text-center small text-muted-custom font-body mt-4">
+            Chưa có tài khoản?
+            <router-link class="text-decoration-none fw-semibold text-warning" to="/register">Đăng ký ngay</router-link>
+          </div>
+        </BaseCard>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AuthService from '@/services/auth.service'
 
-export default {
-  name: 'LoginUser',
-  data() {
-    return {
-      form: {
-        Email: '',
-        MatKhau: '',
-      },
-      errorMessage: '',
-      loading: false,
-    }
-  },
-  methods: {
-    async handleLogin() {
-      this.errorMessage = ''
-      this.loading = true
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
 
-      try {
-        await AuthService.login(this.form)
-        this.$router.push('/sach')
-      } catch (error) {
-        this.errorMessage = error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+const router = useRouter()
+
+const form = reactive({
+  Email: '',
+  MatKhau: '',
+})
+
+const errorMessage = ref('')
+const loading = ref(false)
+
+const handleLogin = async () => {
+  errorMessage.value = ''
+  loading.value = true
+
+  try {
+    await AuthService.login(form)
+    router.push('/sach')
+  } catch (error) {
+    errorMessage.value = error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>

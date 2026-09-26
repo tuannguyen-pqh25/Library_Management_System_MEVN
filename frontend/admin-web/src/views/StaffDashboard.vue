@@ -1,820 +1,466 @@
 <template>
-  <div class="staff-dashboard">
-    <!-- Stats Cards -->
-    <div class="stats-section">
-      <div class="stat-card">
-        <div class="stat-icon pending">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Yêu Cầu Chờ Xử Lý</div>
-          <div class="stat-value">{{ pendingCount }}</div>
+  <div class="page-shell py-4">
+    <div class="container-fluid">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="font-display fw-bold text-dark mb-1">Dashboard</h2>
+          <p class="text-muted-custom mb-0">Quản lý các yêu cầu mượn trả sách</p>
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-icon borrowed">
-          <i class="fas fa-book"></i>
+      <!-- Stats Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <BaseCard class="h-100 border-0 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-warning-subtle text-warning rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                <i class="fas fa-clock fa-2x"></i>
+              </div>
+              <div>
+                <div class="text-muted-custom small fw-semibold">Yêu Cầu Chờ Xử Lý</div>
+                <h3 class="fw-bold mb-0 text-dark">{{ pendingCount }}</h3>
+              </div>
+            </div>
+          </BaseCard>
         </div>
-        <div class="stat-content">
-          <div class="stat-label">Sách Đang Mượn</div>
-          <div class="stat-value">{{ borrowedCount }}</div>
+        <div class="col-md-4">
+          <BaseCard class="h-100 border-0 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                <i class="fas fa-book-reader fa-2x"></i>
+              </div>
+              <div>
+                <div class="text-muted-custom small fw-semibold">Sách Đang Mượn</div>
+                <h3 class="fw-bold mb-0 text-dark">{{ borrowedCount }}</h3>
+              </div>
+            </div>
+          </BaseCard>
+        </div>
+        <div class="col-md-4">
+          <BaseCard class="h-100 border-0 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-success-subtle text-success rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                <i class="fas fa-undo fa-2x"></i>
+              </div>
+              <div>
+                <div class="text-muted-custom small fw-semibold">Yêu Cầu Trả</div>
+                <h3 class="fw-bold mb-0 text-dark">{{ returnCount }}</h3>
+              </div>
+            </div>
+          </BaseCard>
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-icon return">
-          <i class="fas fa-undo"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Yêu Cầu Trả</div>
-          <div class="stat-value">{{ returnCount }}</div>
-        </div>
-      </div>
-    </div>
+      <!-- Filters & Search -->
+      <BaseCard class="mb-4 border-0 shadow-sm">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <!-- Search -->
+          <div class="input-group" style="max-width: 350px;">
+            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              class="form-control border-start-0 ps-0" 
+              placeholder="Tìm kiếm độc giả, mã sách..."
+              @input="handleSearch"
+            />
+          </div>
 
-    <!-- Search & Filter Section -->
-    <div class="filter-section">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="Tìm kiếm theo tên, mã..."
-          @input="handleSearch"
-        />
-      </div>
+          <!-- Tabs -->
+          <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" value="CHO_XU_LY" v-model="activeTab" @change="handleSearch">
+            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio1">Chờ Xử Lý</label>
 
-      <div class="tab-buttons">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.value"
-          :class="['tab-btn', { active: activeTab === tab.value }]"
-          @click="activeTab = tab.value; currentPage = 1"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-    </div>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" value="DA_MUON" v-model="activeTab" @change="handleSearch">
+            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio2">Đang Mượn</label>
 
-    <!-- Data Table -->
-    <div class="table-section">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Tên Độc Giả</th>
-            <th>Tên Sách</th>
-            <th>Ngày Mượn</th>
-            <th>Hạn Trả</th>
-            <th>Trạng Thái</th>
-            <th>Thao Tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="filteredData.length === 0">
-            <td colspan="7" class="text-center text-muted">Không có dữ liệu</td>
-          </tr>
-          <tr v-for="(item, index) in paginatedData" :key="item._id">
-            <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
-            <td>{{ item.maDocGia?.tenDocGia || '-' }}</td>
-            <td>{{ item.maSach?.tenSach || '-' }}</td>
-            <td>{{ formatDate(item.ngayMuon) }}</td>
-            <td>{{ formatDate(item.hanTra) }}</td>
-            <td>
-              <span :class="['badge', getStatusClass(item.trangThai)]">
-                {{ getStatusLabel(item.trangThai) }}
-              </span>
-            </td>
-            <td>
-              <button 
-                v-if="item.trangThai === 'CHO_XU_LY'"
-                class="btn-action btn-confirm"
-                @click="openConfirmModal(item)"
-                title="Xác nhận mượn"
-              >
-                <i class="fas fa-check"></i>
-              </button>
-              <button 
-                v-if="item.trangThai === 'DA_MUON'"
-                class="btn-action btn-return"
-                @click="openReturnModal(item)"
-                title="Xác nhận trả"
-              >
-                <i class="fas fa-undo"></i>
-              </button>
-              <button 
-                v-if="item.trangThai === 'CHO_XU_LY' || item.trangThai === 'DA_MUON'"
-                class="btn-action btn-reject"
-                @click="rejectRequest(item._id)"
-                title="Từ chối"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination-section" v-if="filteredData.length > pageSize">
-      <div class="pagination">
-        <button 
-          :disabled="currentPage === 1"
-          @click="currentPage--"
-          class="page-btn"
-        >
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <span class="page-info">Trang {{ currentPage }} / {{ totalPages }}</span>
-        <button 
-          :disabled="currentPage === totalPages"
-          @click="currentPage++"
-          class="page-btn"
-        >
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Confirm Modal -->
-    <div v-if="showConfirmModal" class="modal-overlay" @click.self="closeConfirmModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5>Xác Nhận Mượn Sách</h5>
-          <button class="close-btn" @click="closeConfirmModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div v-if="selectedItem" class="info-group">
-            <p><strong>Độc giả:</strong> {{ selectedItem.maDocGia?.tenDocGia }}</p>
-            <p><strong>Sách:</strong> {{ selectedItem.maSach?.tenSach }}</p>
-            <p><strong>Hạn trả:</strong> {{ formatDate(selectedItem.hanTra) }}</p>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" value="CHO_TRA" v-model="activeTab" @change="handleSearch">
+            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio3">Yêu Cầu Trả</label>
           </div>
         </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="closeConfirmModal">Hủy</button>
-          <button class="btn-success" @click="confirmBorrow">Xác Nhận</button>
+      </BaseCard>
+
+      <!-- Table -->
+      <BaseCard class="border-0 shadow-sm overflow-hidden p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 border-top">
+            <thead class="table-light text-muted-custom">
+              <tr>
+                <th class="ps-4 py-3 fw-semibold">STT</th>
+                <th class="py-3 fw-semibold">Độc Giả</th>
+                <th class="py-3 fw-semibold">Sách</th>
+                <th class="py-3 fw-semibold">Ngày Mượn</th>
+                <th class="py-3 fw-semibold">Hạn Trả</th>
+                <th class="py-3 fw-semibold">Trạng Thái</th>
+                <th class="py-3 fw-semibold text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="filteredData.length === 0">
+                <td colspan="7" class="text-center text-muted py-4">
+                  <div class="mb-2"><i class="fas fa-inbox fa-2x opacity-50"></i></div>
+                  Không tìm thấy dữ liệu phù hợp
+                </td>
+              </tr>
+              <tr v-for="(item, index) in paginatedData" :key="item._id">
+                <td class="ps-4 text-muted fw-medium">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
+                <td class="fw-semibold text-dark">{{ item.maDocGia?.Ten || item.maDocGia?.HoLot || item.maDocGia?.tenDocGia || '-' }}</td>
+                <td>
+                  <span class="d-inline-block text-truncate text-dark fw-medium" style="max-width: 200px;" :title="item.maSach?.TenSach || item.maSach?.tenSach">
+                    {{ item.maSach?.TenSach || item.maSach?.tenSach || '-' }}
+                  </span>
+                </td>
+                <td>{{ formatDate(item.NgayMuon || item.ngayMuon) }}</td>
+                <td>{{ formatDate(item.NgayHenTra || item.hanTra) }}</td>
+                <td>
+                  <span class="badge rounded-pill px-3 py-2 fw-medium border" :class="getStatusClass(item.TrangThai || item.trangThai)">
+                    {{ getStatusLabel(item.TrangThai || item.trangThai) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-center gap-2">
+                    <button 
+                      v-if="(item.TrangThai || item.trangThai) === 'CHO_XU_LY'"
+                      class="btn btn-sm btn-success rounded-circle shadow-sm icon-btn"
+                      @click="openConfirmModal(item)"
+                      title="Duyệt mượn"
+                    >
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button 
+                      v-if="(item.TrangThai || item.trangThai) === 'DA_MUON'"
+                      class="btn btn-sm btn-primary rounded-circle shadow-sm icon-btn"
+                      @click="openReturnModal(item)"
+                      title="Xác nhận trả"
+                    >
+                      <i class="fas fa-undo"></i>
+                    </button>
+                    <button 
+                      v-if="(item.TrangThai || item.trangThai) === 'CHO_XU_LY' || (item.TrangThai || item.trangThai) === 'DA_MUON'"
+                      class="btn btn-sm btn-danger rounded-circle shadow-sm icon-btn"
+                      @click="rejectRequest(item._id)"
+                      title="Từ chối / Hủy"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </BaseCard>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-center mt-4" v-if="totalPages > 1">
+        <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+          <button class="btn btn-light border" :disabled="currentPage === 1" @click="currentPage--">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="btn btn-light border-top border-bottom fw-medium px-4 text-dark" style="pointer-events: none;">
+            Trang {{ currentPage }} / {{ totalPages }}
+          </span>
+          <button class="btn btn-light border" :disabled="currentPage === totalPages" @click="currentPage++">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Return Modal -->
-    <div v-if="showReturnModal" class="modal-overlay" @click.self="closeReturnModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5>Xác Nhận Trả Sách</h5>
-          <button class="close-btn" @click="closeReturnModal">
-            <i class="fas fa-times"></i>
-          </button>
+    <!-- Modals (Custom Simple Modals for now to avoid Bootstrap JS dependency issues) -->
+    <!-- Confirm Borrow Modal -->
+    <div v-if="showConfirmModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+      <BaseCard class="modal-card border-0 shadow-lg">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">Duyệt Phiếu Mượn</h5>
+          <button class="btn-close" @click="closeConfirmModal"></button>
         </div>
-        <div class="modal-body">
-          <div v-if="selectedItem" class="info-group">
-            <p><strong>Độc giả:</strong> {{ selectedItem.maDocGia?.tenDocGia }}</p>
-            <p><strong>Sách:</strong> {{ selectedItem.maSach?.tenSach }}</p>
-            <p><strong>Ngày mượn:</strong> {{ formatDate(selectedItem.ngayMuon) }}</p>
+        <div v-if="selectedItem" class="mb-4">
+          <div class="bg-light p-3 rounded-3 mb-3">
+            <div class="row mb-2">
+              <div class="col-4 text-muted-custom small">Độc giả:</div>
+              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maDocGia?.Ten || selectedItem.maDocGia?.tenDocGia }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-4 text-muted-custom small">Sách:</div>
+              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maSach?.TenSach || selectedItem.maSach?.tenSach }}</div>
+            </div>
+            <div class="row">
+              <div class="col-4 text-muted-custom small">Hạn trả:</div>
+              <div class="col-8 fw-semibold text-primary">{{ formatDate(selectedItem.NgayHenTra || selectedItem.hanTra) }}</div>
+            </div>
           </div>
+          <p class="mb-0 text-muted-custom small">Xác nhận cho độc giả này mượn quyển sách trên?</p>
         </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="closeReturnModal">Hủy</button>
-          <button class="btn-success" @click="confirmReturn">Xác Nhận Trả</button>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <BaseButton variant="outline-secondary" @click="closeConfirmModal">Hủy bỏ</BaseButton>
+          <BaseButton variant="success" @click="confirmBorrow" :disabled="loadingAction">
+            <i class="fas fa-check me-2"></i> Xác nhận mượn
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
+    </div>
+
+    <!-- Confirm Return Modal -->
+    <div v-if="showReturnModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+      <BaseCard class="modal-card border-0 shadow-lg">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">Xác Nhận Trả Sách</h5>
+          <button class="btn-close" @click="closeReturnModal"></button>
+        </div>
+        <div v-if="selectedItem" class="mb-4">
+          <div class="bg-light p-3 rounded-3 mb-3">
+            <div class="row mb-2">
+              <div class="col-4 text-muted-custom small">Độc giả:</div>
+              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maDocGia?.Ten || selectedItem.maDocGia?.tenDocGia }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-4 text-muted-custom small">Sách:</div>
+              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maSach?.TenSach || selectedItem.maSach?.tenSach }}</div>
+            </div>
+            <div class="row">
+              <div class="col-4 text-muted-custom small">Ngày mượn:</div>
+              <div class="col-8 fw-semibold text-primary">{{ formatDate(selectedItem.NgayMuon || selectedItem.ngayMuon) }}</div>
+            </div>
+          </div>
+          <p class="mb-0 text-muted-custom small">Sách đã được thu hồi và xác nhận tình trạng tốt?</p>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <BaseButton variant="outline-secondary" @click="closeReturnModal">Hủy bỏ</BaseButton>
+          <BaseButton variant="primary" @click="confirmReturn" :disabled="loadingAction">
+            <i class="fas fa-undo me-2"></i> Xác nhận trả
+          </BaseButton>
+        </div>
+      </BaseCard>
     </div>
   </div>
 </template>
 
-<script>
-import MuonSachService from "@/services/muonsach.service";
-import AuthService from "@/services/auth.service";
-import DocGiaService from "@/services/docgia.service";
-import SachService from "@/services/sach.service";
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import MuonSachService from "@/services/muonsach.service"
+import AuthService from "@/services/auth.service"
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 
-export default {
-  name: "StaffDashboard",
-  data() {
-    return {
-      muonSachList: [],
-      filteredData: [],
-      searchQuery: "",
-      activeTab: "CHO_XU_LY",
-      currentPage: 1,
-      pageSize: 10,
-      showConfirmModal: false,
-      showReturnModal: false,
-      selectedItem: null,
-      currentUser: null,
+const muonSachList = ref([])
+const filteredData = ref([])
+const searchQuery = ref('')
+const activeTab = ref('CHO_XU_LY')
+const currentPage = ref(1)
+const pageSize = 10
+const currentUser = ref(null)
 
-      tabs: [
-        { label: "Chờ Xử Lý", value: "CHO_XU_LY" },
-        { label: "Đang Mượn", value: "DA_MUON" },
-        { label: "Yêu Cầu Trả", value: "CHO_TRA" },
-      ],
-    };
-  },
-  computed: {
-    pendingCount() {
-      return this.muonSachList.filter((item) => item.trangThai === "CHO_XU_LY")
-        .length;
-    },
-    borrowedCount() {
-      return this.muonSachList.filter((item) => item.trangThai === "DA_MUON")
-        .length;
-    },
-    returnCount() {
-      return this.muonSachList.filter((item) => item.trangThai === "CHO_TRA")
-        .length;
-    },
-    totalPages() {
-      return Math.ceil(this.filteredData.length / this.pageSize);
-    },
-    paginatedData() {
-      const start = (this.currentPage - 1) * this.pageSize;
-      return this.filteredData.slice(start, start + this.pageSize);
-    },
-  },
-  methods: {
-    async fetchAll() {
-      try {
-        const response = await MuonSachService.getAll();
-        this.muonSachList = response.data || [];
-        this.applyFilter();
-      } catch (error) {
-        console.error("Error fetching mượn sách list:", error);
-      }
-    },
+const showConfirmModal = ref(false)
+const showReturnModal = ref(false)
+const selectedItem = ref(null)
+const loadingAction = ref(false)
 
-    handleSearch() {
-      this.currentPage = 1;
-      this.applyFilter();
-    },
+// Cập nhật lại enum matching với backend (Backend sử dụng ChoDuyet, DangMuon, DaTra, QuaHan, TuChoi)
+// Note: code cũ xài CHO_XU_LY, DA_MUON, v.v., ta sẽ cần điều chỉnh lại data nếu BE trả về khác.
+// Vì UI filter yêu cầu 3 tab, ta map cho linh hoạt
+const enumMap = {
+  'CHO_XU_LY': ['choduyet', 'cho_xu_ly'],
+  'DA_MUON': ['dangmuon', 'da_muon', 'quahan'],
+  'CHO_TRA': ['dangmuon', 'cho_tra'] // Nếu không có trạng thái chờ trả, gộp vào Đang Mượn.
+}
 
-    applyFilter() {
-      let filtered = this.muonSachList.filter(
-        (item) => item.trangThai === this.activeTab
-      );
+const pendingCount = computed(() => muonSachList.value.filter(i => {
+  const t = String(i.TrangThai || i.trangThai).toLowerCase();
+  return enumMap['CHO_XU_LY'].includes(t);
+}).length)
 
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(
-          (item) =>
-            item.maDocGia?.tenDocGia?.toLowerCase().includes(query) ||
-            item.maSach?.tenSach?.toLowerCase().includes(query) ||
-            item.maDocGia?._id?.includes(query) ||
-            item.maSach?._id?.includes(query)
-        );
-      }
+const borrowedCount = computed(() => muonSachList.value.filter(i => {
+  const t = String(i.TrangThai || i.trangThai).toLowerCase();
+  return enumMap['DA_MUON'].includes(t);
+}).length)
 
-      this.filteredData = filtered;
-    },
+const returnCount = computed(() => muonSachList.value.filter(i => {
+  const t = String(i.TrangThai || i.trangThai).toLowerCase();
+  return t === 'dangmuon' || t === 'da_muon'; // Tạm thay bằng đang mượn
+}).length)
 
-    openConfirmModal(item) {
-      this.selectedItem = item;
-      this.showConfirmModal = true;
-    },
+const totalPages = computed(() => Math.ceil(filteredData.value.length / pageSize) || 1)
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredData.value.slice(start, start + pageSize)
+})
 
-    closeConfirmModal() {
-      this.showConfirmModal = false;
-      this.selectedItem = null;
-    },
+const fetchAll = async () => {
+  try {
+    const response = await MuonSachService.getAll()
+    muonSachList.value = response.data || []
+    applyFilter()
+  } catch (error) {
+    console.error("Lỗi khi tải danh sách mượn sách:", error)
+  }
+}
 
-    async confirmBorrow() {
-      if (!this.selectedItem) return;
+const handleSearch = () => {
+  currentPage.value = 1
+  applyFilter()
+}
 
-      try {
-        await MuonSachService.update(this.selectedItem._id, {
-          trangThai: "DA_MUON",
-          nhanVienId: this.currentUser._id,
-        });
+const applyFilter = () => {
+  let filtered = muonSachList.value.filter(item => {
+    const t = String(item.TrangThai || item.trangThai).toLowerCase();
+    return enumMap[activeTab.value].includes(t);
+  })
 
-        this.closeConfirmModal();
-        this.fetchAll();
-      } catch (error) {
-        console.error("Error confirming borrow:", error);
-        alert("Lỗi: " + (error.response?.data?.message || error.message));
-      }
-    },
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(item => {
+      const dgTen = (item.maDocGia?.Ten || item.maDocGia?.tenDocGia || '').toLowerCase()
+      const sTen = (item.maSach?.TenSach || item.maSach?.tenSach || '').toLowerCase()
+      const dgId = (item.maDocGia?._id || '').toLowerCase()
+      const sId = (item.maSach?._id || '').toLowerCase()
+      return dgTen.includes(query) || sTen.includes(query) || dgId.includes(query) || sId.includes(query)
+    })
+  }
+  
+  filteredData.value = filtered
+}
 
-    openReturnModal(item) {
-      this.selectedItem = item;
-      this.showReturnModal = true;
-    },
+const openConfirmModal = (item) => {
+  selectedItem.value = item
+  showConfirmModal.value = true
+}
 
-    closeReturnModal() {
-      this.showReturnModal = false;
-      this.selectedItem = null;
-    },
+const closeConfirmModal = () => {
+  showConfirmModal.value = false
+  selectedItem.value = null
+}
 
-    async confirmReturn() {
-      if (!this.selectedItem) return;
+const confirmBorrow = async () => {
+  if (!selectedItem.value) return
+  loadingAction.value = true
+  try {
+    // API Duyệt yêu cầu mượn
+    await MuonSachService.update(selectedItem.value._id, {
+      trangThai: "DangMuon",
+      nhanVienId: currentUser.value?._id,
+    })
+    closeConfirmModal()
+    await fetchAll()
+  } catch (error) {
+    alert("Lỗi: " + (error.response?.data?.message || error.message))
+  } finally {
+    loadingAction.value = false
+  }
+}
 
-      try {
-        await MuonSachService.update(this.selectedItem._id, {
-          trangThai: "DA_TRA",
-          nhanVienId: this.currentUser._id,
-        });
+const openReturnModal = (item) => {
+  selectedItem.value = item
+  showReturnModal.value = true
+}
 
-        this.closeReturnModal();
-        this.fetchAll();
-      } catch (error) {
-        console.error("Error confirming return:", error);
-        alert("Lỗi: " + (error.response?.data?.message || error.message));
-      }
-    },
+const closeReturnModal = () => {
+  showReturnModal.value = false
+  selectedItem.value = null
+}
 
-    async rejectRequest(id) {
-      if (!confirm("Bạn chắc chắn muốn từ chối yêu cầu này?")) return;
+const confirmReturn = async () => {
+  if (!selectedItem.value) return
+  loadingAction.value = true
+  try {
+    // API Xác nhận trả
+    await MuonSachService.update(selectedItem.value._id, {
+      trangThai: "DaTra",
+      nhanVienId: currentUser.value?._id,
+    })
+    closeReturnModal()
+    await fetchAll()
+  } catch (error) {
+    alert("Lỗi: " + (error.response?.data?.message || error.message))
+  } finally {
+    loadingAction.value = false
+  }
+}
 
-      try {
-        await MuonSachService.update(id, {
-          trangThai: "TU_CHOI",
-          nhanVienId: this.currentUser._id,
-        });
+const rejectRequest = async (id) => {
+  if (!confirm("Bạn chắc chắn muốn từ chối / hủy yêu cầu này?")) return
+  try {
+    await MuonSachService.update(id, {
+      trangThai: "TuChoi",
+      nhanVienId: currentUser.value?._id,
+    })
+    await fetchAll()
+  } catch (error) {
+    alert("Lỗi: " + (error.response?.data?.message || error.message))
+  }
+}
 
-        this.fetchAll();
-      } catch (error) {
-        console.error("Error rejecting request:", error);
-        alert("Lỗi: " + (error.response?.data?.message || error.message));
-      }
-    },
+const formatDate = (date) => {
+  if (!date) return "-"
+  return new Date(date).toLocaleDateString("vi-VN")
+}
 
-    formatDate(date) {
-      if (!date) return "-";
-      return new Date(date).toLocaleDateString("vi-VN");
-    },
+const getStatusLabel = (status) => {
+  const s = String(status || '').toLowerCase()
+  if (s.includes('choduyet') || s.includes('cho_xu_ly')) return "Chờ Duyệt"
+  if (s.includes('dangmuon') || s.includes('da_muon')) return "Đang Mượn"
+  if (s.includes('datra') || s.includes('da_tra')) return "Đã Trả"
+  if (s.includes('tuchoi') || s.includes('tu_choi')) return "Từ Chối"
+  if (s.includes('quahan')) return "Quá Hạn"
+  return "Chờ Xử Lý"
+}
 
-    getStatusLabel(status) {
-      const labels = {
-        CHO_XU_LY: "Chờ Xử Lý",
-        DA_MUON: "Đang Mượn",
-        CHO_TRA: "Yêu Cầu Trả",
-        DA_TRA: "Đã Trả",
-        TU_CHOI: "Từ Chối",
-      };
-      return labels[status] || status;
-    },
+const getStatusClass = (status) => {
+  const s = String(status || '').toLowerCase()
+  if (s.includes('choduyet') || s.includes('cho_xu_ly')) return "bg-warning text-dark border-warning-subtle"
+  if (s.includes('dangmuon') || s.includes('da_muon')) return "bg-primary text-white border-primary-subtle"
+  if (s.includes('datra') || s.includes('da_tra')) return "bg-success text-white border-success-subtle"
+  if (s.includes('tuchoi') || s.includes('tu_choi') || s.includes('quahan')) return "bg-danger text-white border-danger-subtle"
+  return "bg-secondary text-white"
+}
 
-    getStatusClass(status) {
-      const classes = {
-        CHO_XU_LY: "badge-warning",
-        DA_MUON: "badge-info",
-        CHO_TRA: "badge-primary",
-        DA_TRA: "badge-success",
-        TU_CHOI: "badge-danger",
-      };
-      return classes[status] || "badge-secondary";
-    },
-
-    getCurrentUser() {
-      const user = AuthService.getCurrentUser();
-      this.currentUser = user;
-    },
-  },
-  mounted() {
-    this.getCurrentUser();
-    this.fetchAll();
-  },
-};
+onMounted(() => {
+  currentUser.value = AuthService.getCurrentUser()
+  fetchAll()
+})
 </script>
 
 <style scoped>
-.staff-dashboard {
-  padding: 30px;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-/* Stats Cards */
-.stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s;
-}
-
-.stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.stat-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+.icon-btn {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  color: white;
+  padding: 0;
+  transition: transform 0.2s;
+}
+.icon-btn:hover {
+  transform: scale(1.1);
 }
 
-.stat-icon.pending {
-  background-color: #ffc107;
-}
-
-.stat-icon.borrowed {
-  background-color: #0066ff;
-}
-
-.stat-icon.return {
-  background-color: #28a745;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #222;
-}
-
-/* Filter Section */
-.filter-section {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 30px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  flex-wrap: wrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.search-box {
-  flex: 1;
-  min-width: 250px;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-box i {
-  position: absolute;
-  left: 12px;
-  color: #999;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px 12px 10px 38px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: #0066ff;
-  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
-}
-
-.tab-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.tab-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.tab-btn:hover {
-  border-color: #0066ff;
-  color: #0066ff;
-}
-
-.tab-btn.active {
-  background: #0066ff;
-  color: white;
-  border-color: #0066ff;
-}
-
-/* Table Section */
-.table-section {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  margin-bottom: 20px;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table thead {
-  background-color: #f0f2f5;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.data-table th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.data-table td {
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  color: #555;
-  font-size: 14px;
-}
-
-.data-table tbody tr:hover {
-  background-color: #fafafa;
-}
-
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge-warning {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.badge-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
-.badge-primary {
-  background-color: #cfe2ff;
-  color: #084298;
-}
-
-.badge-success {
-  background-color: #d1e7dd;
-  color: #0f5132;
-}
-
-.badge-danger {
-  background-color: #f8d7da;
-  color: #842029;
-}
-
-.badge-secondary {
-  background-color: #e2e3e5;
-  color: #383d41;
-}
-
-/* Action Buttons */
-.btn-action {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-right: 5px;
-  transition: all 0.3s;
-}
-
-.btn-confirm {
-  background-color: #28a745;
-  color: white;
-}
-
-.btn-confirm:hover {
-  background-color: #218838;
-}
-
-.btn-return {
-  background-color: #0066ff;
-  color: white;
-}
-
-.btn-return:hover {
-  background-color: #0052cc;
-}
-
-.btn-reject {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-reject:hover {
-  background-color: #c82333;
-}
-
-/* Pagination */
-.pagination-section {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.page-btn {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.page-btn:hover:not(:disabled) {
-  border-color: #0066ff;
-  color: #0066ff;
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  margin: 0 10px;
-  font-size: 14px;
-  color: #666;
-}
-
-/* Modal Styles */
-.modal-overlay {
+.modal-backdrop-custom {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 8px;
+.modal-card {
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  border-radius: 16px;
+  animation: modalIn 0.3s ease;
 }
 
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.modal-header h5 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #999;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.info-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.info-group p {
-  margin: 0;
-  font-size: 14px;
-  color: #555;
-}
-
-.info-group strong {
-  color: #333;
-}
-
-.modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.btn-cancel {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.btn-cancel:hover {
-  border-color: #999;
-  background: #f5f5f5;
-}
-
-.btn-success {
-  padding: 8px 16px;
-  background: #28a745;
+.btn-check:checked + .btn-outline-primary {
+  background-color: var(--bs-primary);
   color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.btn-success:hover {
-  background: #218838;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-muted {
-  color: #999;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .staff-dashboard {
-    padding: 15px;
-  }
-
-  .stats-section {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-section {
-    flex-direction: column;
-  }
-
-  .search-box {
-    flex: none;
-    width: 100%;
-  }
-
-  .tab-buttons {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 10px;
-    font-size: 12px;
-  }
+  border-color: var(--bs-primary);
 }
 </style>

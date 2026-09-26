@@ -5,8 +5,8 @@ const { uploadImageFromBase64 } = require("../../utils/cloudinary.util");
 
 //1. Tạo một cuốn sách mới
 exports.create = async (req, res, next) => {
-    // Kiểm tra TENSACH có tồn tại không
-    if (!req.body?.TENSACH) {
+    // Kiểm tra TenSach có tồn tại không
+    if (!req.body?.TenSach) {
         return next(new ApiError(400, "Tên sách không được để trống"));
     }
 

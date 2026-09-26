@@ -1,110 +1,155 @@
 <template>
-  <div class="page-shell d-flex align-items-center justify-content-center">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-7">
-          <div class="card-surface p-4 p-md-5">
-            <div class="text-center mb-4">
-              <h2 class="fw-bold mb-1">Đăng ký tài khoản</h2>
-              <p class="text-muted-custom mb-0">Tạo tài khoản độc giả để mượn sách và quản lý hồ sơ</p>
-            </div>
+  <div class="container-fluid min-vh-100 d-flex flex-column flex-md-row p-0">
+    <!-- Left column: Visuals/Texture -->
+    <div class="col-12 col-md-5 col-lg-6 d-none d-md-flex align-items-center justify-content-center bg-primary text-white position-relative overflow-hidden">
+      <!-- Background pattern -->
+      <div class="position-absolute w-100 h-100 opacity-25" style="background-image: radial-gradient(#F6F1E7 1px, transparent 1px); background-size: 24px 24px;"></div>
+      <div class="z-1 text-center p-5">
+        <h1 class="font-display fw-bold mb-3 display-4">Trở thành Độc giả</h1>
+        <p class="font-body fs-5 opacity-75">Tham gia cộng đồng để bắt đầu mượn sách.</p>
+      </div>
+    </div>
 
-            <form @submit.prevent="handleRegister">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Email</label>
-                  <input v-model="form.Email" type="email" class="form-control" required />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Mật khẩu</label>
-                  <input v-model="form.MatKhau" type="password" class="form-control" required />
-                </div>
+    <!-- Right column: Form -->
+    <div class="col-12 col-md-7 col-lg-6 d-flex align-items-center justify-content-center bg-body p-4 p-sm-5 py-5 overflow-auto">
+      <div class="w-100" style="max-width: 500px;">
+        <BaseCard class="border-0 shadow-none bg-transparent">
+          <div class="text-center mb-4">
+            <h2 class="font-display fw-bold mb-1">Đăng ký tài khoản</h2>
+            <p class="text-muted-custom font-body">Tạo tài khoản độc giả để mượn sách và quản lý hồ sơ</p>
+          </div>
 
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Họ lót</label>
-                  <input v-model="form.HoLot" type="text" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Tên</label>
-                  <input v-model="form.Ten" type="text" class="form-control" required />
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Ngày sinh</label>
-                  <input v-model="form.NgaySinh" type="date" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Giới tính</label>
-                  <select v-model="form.Phai" class="form-select">
-                    <option value="Nam">Nam</option>
-                    <option value="Nữ">Nữ</option>
-                    <option value="Khác">Khác</option>
-                  </select>
-                </div>
-
-                <div class="col-12">
-                  <label class="form-label fw-semibold">Địa chỉ</label>
-                  <input v-model="form.DiaChi" type="text" class="form-control" />
-                </div>
-
-                <div class="col-12">
-                  <label class="form-label fw-semibold">Số điện thoại</label>
-                  <input v-model="form.DienThoai" type="text" class="form-control" />
-                </div>
+          <form @submit.prevent="handleRegister">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <BaseInput
+                  v-model="form.Email"
+                  label="Email"
+                  type="email"
+                  required
+                />
+              </div>
+              <div class="col-sm-6">
+                <BaseInput
+                  v-model="form.MatKhau"
+                  label="Mật khẩu"
+                  type="password"
+                  required
+                />
               </div>
 
-              <div v-if="errorMessage" class="alert alert-danger py-2 mt-3 mb-3">{{ errorMessage }}</div>
-              <div v-if="successMessage" class="alert alert-success py-2 mt-3 mb-3">{{ successMessage }}</div>
+              <div class="col-sm-6">
+                <BaseInput
+                  v-model="form.HoLot"
+                  label="Họ lót"
+                  type="text"
+                />
+              </div>
+              <div class="col-sm-6">
+                <BaseInput
+                  v-model="form.Ten"
+                  label="Tên"
+                  type="text"
+                  required
+                />
+              </div>
 
-              <button type="submit" class="btn btn-primary w-100 mt-2" :disabled="loading">
-                {{ loading ? 'Đang xử lý...' : 'Đăng ký' }}
-              </button>
-            </form>
+              <div class="col-sm-6">
+                <BaseInput
+                  v-model="form.NgaySinh"
+                  label="Ngày sinh"
+                  type="date"
+                />
+              </div>
+              <div class="col-sm-6 mb-3">
+                <label class="form-label font-body fw-semibold" style="color: var(--bs-body-color); margin-bottom: 0.5rem;">Giới tính</label>
+                <select v-model="form.Phai" class="form-select" style="border-radius: 8px; padding: 0.75rem 1rem; border: 1px solid var(--border);">
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <BaseInput
+                  v-model="form.DiaChi"
+                  label="Địa chỉ"
+                  type="text"
+                />
+              </div>
+
+              <div class="col-12">
+                <BaseInput
+                  v-model="form.DienThoai"
+                  label="Số điện thoại"
+                  type="text"
+                />
+              </div>
+            </div>
+
+            <div v-if="errorMessage" class="alert alert-danger py-2 mt-3 mb-3 font-body small">{{ errorMessage }}</div>
+            <div v-if="successMessage" class="alert alert-success py-2 mt-3 mb-3 font-body small">{{ successMessage }}</div>
+
+            <BaseButton
+              type="submit"
+              variant="primary"
+              block
+              class="mt-4 mb-3 py-2 fs-5"
+              :disabled="loading"
+            >
+              {{ loading ? 'Đang xử lý...' : 'Đăng ký' }}
+            </BaseButton>
+          </form>
+
+          <div class="text-center small text-muted-custom font-body mt-3">
+            Đã có tài khoản?
+            <router-link class="text-decoration-none fw-semibold text-warning" to="/login">Đăng nhập</router-link>
           </div>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AuthService from '@/services/auth.service'
 
-export default {
-  name: 'RegisterUser',
-  data() {
-    return {
-      form: {
-        Email: '',
-        MatKhau: '',
-        HoLot: '',
-        Ten: '',
-        NgaySinh: '',
-        Phai: 'Nam',
-        DiaChi: '',
-        DienThoai: '',
-      },
-      loading: false,
-      errorMessage: '',
-      successMessage: '',
-    }
-  },
-  methods: {
-    async handleRegister() {
-      this.loading = true
-      this.errorMessage = ''
-      this.successMessage = ''
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
 
-      try {
-        await AuthService.register(this.form)
-        this.successMessage = 'Đăng ký thành công. Bạn có thể đăng nhập ngay.'
-        setTimeout(() => this.$router.push('/login'), 800)
-      } catch (error) {
-        this.errorMessage = error?.response?.data?.message || 'Đăng ký thất bại.'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+const router = useRouter()
+
+const form = reactive({
+  Email: '',
+  MatKhau: '',
+  HoLot: '',
+  Ten: '',
+  NgaySinh: '',
+  Phai: 'Nam',
+  DiaChi: '',
+  DienThoai: '',
+})
+
+const loading = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
+
+const handleRegister = async () => {
+  loading.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await AuthService.register(form)
+    successMessage.value = 'Đăng ký thành công. Đang chuyển hướng...'
+    setTimeout(() => router.push('/login'), 1200)
+  } catch (error) {
+    errorMessage.value = error?.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>

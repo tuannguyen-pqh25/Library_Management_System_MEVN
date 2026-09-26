@@ -31,9 +31,9 @@ app.use("/api/admin/muonsach", muonsachRouter);
 
 // Namespace User
 app.use("/api/user/auth", userAuthRouter);
-app.use("/api/user", userProfileRouter);
 app.use("/api/user/sach", userSachRouter);
 app.use("/api/user/muon", userMuonRouter);
+app.use("/api/user", userProfileRouter);
 
 // Các route chưa migrate (tạm giữ)
 app.use("/api/docgia", docgiaRouter);

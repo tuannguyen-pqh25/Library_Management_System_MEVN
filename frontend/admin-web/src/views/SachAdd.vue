@@ -82,42 +82,42 @@
                     <label class="form-label fw-semibold text-secondary small">Tên Sách <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-book text-muted"></i></span>
-                        <Field name="TENSACH" type="text" class="form-control bg-light border-0 ps-2" placeholder="Nhập tên sách..." />
+                        <Field name="TenSach" type="text" class="form-control bg-light border-0 ps-2" placeholder="Nhập tên sách..." />
                     </div>
-                    <ErrorMessage name="TENSACH" class="text-danger small mt-1" />
+                    <ErrorMessage name="TenSach" class="text-danger small mt-1" />
                  </div>
                  <div class="col-md-6">
                     <label class="form-label fw-semibold text-secondary small">Tác Giả <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-pen-nib text-muted"></i></span>
-                       <Field name="TACGIA" type="text" class="form-control bg-light border-0 ps-2" placeholder="Tên tác giả" />
+                       <Field name="TacGia" type="text" class="form-control bg-light border-0 ps-2" placeholder="Tên tác giả" />
                     </div>
-                    <ErrorMessage name="TACGIA" class="text-danger small mt-1" />
+                    <ErrorMessage name="TacGia" class="text-danger small mt-1" />
                  </div>
                  <div class="col-md-6">
                     <label class="form-label fw-semibold text-secondary small">Mã NXB <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                        <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-barcode text-muted"></i></span>
-                       <Field name="MANXB" type="text" class="form-control bg-light border-0 ps-2" placeholder="Mã nhà xuất bản" />
+                       <Field name="MaNXB" type="text" class="form-control bg-light border-0 ps-2" placeholder="Mã nhà xuất bản" />
                     </div>
-                    <ErrorMessage name="MANXB" class="text-danger small mt-1" />
+                    <ErrorMessage name="MaNXB" class="text-danger small mt-1" />
                  </div>
                  <div class="col-md-6">
                     <label class="form-label fw-semibold text-secondary small">Thể Loại <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-tags text-muted"></i></span>
-                        <Field name="THELOAI" type="text" class="form-control bg-light border-0 ps-2" placeholder="Ví dụ: Khoa học, Văn học..." />
+                        <Field name="TheLoai" type="text" class="form-control bg-light border-0 ps-2" placeholder="Ví dụ: Khoa học, Văn học..." />
                     </div>
-                    <ErrorMessage name="THELOAI" class="text-danger small mt-1" />
+                    <ErrorMessage name="TheLoai" class="text-danger small mt-1" />
                  </div>
                  <div class="col-md-6">
                     <label class="form-label fw-semibold text-secondary small">Đơn Giá <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-tag text-muted"></i></span>
-                        <Field name="DONGIA" type="number" class="form-control bg-light border-0 ps-2" placeholder="0" />
+                        <Field name="DonGia" type="number" class="form-control bg-light border-0 ps-2" placeholder="0" />
                         <span class="input-group-text bg-light border-0 text-success fw-bold">VNĐ</span>
                     </div>
-                    <ErrorMessage name="DONGIA" class="text-danger small mt-1" />
+                    <ErrorMessage name="DonGia" class="text-danger small mt-1" />
                  </div>
               </div>
 
@@ -129,40 +129,40 @@
                     <label class="form-label fw-semibold text-secondary small">Năm XB</label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-calendar-alt text-muted small"></i></span>
-                        <Field name="NAMXUATBAN" type="number" class="form-control bg-light border-0 ps-1" />
+                        <Field name="NamXuatBan" type="number" class="form-control bg-light border-0 ps-1" />
                     </div>
-                    <ErrorMessage name="NAMXUATBAN" class="text-danger small mt-1" />
+                    <ErrorMessage name="NamXuatBan" class="text-danger small mt-1" />
                  </div>
                  <div class="col-6 col-md-3">
                     <label class="form-label fw-semibold text-secondary small">Số Quyển</label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-layer-group text-muted small"></i></span>
-                        <Field name="SOQUYEN" type="number" class="form-control bg-light border-0 ps-1" />
+                        <Field name="SoQuyen" type="number" class="form-control bg-light border-0 ps-1" />
                     </div>
-                    <ErrorMessage name="SOQUYEN" class="text-danger small mt-1" />
+                    <ErrorMessage name="SoQuyen" class="text-danger small mt-1" />
                  </div>
                  <div class="col-6 col-md-3">
                     <label class="form-label fw-semibold text-secondary small">Số Trang</label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-file-alt text-muted small"></i></span>
-                        <Field name="SOTRANG" type="number" class="form-control bg-light border-0 ps-1" />
+                        <Field name="SoTrang" type="number" class="form-control bg-light border-0 ps-1" />
                     </div>
-                    <ErrorMessage name="SOTRANG" class="text-danger small mt-1" />
+                    <ErrorMessage name="SoTrang" class="text-danger small mt-1" />
                  </div>
                  <div class="col-6 col-md-3">
                     <label class="form-label fw-semibold text-secondary small">Ngôn Ngữ</label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-globe text-muted small"></i></span>
-                        <Field name="NGONNGU" type="text" class="form-control bg-light border-0 ps-1" placeholder="Tiếng Việt" />
+                        <Field name="NgonNgu" type="text" class="form-control bg-light border-0 ps-1" placeholder="Tiếng Việt" />
                     </div>
-                    <ErrorMessage name="NGONNGU" class="text-danger small mt-1" />
+                    <ErrorMessage name="NgonNgu" class="text-danger small mt-1" />
                  </div>
               </div>
 
               <div class="mb-3">
                  <label class="form-label fw-semibold text-secondary small">Giới Thiệu Nội Dung <span class="text-danger">*</span></label>
-                 <Field name="MOTA" as="textarea" class="form-control bg-light border-0" rows="4" placeholder="Viết mô tả ngắn về nội dung sách..." />
-                 <ErrorMessage name="MOTA" class="text-danger small mt-1" />
+                 <Field name="MoTa" as="textarea" class="form-control bg-light border-0" rows="4" placeholder="Viết mô tả ngắn về nội dung sách..." />
+                 <ErrorMessage name="MoTa" class="text-danger small mt-1" />
               </div>
 
             </div>
@@ -216,16 +216,16 @@ export default {
   },
   data() {
     const bookSchema = yup.object().shape({
-      TENSACH: yup.string().required("Tên sách là bắt buộc!").min(2, "Quá ngắn").max(200, "Quá dài"),
-      MANXB: yup.string().required("Bắt buộc").max(50, "Quá dài"),
-      TACGIA: yup.string().required("Bắt buộc").max(100, "Quá dài"),
-      NAMXUATBAN: yup.number().required("Bắt buộc").typeError("Phải là số").min(1900, "Từ 1900+").max(new Date().getFullYear() + 1, "Không hợp lệ"),
-      SOQUYEN: yup.number().required("Bắt buộc").typeError("Phải là số").min(1, "Ít nhất 1").max(10000, "Quá nhiều"),
-      DONGIA: yup.number().required("Bắt buộc").typeError("Phải là số").min(1000, "Min 1k").max(10000000, "Max 10tr"),
-      SOTRANG: yup.number().required("Bắt buộc").typeError("Phải là số").min(1, "Min 1"),
-      NGONNGU: yup.string().required("Bắt buộc"),
-      THELOAI: yup.string().required("Bắt buộc"),
-      MOTA: yup.string().required("Bắt buộc").min(10, "Mô tả quá ngắn"),
+      TenSach: yup.string().required("Tên sách là bắt buộc!").min(2, "Quá ngắn").max(200, "Quá dài"),
+      MaNXB: yup.string().required("Bắt buộc").max(50, "Quá dài"),
+      TacGia: yup.string().required("Bắt buộc").max(100, "Quá dài"),
+      NamXuatBan: yup.number().required("Bắt buộc").typeError("Phải là số").min(1900, "Từ 1900+").max(new Date().getFullYear() + 1, "Không hợp lệ"),
+      SoQuyen: yup.number().required("Bắt buộc").typeError("Phải là số").min(1, "Ít nhất 1").max(10000, "Quá nhiều"),
+      DonGia: yup.number().required("Bắt buộc").typeError("Phải là số").min(1000, "Min 1k").max(10000000, "Max 10tr"),
+      SoTrang: yup.number().required("Bắt buộc").typeError("Phải là số").min(1, "Min 1"),
+      NgonNgu: yup.string().required("Bắt buộc"),
+      TheLoai: yup.string().required("Bắt buộc"),
+      MoTa: yup.string().required("Bắt buộc").min(10, "Mô tả quá ngắn"),
     });
 
     return {

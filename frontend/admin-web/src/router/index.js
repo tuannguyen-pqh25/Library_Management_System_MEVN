@@ -1,4 +1,5 @@
 import { createWebHistory, createRouter } from "vue-router";
+import AdminLayout from "@/layouts/AdminLayout.vue";
 import Login from "@/views/Login.vue";
 import StaffDashboard from "@/views/StaffDashboard.vue";
 import StaffSachManagement from "@/views/StaffSachManagement.vue";
@@ -7,6 +8,42 @@ import SachAdd from "@/views/SachAdd.vue";
 import SachEdit from "@/views/SachEdit.vue";
 import MuonSachManagement from "@/views/MuonSachManagement.vue";
 import NhanVienManagement from "@/views/NhanVienManagement.vue";
+import DocGiaManagement from "@/views/DocGiaManagement.vue";
+
+const decodeToken = (token) => {
+  if (!token) return null;
+
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const raw = atob(padded);
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+};
+
+const isValidAdminToken = () => {
+  const token = localStorage.getItem("token");
+  const payload = decodeToken(token);
+
+  if (!payload || !payload.aud || payload.aud !== "admin") {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return false;
+  }
+
+  if (payload.exp && Date.now() >= payload.exp * 1000) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return false;
+  }
+
+  return true;
+};
 
 const routes = [
   {
@@ -19,47 +56,52 @@ const routes = [
     component: Login,
   },
   {
-    path: "/dashboard",
-    name: "StaffDashboard",
-    component: StaffDashboard,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/sach",
-    name: "StaffSachManagement",
-    component: StaffSachManagement,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/sach/add",
-    name: "SachAdd",
-    component: SachAdd,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/sach/edit/:id",
-    name: "SachEdit",
-    component: SachEdit,
-    props: true,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/nxb",
-    name: "StaffNhaXuatBanManagement",
-    component: StaffNhaXuatBanManagement,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/muonsach",
-    name: "MuonSachManagement",
-    component: MuonSachManagement,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/nhanvien",
-    name: "NhanVienManagement",
-    component: NhanVienManagement,
-    meta: { requiresAuth: true }
+    path: "/",
+    component: AdminLayout,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "dashboard",
+        name: "StaffDashboard",
+        component: StaffDashboard,
+      },
+      {
+        path: "sach",
+        name: "StaffSachManagement",
+        component: StaffSachManagement,
+      },
+      {
+        path: "sach/add",
+        name: "SachAdd",
+        component: SachAdd,
+      },
+      {
+        path: "sach/edit/:id",
+        name: "SachEdit",
+        component: SachEdit,
+        props: true,
+      },
+      {
+        path: "nxb",
+        name: "StaffNhaXuatBanManagement",
+        component: StaffNhaXuatBanManagement,
+      },
+      {
+        path: "muonsach",
+        name: "MuonSachManagement",
+        component: MuonSachManagement,
+      },
+      {
+        path: "nhanvien",
+        name: "NhanVienManagement",
+        component: NhanVienManagement,
+      },
+      {
+        path: "docgia",
+        name: "DocGiaManagement",
+        component: DocGiaManagement,
+      }
+    ]
   }
 ];
 
@@ -68,14 +110,22 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-    // Tạm thời bỏ qua auth guard cho dev phase hoặc cài đặt logic lấy token từ localStorage 
-    // const isAuthenticated = localStorage.getItem('token');
-    // if (to.meta.requiresAuth && !isAuthenticated) {
-    //     next('/login');
-    // } else {
-        next();
-    // }
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem("token");
+
+  if (to.meta.requiresAuth) {
+    if (!token || !isValidAdminToken()) {
+      next("/login");
+      return;
+    }
+  }
+
+  if (to.path === "/login" && token && isValidAdminToken()) {
+    next("/dashboard");
+    return;
+  }
+
+  next();
 });
 
 export default router;

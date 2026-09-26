@@ -10,7 +10,7 @@
       @input="$emit('update:modelValue', $event.target.value)"
       v-bind="$attrs"
     />
-    <div v-if="error" class="invalid-feedback font-body small">
+    <div v-if="error" class="invalid-feedback">
       {{ error }}
     </div>
   </div>
@@ -53,14 +53,10 @@ defineEmits(['update:modelValue'])
 .form-control {
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  background-color: #ffffff;
+  border: 1px solid var(--border);
 }
 .form-control:focus {
   border-color: var(--bs-primary);
   box-shadow: 0 0 0 0.25rem rgba(30, 61, 47, 0.25);
-}
-.form-control::placeholder {
-  color: #9ca3af;
 }
 </style>

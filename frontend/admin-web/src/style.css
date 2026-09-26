@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Màu chủ đạo giống code cũ (Xanh dương, sáng sủa) */
+  /* Màu chủ đạo theo Figma */
   --bs-primary: #2563eb; 
   --bs-primary-rgb: 37, 99, 235;
-  --bs-secondary: #6b7280;
-  --bs-secondary-rgb: 107, 114, 128;
-  --bs-warning: #f59e0b; /* Màu vàng cam nếu cần điểm nhấn */
+  --bs-secondary: #64748b;
+  --bs-secondary-rgb: 100, 116, 139;
+  --bs-warning: #f59e0b; /* Màu Accent */
   --bs-warning-rgb: 245, 158, 11;
-  --bs-body-bg: #f9fafb;
-  --bs-body-color: #1a202c;
+  --bs-body-bg: #f8fafc;
+  --bs-body-color: #0f172a;
   
   /* Các biến custom */
-  --bg-dark: #1e293b; /* Xanh đen */
+  --bg-dark: #0f172a; /* Xanh đen */
   --card-bg: #ffffff;
   --muted-text: #6b7280;
   --border-color: #e2e8f0;

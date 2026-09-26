@@ -63,8 +63,8 @@ class MuonSachService {
         if (!sach) throw new Error("Không tìm thấy sách");
 
         // --- 3.5. KIỂM TRA SỐ LƯỢNG SÁCH CÒN LẠI ---
-        if (sach.SOQUYEN < soLuong) {
-            throw new Error(`Chỉ còn ${sach.SOQUYEN} quyển, không thể mượn ${soLuong} quyển`);
+        if (sach.SoQuyen < soLuong) {
+            throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không thể mượn ${soLuong} quyển`);
         }
 
         // --- 3.75. KIỂM TRA HẠNMỨC TỔNG CỘNG ĐỦC GIẢ (MAX 10 QUYỂN) ---
@@ -198,25 +198,25 @@ class MuonSachService {
                 try {
                     const sach = await this.Sach.findOne({ _id: rec.sachId });
                     if (sach) {
-                        out.TENSACH = sach.TENSACH || out.TENSACH;
-                        out.TACGIA = sach.TACGIA || out.TACGIA;
-                        out.NAMXB = sach.NAMXUATBAN || sach.NAMXB || out.NAMXB;
+                        out.TenSach = sach.TenSach || out.TenSach;
+                        out.TacGia = sach.TacGia || out.TacGia;
+                        out.NamXuatBan = sach.NamXuatBan || out.NamXuatBan;
 
-                        // Populate NXB name - find by MANXB (code) or _id
+                        // Populate NXB name - find by MaNXB (code) or _id
                         out.nxbName = 'N/A'; // Default value
-                        if (sach.MANXB) {
-                            // Try to find by MANXB first (string field)
-                            let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MANXB: sach.MANXB });
+                        if (sach.MaNXB) {
+                            // Try to find by MaNXB first (string field)
+                            let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MaNXB: sach.MaNXB });
 
-                            // If not found and MANXB is valid ObjectId, try by _id
-                            if (!nxb && ObjectId.isValid(sach.MANXB)) {
-                                nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(sach.MANXB) });
+                            // If not found and MaNXB is valid ObjectId, try by _id
+                            if (!nxb && ObjectId.isValid(sach.MaNXB)) {
+                                nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(sach.MaNXB) });
                             }
 
                             if (nxb) {
-                                out.nxbName = nxb.TENNXB;
+                                out.nxbName = nxb.TenNXB;
                             } else {
-                                out.nxbName = sach.MANXB;
+                                out.nxbName = sach.MaNXB;
                             }
                         }
                     }
@@ -251,14 +251,14 @@ class MuonSachService {
         // B. Kiểm tra và cập nhật số lượng sách
         const soLuong = currentPhieuMuon.soLuong || 1; // Lấy số lượng từ phiếu
 
-        // Giảm SOQUYEN khi duyệt phiếu mượn (giảm theo số lượng)
+        // Giảm SoQuyen khi duyệt phiếu mượn (giảm theo số lượng)
         if (newTrangThai === "đã duyệt" && oldTrangThai === "chờ duyệt") {
             const sach = await this.Sach.findOne({ _id: sachId });
             if (!sach) throw new Error("Không tìm thấy sách");
-            if (sach.SOQUYEN < soLuong) throw new Error(`Chỉ còn ${sach.SOQUYEN} quyển, không đủ để duyệt`);
+            if (sach.SoQuyen < soLuong) throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không đủ để duyệt`);
             await this.Sach.updateOne(
                 { _id: sachId },
-                { $inc: { SOQUYEN: -soLuong } }
+                { $inc: { SoQuyen: -soLuong } }
             );
         }
 
@@ -270,10 +270,10 @@ class MuonSachService {
         const isRejected = (newTrangThai === "từ chối" && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
 
         if (isReturning || isRejected) {
-            // Cộng soLuong trả lại SOQUYEN cho sách
+            // Cộng soLuong trả lại SoQuyen cho sách
             await this.Sach.updateOne(
                 { _id: sachId },
-                { $inc: { SOQUYEN: +soLuong } }
+                { $inc: { SoQuyen: +soLuong } }
             );
         }
         // --- KẾT THÚC LOGIC QUẢN LÝ SÁCH ---
@@ -352,7 +352,7 @@ class MuonSachService {
             if (["chờ duyệt", "đã duyệt", "đang mượn"].includes(trangThai)) {
                 await this.Sach.updateOne(
                     { _id: sachId },
-                    { $inc: { SOQUYEN: +soLuong } }
+                    { $inc: { SoQuyen: +soLuong } }
                 );
             }
         }

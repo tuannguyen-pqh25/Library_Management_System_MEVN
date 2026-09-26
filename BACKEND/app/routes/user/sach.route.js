@@ -1,13 +1,9 @@
 const express = require("express");
 const sach = require("../../controllers/user/sach.controller");
-const verifyToken = require("../../middlewares/verifyToken");
-const checkRole = require("../../middlewares/checkRole");
 
 const router = express.Router();
 
-router.use(verifyToken);
-router.use(checkRole(["DocGia"]));
-
+// Public routes - ai cũng có thể xem danh sách sách
 router.route("/")
     .get(sach.findAll);
 

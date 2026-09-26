@@ -50,14 +50,14 @@
               <img
                 :src="book.HinhAnh || 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80'"
                 class="book-cover"
-                :alt="book.TENSACH"
+                :alt="book.TenSach"
               />
               <div class="card-body d-flex flex-column">
-                <span class="badge-pill bg-light text-primary mb-2 align-self-start">{{ book.THELOAI || 'Tiểu thuyết' }}</span>
-                <h5 class="card-title fw-bold mb-2">{{ book.TENSACH }}</h5>
-                <p class="text-muted-custom mb-3">{{ book.TACGIA || 'Không rõ tác giả' }}</p>
+                <span class="badge-pill bg-light text-primary mb-2 align-self-start">{{ book.TheLoai || 'Tiểu thuyết' }}</span>
+                <h5 class="card-title fw-bold mb-2">{{ book.TenSach }}</h5>
+                <p class="text-muted-custom mb-3">{{ book.TacGia || 'Không rõ tác giả' }}</p>
                 <div class="mt-auto d-flex justify-content-between align-items-center">
-                  <span class="fw-semibold text-primary">{{ book.DONGIA ? Number(book.DONGIA).toLocaleString() + ' ₫' : 'Miễn phí' }}</span>
+                  <span class="fw-semibold text-primary">{{ book.DonGia ? Number(book.DonGia).toLocaleString() + ' ₫' : 'Miễn phí' }}</span>
                   <router-link class="btn btn-sm btn-outline-primary" :to="`/sach/${book._id}`">Chi tiết</router-link>
                 </div>
               </div>

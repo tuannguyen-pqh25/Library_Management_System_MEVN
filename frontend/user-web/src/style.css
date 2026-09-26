@@ -1,20 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
 :root {
+  /* Màu chủ đạo theo Figma */
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
-  --bg: #f3f6fb;
+  --bg: #f8fafc;
   --card: #ffffff;
-  --text: #1f2937;
+  --text: #0f172a;
   --muted: #64748b;
   --border: #e2e8f0;
   --success: #16a34a;
-  --warning: #f59e0b;
+  --warning: #b5881e;
   --danger: #dc2626;
+
+  /* Bootstrap Overrides */
+  --bs-primary: #2563eb; 
+  --bs-warning: #b5881e;
+  --bs-body-bg: #f6f1e7;
+  
+  /* Fonts */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-data: 'DM Mono', 'Courier New', monospace;
 }
 
 html, body, #app {
   margin: 0;
   min-height: 100%;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
 }

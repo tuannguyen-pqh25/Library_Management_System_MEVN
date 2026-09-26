@@ -46,10 +46,10 @@ class ExportService {
 
       // Populate tên nhà xuất bản cho sách
       const populatedSaches = saches.map(sach => {
-        const nxb = nhaXuatBans.find(n => n.MANXB === sach.MANXB);
+        const nxb = nhaXuatBans.find(n => n.MaNXB === sach.MaNXB);
         return {
           ...sach,
-          TenNhaXuatBan: nxb?.TENNXB || nxb?.TenNXB || ''
+          TenNhaXuatBan: nxb?.TenNXB || nxb?.TenNXB || ''
         };
       });
 
@@ -69,7 +69,7 @@ class ExportService {
           : '';
 
         // Build book name
-        const tenSach = sach?.TENSACH || sach?.TenSach || '';
+        const tenSach = sach?.TenSach || sach?.TenSach || '';
 
         // Build staff name (HoTenNV)
         const tenNhanVien = nhanVien?.HoTenNV || nhanVien?.HoTen || ms.nhanVienName || ms.TenNhanVien || '';
@@ -108,13 +108,13 @@ class ExportService {
 
       // Sách hết (số lượng = 0)
       const outOfStockBooks = saches.filter(s => {
-        const soLuong = s.SOQUYEN || s.SoLuong || 0;
+        const soLuong = s.SoQuyen || s.SoLuong || 0;
         return soLuong === 0;
       });
 
       // Sách còn
       const inStockBooks = saches.filter(s => {
-        const soLuong = s.SOQUYEN || s.SoLuong || 0;
+        const soLuong = s.SoQuyen || s.SoLuong || 0;
         return soLuong > 0;
       });
 
@@ -431,12 +431,12 @@ class ExportService {
 
     for (let index = 0; index < books.length; index++) {
       const book = books[index];
-      const tenSach = book.TENSACH || book.TenSach || '';
-      const tacGia = book.TACGIA || book.TacGia || '';
-      const tenNXB = book.TENNXB || book.TenNhaXuatBan || '';
-      const soLuong = book.SOQUYEN || book.SoLuong || 0;
-      const gia = book.DONGIA || book.Gia || 0;
-      const namXB = book.NAMXUATBAN || book.NamXuatBan || '';
+      const tenSach = book.TenSach || book.TenSach || '';
+      const tacGia = book.TacGia || book.TacGia || '';
+      const tenNXB = book.TenNXB || book.TenNhaXuatBan || '';
+      const soLuong = book.SoQuyen || book.SoLuong || 0;
+      const gia = book.DonGia || book.Gia || 0;
+      const namXB = book.NamXuatBan || book.NamXuatBan || '';
       const hinhAnh = book.HinhAnh || book.HINHANH || '';
       const statusText = soLuong > 0 ? 'Còn hàng' : 'Hết hàng';
 
@@ -512,7 +512,7 @@ class ExportService {
       const ten = ((reader.HOLOT || '') + ' ' + (reader.TEN || '')).trim() || reader.HoTen || reader.HOTEN || '';
       const email = reader.Email || reader.EMAIL || reader.username || '';
       const sdt = reader.DIENTHOAI || reader.SDT || reader.SODIENTHOAI || '';
-      const diaChi = reader.DIACHI || reader.DiaChi || '';
+      const diaChi = reader.DiaChi || reader.DiaChi || '';
 
       const row = sheet.addRow({
         stt: index + 1,
@@ -621,9 +621,9 @@ class ExportService {
     sheet.getRow(1).eachCell(cell => { cell.style = this.getHeaderStyle(); });
 
     topBooks.forEach((book, index) => {
-      const tenSach = book.TENSACH || book.TenSach || '';
-      const tacGia = book.TACGIA || book.TacGia || '';
-      const soLuong = book.SOQUYEN || book.SoLuong || 0;
+      const tenSach = book.TenSach || book.TenSach || '';
+      const tacGia = book.TacGia || book.TacGia || '';
+      const soLuong = book.SoQuyen || book.SoLuong || 0;
 
       const row = sheet.addRow({
         stt: index + 1,
@@ -690,9 +690,9 @@ class ExportService {
     });
 
     outOfStockBooks.forEach((book, index) => {
-      const tenSach = book.TENSACH || book.TenSach || '';
-      const tacGia = book.TACGIA || book.TacGia || '';
-      const gia = book.DONGIA || book.Gia || 0;
+      const tenSach = book.TenSach || book.TenSach || '';
+      const tacGia = book.TacGia || book.TacGia || '';
+      const gia = book.DonGia || book.Gia || 0;
 
       const row = sheet.addRow({
         stt: index + 1,

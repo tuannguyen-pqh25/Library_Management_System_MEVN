@@ -1,42 +1,42 @@
 <template>
-  <div class="container-fluid py-4">
-    <!-- Header Section -->
-    <div class="row align-items-center mb-4">
-      <div class="col">
-        <h3 class="fw-bold text-dark mb-0">
-          <span class="text-primary">Quản Lý</span> Nhà Xuất Bản
-        </h3>
-        <small class="text-muted">Xem và quản lý danh sách các nhà xuất bản</small>
+  <div class="page-shell py-4">
+    <div class="container-fluid">
+      <!-- Header Section -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+          <h2 class="font-display fw-bold text-dark mb-1">
+            <span class="text-primary">Quản Lý</span> Nhà Xuất Bản
+          </h2>
+          <p class="text-muted-custom mb-0">Xem và quản lý danh sách các nhà xuất bản</p>
+        </div>
+        <BaseButton variant="primary" class="fw-bold px-4 shadow-sm rounded-pill d-flex align-items-center justify-content-center" @click="openAddModal">
+          <i class="fas fa-plus me-2"></i> Thêm NXB Mới
+        </BaseButton>
       </div>
-    </div>
 
-    <!-- Search & Actions Card -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-      <div class="card-body p-3">
-        <div class="row g-3 align-items-center">
-          <div class="col-md-8">
-            <div class="input-group">
-              <span class="input-group-text bg-light border-end-0 text-secondary ps-3">
+      <!-- Search & Actions Card -->
+      <BaseCard class="mb-4 border-0 shadow-sm rounded-4">
+        <div class="row g-3 align-items-center justify-content-between">
+          <div class="col-md-6 col-lg-5">
+            <div class="input-group input-group-lg">
+              <span class="input-group-text bg-light border-end-0 text-muted">
                 <i class="fas fa-search"></i>
               </span>
               <input
                 type="text"
-                class="form-control bg-light border-start-0 ps-0"
-                placeholder="Tìm kiếm theo tên hoặc mã NXB..."
+                class="form-control bg-light border-start-0 ps-0 text-dark"
+                placeholder="Tìm kiếm nhà xuất bản..."
                 v-model="searchText"
                 @keyup.enter="search"
               />
-              <button class="btn btn-primary px-4 fw-bold" type="button" @click="search">
-                Tìm kiếm
-              </button>
             </div>
           </div>
-          <!-- Phần hiển thị số dòng (thay thế nút copy cũ) -->
-          <div class="col-md-4 text-end">
-            <div class="d-flex align-items-center justify-content-end gap-2">
-                <label class="text-secondary fw-semibold small text-nowrap">Hiển thị:</label>
+          <!-- Items Per Page -->
+          <div class="col-md-4 text-md-end">
+            <div class="d-flex align-items-center justify-content-md-end gap-2">
+                <label class="text-muted-custom fw-semibold small text-nowrap">Hiển thị:</label>
                 <select 
-                    class="form-select w-auto bg-light border-0 fw-bold text-primary shadow-none cursor-pointer" 
+                    class="form-select w-auto bg-light border-0 fw-bold text-primary shadow-none cursor-pointer rounded-pill px-3" 
                     v-model="itemsPerPage" 
                     @change="currentPage = 1"
                 >
@@ -49,29 +49,28 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </BaseCard>
 
-    <!-- Data Table Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-      <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-        <div class="d-flex align-items-center">
-          <div class="icon-shape bg-primary text-white rounded-3 me-3 p-2">
-            <i class="fas fa-building fa-lg"></i>
+      <!-- Data Table Card -->
+      <BaseCard class="border-0 shadow-sm rounded-4 overflow-hidden p-0">
+        <div class="bg-white pt-4 pb-3 px-4 border-bottom">
+          <div class="d-flex align-items-center">
+            <div class="bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+              <i class="fas fa-building fa-lg"></i>
+            </div>
+            <h5 class="mb-0 fw-bold text-dark">Danh sách Nhà Xuất Bản</h5>
           </div>
-          <h5 class="mb-0 fw-bold text-secondary">Danh sách Nhà Xuất Bản</h5>
         </div>
-      </div>
 
-      <div class="card-body p-0 mt-3">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light text-secondary">
+            <thead class="table-light text-muted-custom">
               <tr>
-                <th class="fw-bold text-uppercase small ps-4">STT</th>
-                <th class="fw-bold text-uppercase small">Mã NXB</th>
-                <th class="fw-bold text-uppercase small">Tên Nhà Xuất Bản</th>
-                <th class="fw-bold text-uppercase small">Địa Chỉ</th>
+                <th class="fw-semibold text-uppercase small ps-4 py-3">STT</th>
+                <th class="fw-semibold text-uppercase small py-3">Mã NXB</th>
+                <th class="fw-semibold text-uppercase small py-3">Tên Nhà Xuất Bản</th>
+                <th class="fw-semibold text-uppercase small py-3">Địa Chỉ</th>
+                <th class="fw-semibold text-uppercase small py-3 text-end pe-4">Thao tác</th>
               </tr>
             </thead>
             <tbody v-if="!loading">
@@ -79,33 +78,45 @@
                 <td class="text-muted fw-bold ps-4">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
                 <td>
                   <div class="d-flex align-items-center">
-                      <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2 rounded-pill me-2">
-                        {{ nxb.MANXB }}
+                      <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2 rounded-pill me-2 font-monospace">
+                        {{ nxb.MaNXB }}
                       </span>
                       <!-- Nút copy nhỏ kế bên -->
                       <button 
-                        class="btn btn-sm btn-light text-secondary rounded-circle shadow-sm copy-btn" 
-                        @click="copyToClipboard(nxb.MANXB)"
+                        class="btn btn-sm btn-light text-secondary rounded-circle shadow-sm copy-btn d-flex align-items-center justify-content-center" 
+                        @click="copyToClipboard(nxb.MaNXB)"
                         title="Sao chép mã"
+                        style="width: 32px; height: 32px;"
                       >
-                        <i v-if="copiedId === nxb.MANXB" class="fas fa-check text-success"></i>
+                        <i v-if="copiedId === nxb.MaNXB" class="fas fa-check text-success"></i>
                         <i v-else class="fas fa-copy"></i>
                       </button>
                   </div>
                 </td>
-                <td class="fw-semibold text-dark">{{ nxb.TENNXB }}</td>
-                <td class="text-secondary"><i class="fas fa-map-marker-alt me-2 text-danger opacity-50"></i> {{ nxb.DIACHI }}</td>
+                <td class="fw-semibold text-dark">{{ nxb.TenNXB }}</td>
+                <td class="text-secondary">
+                  <i class="fas fa-map-marker-alt me-2 text-danger opacity-75"></i> 
+                  <span class="text-dark">{{ nxb.DiaChi }}</span>
+                </td>
+                <td class="text-end pe-4">
+                  <button class="btn btn-sm btn-light text-warning rounded-circle action-btn shadow-sm me-2" @click="openEditModal(nxb)" title="Chỉnh sửa">
+                      <i class="fas fa-pen"></i>
+                  </button>
+                  <button class="btn btn-sm btn-light text-danger rounded-circle action-btn shadow-sm" @click="deleteNxb(nxb._id, nxb.TenNXB)" title="Xóa">
+                      <i class="fas fa-trash"></i>
+                  </button>
+                </td>
               </tr>
               <tr v-if="paginatedNXB.length === 0">
-                <td colspan="4" class="text-center py-5 text-muted">
-                  <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                  <p class="mb-0">Không tìm thấy dữ liệu phù hợp.</p>
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <div class="mb-3"><i class="fas fa-inbox fa-3x opacity-25"></i></div>
+                  <p class="mb-0 fw-medium">Không tìm thấy dữ liệu phù hợp.</p>
                 </td>
               </tr>
             </tbody>
             <tbody v-else>
               <tr>
-                <td colspan="4" class="text-center py-5">
+                <td colspan="5" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
@@ -114,219 +125,246 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination -->
+        <div class="bg-white py-3 px-4 border-top d-flex justify-content-center" v-if="!loading && totalPages > 1">
+          <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+            <button class="btn btn-light border" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="btn btn-light border-top border-bottom fw-medium px-4 text-dark" style="pointer-events: none;">
+              Trang {{ currentPage }} / {{ totalPages }}
+            </span>
+            <button class="btn btn-light border" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </BaseCard>
+
+      <!-- Add/Edit Modal -->
+      <div class="modal fade" id="nxbModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg overflow-hidden rounded-4">
+            
+            <div class="modal-header bg-primary text-white py-3 px-4 border-0">
+              <h5 class="modal-title fw-bold">
+                <i class="fas me-2" :class="isEdit ? 'fa-edit' : 'fa-plus-circle'"></i>
+                {{ isEdit ? 'Cập Nhật NXB' : 'Thêm Nhà Xuất Bản Mới' }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body bg-light p-4">
+               <Form @submit="saveNxb" :validation-schema="nxbSchema" v-slot="{ errors }">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Mã Nhà Xuất Bản <span class="text-danger">*</span></label>
+                        <Field name="MaNXB" type="text" class="form-control bg-white border-0 shadow-sm" :class="{'is-invalid': errors.MaNXB}" placeholder="VD: NXB01" v-model="formData.MaNXB" />
+                        <ErrorMessage name="MaNXB" class="invalid-feedback small" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Tên Nhà Xuất Bản <span class="text-danger">*</span></label>
+                        <Field name="TenNXB" type="text" class="form-control bg-white border-0 shadow-sm" :class="{'is-invalid': errors.TenNXB}" placeholder="Tên đầy đủ NXB..." v-model="formData.TenNXB" />
+                        <ErrorMessage name="TenNXB" class="invalid-feedback small" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Địa Chỉ <span class="text-danger">*</span></label>
+                        <Field name="DiaChi" type="text" class="form-control bg-white border-0 shadow-sm" :class="{'is-invalid': errors.DiaChi}" placeholder="Địa chỉ chi tiết..." v-model="formData.DiaChi" />
+                        <ErrorMessage name="DiaChi" class="invalid-feedback small" />
+                    </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <BaseButton variant="light" type="button" class="px-4 fw-medium me-2" data-bs-dismiss="modal">Hủy</BaseButton>
+                        <BaseButton type="submit" variant="primary" class="px-4 fw-bold shadow-sm rounded-pill">
+                            <i class="fas fa-save me-2"></i> {{ isEdit ? 'Lưu Thay Đổi' : 'Thêm NXB' }}
+                        </BaseButton>
+                    </div>
+               </Form>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Pagination -->
-      <div class="card-footer bg-white border-top-0 py-3" v-if="!loading && totalPages > 1">
-        <nav>
-          <ul class="pagination justify-content-center mb-0">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage - 1)">
-                <i class="fas fa-chevron-left"></i>
-              </a>
-            </li>
-            <li
-              v-for="page in totalPages"
-              :key="page"
-              class="page-item"
-              :class="{ active: currentPage === page }"
-            >
-              <a class="page-link border-0 rounded-circle mx-1 shadow-sm" href="#" @click.prevent="changePage(page)">
-                {{ page }}
-              </a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link border-0 rounded-circle mx-1" href="#" @click.prevent="changePage(currentPage + 1)">
-                <i class="fas fa-chevron-right"></i>
-              </a>
-            </li>
-          </ul>
-        </nav>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    <div id="nxbSuccessToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-medium d-flex align-items-center">
+          <i class="fas fa-check-circle me-2 fs-5"></i>
+          {{ notificationMessage }}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import NhaXuatBanService from "@/services/nhaxuatban.service";
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { Modal, Toast } from "bootstrap"
+import { Form, Field, ErrorMessage } from "vee-validate"
+import * as yup from "yup"
+import NhaXuatBanService from "@/services/nhaxuatban.service"
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 
-export default {
-  name: "StaffNhaXuatBanManagement",
-  data() {
-    return {
-      nhaXuatBans: [],
-      loading: true,
-      searchText: "",
-      
-      // Pagination
-      currentPage: 1,
-      itemsPerPage: 5, // Mặc định hiển thị 5 dòng
-      
-      // Copy visual feedback
-      copiedId: null,
-    };
-  },
-  computed: {
-    filteredNXB() {
-      if (!this.searchText) {
-        return this.nhaXuatBans;
-      }
-      const lowerSearch = this.searchText.toLowerCase();
-      return this.nhaXuatBans.filter(
-        (nxb) =>
-          nxb.TENNXB.toLowerCase().includes(lowerSearch) ||
-          nxb.MANXB.toLowerCase().includes(lowerSearch)
-      );
-    },
-    totalPages() {
-      return Math.ceil(this.filteredNXB.length / this.itemsPerPage);
-    },
-    paginatedNXB() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredNXB.slice(start, end);
-    },
-  },
-  methods: {
-    async retrieveNXB() {
-      this.loading = true;
-      try {
-        const response = await NhaXuatBanService.getAll();
-        this.nhaXuatBans = response.data;
-      } catch (error) {
-        console.error("Lỗi khi tải danh sách NXB:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
+const nxbSchema = yup.object().shape({
+  MaNXB: yup.string().required("Mã NXB là bắt buộc").max(10, "Tối đa 10 ký tự"),
+  TenNXB: yup.string().required("Tên NXB là bắt buộc").max(200, "Tối đa 200 ký tự"),
+  DiaChi: yup.string().required("Địa chỉ là bắt buộc").max(500, "Tối đa 500 ký tự")
+})
 
-    search() {
-      this.currentPage = 1;
-    },
+const nhaXuatBans = ref([])
+const loading = ref(true)
+const searchText = ref("")
 
-    changePage(page) {
-      if (page < 1) page = 1;
-      if (page > this.totalPages) page = this.totalPages;
-      this.currentPage = page;
-    },
+const currentPage = ref(1)
+const itemsPerPage = ref(10) 
+const copiedId = ref(null)
 
-    // Hàm sao chép mã NXB đơn lẻ
-    async copyToClipboard(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        // Hiển thị visual feedback (icon check)
-        this.copiedId = text;
-        // Tắt icon check sau 2 giây
-        setTimeout(() => {
-          this.copiedId = null;
-        }, 2000);
-      } catch (err) {
-        console.error("Failed to copy:", err);
-        alert("Không thể sao chép. Vui lòng thử lại.");
-      }
-    },
-  },
-  mounted() {
-    this.retrieveNXB();
-  },
-};
+const isEdit = ref(false)
+const notificationMessage = ref("")
+const formData = ref({ MaNXB: "", TenNXB: "", DiaChi: "" })
+let nxbModalInstance = null
+let toastInstance = null
+
+const filteredNXB = computed(() => {
+  if (!searchText.value) return nhaXuatBans.value
+  
+  const lowerSearch = searchText.value.toLowerCase()
+  return nhaXuatBans.value.filter(
+    (nxb) =>
+      nxb.TenNXB.toLowerCase().includes(lowerSearch) ||
+      nxb.MaNXB.toLowerCase().includes(lowerSearch)
+  )
+})
+
+const totalPages = computed(() => Math.ceil(filteredNXB.value.length / itemsPerPage.value) || 1)
+
+const paginatedNXB = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredNXB.value.slice(start, end)
+})
+
+const retrieveNXB = async () => {
+  loading.value = true
+  try {
+    const response = await NhaXuatBanService.getAll()
+    nhaXuatBans.value = response.data || []
+  } catch (error) {
+    console.error("Lỗi khi tải danh sách NXB:", error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const search = () => {
+  currentPage.value = 1
+}
+
+const changePage = (page) => {
+  if (page < 1) page = 1
+  if (page > totalPages.value) page = totalPages.value
+  currentPage.value = page
+}
+
+const openAddModal = () => {
+  isEdit.value = false
+  formData.value = { MaNXB: "", TenNXB: "", DiaChi: "" }
+  nxbModalInstance?.show()
+}
+
+const openEditModal = (nxb) => {
+  isEdit.value = true
+  formData.value = { ...nxb }
+  nxbModalInstance?.show()
+}
+
+const saveNxb = async () => {
+  try {
+    if (isEdit.value) {
+      await NhaXuatBanService.update(formData.value._id, formData.value)
+      notificationMessage.value = "Cập nhật NXB thành công!"
+    } else {
+      await NhaXuatBanService.create(formData.value)
+      notificationMessage.value = "Thêm NXB thành công!"
+    }
+    await retrieveNXB()
+    nxbModalInstance?.hide()
+    toastInstance?.show()
+  } catch (error) {
+    console.error("Lỗi lưu NXB:", error)
+    alert(error.response?.data?.message || "Lỗi khi lưu NXB")
+  }
+}
+
+const deleteNxb = async (id, name) => {
+  if (confirm(`Bạn có chắc muốn xóa NXB "${name}" không?`)) {
+    try {
+      await NhaXuatBanService.delete(id)
+      notificationMessage.value = "Xóa NXB thành công!"
+      await retrieveNXB()
+      toastInstance?.show()
+    } catch (error) {
+      console.error("Lỗi xóa NXB:", error)
+      alert("Lỗi khi xóa NXB")
+    }
+  }
+}
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    copiedId.value = text
+    setTimeout(() => {
+      copiedId.value = null
+    }, 2000)
+  } catch (err) {
+    console.error("Failed to copy:", err)
+    alert("Không thể sao chép. Vui lòng thử lại.")
+  }
+}
+
+onMounted(() => {
+  retrieveNXB()
+  nxbModalInstance = new Modal(document.getElementById("nxbModal"))
+  toastInstance = new Toast(document.getElementById("nxbSuccessToast"))
+})
 </script>
 
 <style scoped>
-/* Icon shape container */
-.icon-shape {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Input group styling for search */
-.input-group-text {
-  background-color: #f8f9fa;
-  border-right: none;
-  color: #6c757d;
-}
-
-.input-group .form-control {
-  background-color: #f8f9fa;
-  border-left: none;
-  color: #495057;
-}
-
-.input-group:focus-within .input-group-text {
-  background-color: #fff;
-  border-color: #86b7fe;
-  color: #0d6efd;
-}
-
-.input-group:focus-within .form-control {
-  background-color: #fff;
-  border-color: #86b7fe;
-  box-shadow: none;
-}
-
 .input-group:focus-within {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-  border-radius: 0.375rem;
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15);
+  border-radius: var(--bs-border-radius-lg);
 }
 
-/* Pagination Styling */
-.page-link {
-  color: #6c757d;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  font-weight: 600;
-  transition: all 0.2s;
+.table > :not(caption) > * > * {
+  padding: 1rem 0.5rem;
 }
 
-.page-item.active .page-link {
-  background-color: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
-}
-
-.page-item.disabled .page-link {
-  background-color: #e9ecef;
-  color: #adb5bd;
-}
-
-.page-link:hover:not(.active) {
-  background-color: #e9ecef;
-  color: #0d6efd;
-}
-
-/* Table Hover Effect */
-.table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.04);
-}
-
-/* Copy Button Styling */
 .copy-btn {
+  transition: transform 0.2s;
+}
+.copy-btn:hover {
+  transform: scale(1.1);
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.action-btn {
     width: 32px;
     height: 32px;
-    display: flex;
+    padding: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    opacity: 0.6;
 }
-.copy-btn:hover {
-    background-color: #e9ecef;
-    opacity: 1;
-    transform: scale(1.1);
-}
-.copy-btn:active {
-    transform: scale(0.95);
-}
-
-/* Cursor pointer for select */
-.cursor-pointer {
-    cursor: pointer;
+.action-btn:hover {
+    transform: scale(1.15);
 }
 </style>

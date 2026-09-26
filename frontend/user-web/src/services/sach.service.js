@@ -2,7 +2,7 @@ import http from './http-common'
 
 class SachService {
   getAll(search = '') {
-    const url = search ? `/user/sach?TENSACH=${encodeURIComponent(search)}` : '/user/sach'
+    const url = search ? `/user/sach?TenSach=${encodeURIComponent(search)}` : '/user/sach'
     return http.get(url)
   }
 

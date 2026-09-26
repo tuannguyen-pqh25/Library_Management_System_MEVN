@@ -9,18 +9,19 @@ class SachService {
     // Hàm trích xuất dữ liệu sách
     #extractSachData(payload) {
         const sach = {
-            TENSACH: payload.TENSACH,
-            DONGIA: payload.DONGIA,
-            SOQUYEN: payload.SOQUYEN,
-            NAMXUATBAN: payload.NAMXUATBAN,
-            MANXB: payload.MANXB,
-            TACGIA: payload.TACGIA, 
+            MaSach: payload.MaSach,
+            TenSach: payload.TenSach,
+            DonGia: payload.DonGia,
+            SoQuyen: payload.SoQuyen,
+            NamXuatBan: payload.NamXuatBan,
+            MaNXB: payload.MaNXB,
+            TacGia: payload.TacGia, 
             HinhAnh: payload.HinhAnh,
             CloudinaryPublicId: payload.CloudinaryPublicId,
-            SOTRANG: payload.SOTRANG,
-            MOTA: payload.MOTA,
-            NGONNGU: payload.NGONNGU,
-            THELOAI: payload.THELOAI,
+            SoTrang: payload.SoTrang,
+            MoTa: payload.MoTa,
+            NgonNgu: payload.NgonNgu,
+            TheLoai: payload.TheLoai,
         };
 
         // Loại bỏ các trường không xác định (undefined)
@@ -34,8 +35,28 @@ class SachService {
     async create(payload) {
         const sachData = this.#extractSachData(payload);
 
-        // A. Kiểm tra xem TENSACH đã tồn tại chưa
-        const existingBook = await this.Sach.findOne({ TENSACH: sachData.TENSACH });
+        // Tự động sinh MaSach
+        if (!sachData.MaSach) {
+            // Đếm số lượng sách hiện có để tạo mã
+            const count = await this.Sach.countDocuments();
+            sachData.MaSach = `S${String(count + 1).padStart(3, '0')}`;
+            
+            // Đảm bảo mã không trùng
+            let isDuplicate = await this.Sach.findOne({ MaSach: sachData.MaSach });
+            let attempts = 1;
+            while(isDuplicate) {
+                sachData.MaSach = `S${String(count + 1 + attempts).padStart(3, '0')}`;
+                isDuplicate = await this.Sach.findOne({ MaSach: sachData.MaSach });
+                attempts++;
+            }
+        } else {
+            const existingMaSach = await this.Sach.findOne({ MaSach: sachData.MaSach });
+            if (existingMaSach) {
+                throw new Error("Mã sách đã tồn tại");
+            }
+        }
+        
+        const existingBook = await this.Sach.findOne({ TenSach: sachData.TenSach });
         if (existingBook) {
             throw new Error("Tên sách đã tồn tại");
         }
@@ -67,7 +88,7 @@ class SachService {
     // 3. Tìm sách bằng Tên
     async findByName(name) {
         return await this.find({
-            TENSACH: { $regex: new RegExp(name), $options: "i" }, 
+            TenSach: { $regex: new RegExp(name), $options: "i" }, 
         });
     }
 
@@ -84,6 +105,27 @@ class SachService {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
         const update = this.#extractSachData(payload);
+
+        // Cập nhật không trùng tên sách hoặc mã sách (trừ bản ghi hiện tại)
+        if (update.TenSach) {
+            const existingBook = await this.Sach.findOne({
+                TenSach: update.TenSach,
+                _id: { $ne: filter._id }
+            });
+            if (existingBook) {
+                throw new Error("Tên sách đã tồn tại");
+            }
+        }
+
+        if (update.MaSach) {
+            const existingMaSach = await this.Sach.findOne({
+                MaSach: update.MaSach,
+                _id: { $ne: filter._id }
+            });
+            if (existingMaSach) {
+                throw new Error("Mã sách đã tồn tại");
+            }
+        }
 
         // Lấy sách cũ để kiểm tra ảnh
         const oldBook = await this.Sach.findOne(filter);

@@ -7,9 +7,9 @@ class NhaXuatBanService {
 
     #extractNhaXuatBanData(payload) {
         const nhaXuatBan = {
-            MANXB: payload.MANXB,
-            TENNXB: payload.TENNXB,
-            DIACHI: payload.DIACHI,
+            MaNXB: payload.MaNXB,
+            TenNXB: payload.TenNXB,
+            DiaChi: payload.DiaChi,
         };
 
         Object.keys(nhaXuatBan).forEach(
@@ -20,20 +20,20 @@ class NhaXuatBanService {
 
     /**
      * 1. Create: Tạo một NXB mới.
-     * Logic: Kiểm tra trùng TENNXB.
+     * Logic: Kiểm tra trùng TenNXB.
      */
     async create(payload) {
         const nxbData = this.#extractNhaXuatBanData(payload);
 
-        // Kiểm tra xem TENNXB đã tồn tại chưa
-        const existingNXB = await this.NhaXuatBan.findOne({ TENNXB: nxbData.TENNXB });
+        // Kiểm tra xem TenNXB đã tồn tại chưa
+        const existingNXB = await this.NhaXuatBan.findOne({ TenNXB: nxbData.TenNXB });
         if (existingNXB) {
             throw new Error("Tên Nhà Xuất Bản đã tồn tại");
         }
         
-        // Kiểm tra xem MANXB đã tồn tại chưa (nếu bạn muốn MANXB là duy nhất)
-        if (nxbData.MANXB) {
-             const existingMaNXB = await this.NhaXuatBan.findOne({ MANXB: nxbData.MANXB });
+        // Kiểm tra xem MaNXB đã tồn tại chưa (nếu bạn muốn MaNXB là duy nhất)
+        if (nxbData.MaNXB) {
+             const existingMaNXB = await this.NhaXuatBan.findOne({ MaNXB: nxbData.MaNXB });
              if (existingMaNXB) {
                 throw new Error("Mã Nhà Xuất Bản đã tồn tại");
              }
@@ -54,7 +54,7 @@ class NhaXuatBanService {
     
     async findByTen(ten) {
          return await this.find({
-            TENNXB: { $regex: new RegExp(ten), $options: "i" },
+            TenNXB: { $regex: new RegExp(ten), $options: "i" },
         });
     }
 
@@ -74,10 +74,10 @@ class NhaXuatBanService {
         };
         const update = this.#extractNhaXuatBanData(payload);
 
-        // Kiểm tra xem TENNXB đã tồn tại chưa (trừ bản ghi hiện tại)
-        if (update.TENNXB) {
+        // Kiểm tra xem TenNXB đã tồn tại chưa (trừ bản ghi hiện tại)
+        if (update.TenNXB) {
             const existingNXB = await this.NhaXuatBan.findOne({
-                TENNXB: update.TENNXB,
+                TenNXB: update.TenNXB,
                 _id: { $ne: filter._id }
             });
             if (existingNXB) {
@@ -85,10 +85,10 @@ class NhaXuatBanService {
             }
         }
 
-        // Kiểm tra xem MANXB đã tồn tại chưa (trừ bản ghi hiện tại)
-        if (update.MANXB) {
+        // Kiểm tra xem MaNXB đã tồn tại chưa (trừ bản ghi hiện tại)
+        if (update.MaNXB) {
             const existingMaNXB = await this.NhaXuatBan.findOne({
-                MANXB: update.MANXB,
+                MaNXB: update.MaNXB,
                 _id: { $ne: filter._id }
             });
             if (existingMaNXB) {

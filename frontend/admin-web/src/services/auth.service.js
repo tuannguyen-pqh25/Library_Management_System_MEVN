@@ -2,51 +2,26 @@ import http from "./http-common";
 
 class AuthService {
   /**
-   * Đăng nhập ĐỘC GIẢ
+   * Đăng nhập NHÂN VIÊN theo API backend chuẩn
    */
-  login(user) {
-    return http
-      .post("/docgia/login", {
-        username: user.username,
-        password: user.password,
-      })
-      .then((response) => {
-        // API trả về: { message: "...", data: { ...user... } }
-        if (response.data && response.data.data) {
-          // Chỉ lưu thông tin user (response.data.data)
-          localStorage.setItem("user", JSON.stringify(response.data.data));
-          if (response.data.token) localStorage.setItem("token", response.data.token);
-          return response.data.data;
-        }
-        return null;
-      });
-  }
+  async loginNhanVien(staff) {
+    const response = await http.post("/auth/login", {
+      MSNV: staff.MSNV,
+      password: staff.password,
+    });
 
-  /**
-   * Đăng nhập NHÂN VIÊN
-   */
-  loginNhanVien(staff) {
-    return http
-      .post("/nhanvien/login", {
-        MSNV: staff.MSNV,
-        password: staff.password,
-      })
-      .then((response) => {
-        // API trả về: { message: "...", data: { ...staff... } }
-        if (response.data && response.data.data) {
-          // Ghi đè "user" bằng thông tin Nhân Viên
-          localStorage.setItem("user", JSON.stringify(response.data.data));
-          if (response.data.token) localStorage.setItem("token", response.data.token);
-          return response.data.data;
-        } else {
-          return null;
-        }
-      }).catch((error) => {
-        if (error.response) {
-          throw error;
-        }
-        throw error;
-      });
+    const user = response.data?.data || null;
+    const token = response.data?.token || null;
+
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+
+    return user;
   }
 
   /**
@@ -54,29 +29,15 @@ class AuthService {
    */
   logout() {
     localStorage.removeItem("user");
-  }
-
-  /**
-   * Đăng ký (Chỉ dành cho Độc Giả)
-   */
-  register(user) {
-    return http.post("/docgia", {
-      username: user.username,
-      password: user.password,
-      HOLOT: user.HOLOT,
-      TEN: user.TEN,
-      NGAYSINH: user.NGAYSINH,
-      GIOITINH: user.GIOITINH,
-      DIACHI: user.DIACHI,
-      DIENTHOAI: user.DIENTHOAI,
-    });
+    localStorage.removeItem("token");
   }
 
   /**
    * Lấy user/staff hiện tại từ localStorage (Dùng chung)
    */
   getCurrentUser() {
-    return JSON.parse(localStorage.getItem("user"));
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
   }
 }
 
