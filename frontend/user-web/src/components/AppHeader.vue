@@ -82,7 +82,7 @@
 
 <script>
 import AuthService from '@/services/auth.service'
-// Trong Vue 3 Composition API/Pinia thường dùng store. Ở đây code cũ đang dùng methods.
+import eventBus from '@/services/eventBus'
 
 export default {
   name: 'AppHeader',
@@ -106,17 +106,17 @@ export default {
     },
     handleLogout() {
       AuthService.logout()
-      this.updateUser()
+      this.currentUser = null
       this.$router.push('/login')
     }
   },
   created() {
     this.updateUser()
-    // Lắng nghe sự kiện login từ các component khác nếu có (như LoginUser phát ra)
-    window.addEventListener('storage', this.updateUser); 
+    // Lắng nghe eventBus (cùng tab) thay vì window.storage (chỉ bắt tab khác)
+    eventBus.on('auth-change', this.updateUser)
   },
   unmounted() {
-    window.removeEventListener('storage', this.updateUser);
+    eventBus.off('auth-change', this.updateUser)
   }
 }
 </script>

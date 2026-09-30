@@ -17,11 +17,15 @@
     </div>
 
     <!-- Left Texture Panel -->
-    <div class="col-12 col-md-5 col-lg-6 d-none d-md-flex align-items-center justify-content-center bg-primary text-white position-relative overflow-hidden">
-      <!-- Background pattern/texture -->
-      <div class="position-absolute w-100 h-100 opacity-25" style="background-image: radial-gradient(#F6F1E7 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="col-12 col-md-5 col-lg-6 d-none d-md-flex align-items-center justify-content-center position-relative overflow-hidden">
+      <!-- Background image -->
+      <div class="position-absolute w-100 h-100" style="background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); background-size: cover; background-position: center; filter: blur(2px) brightness(0.8);"></div>
+      <!-- Overlay gradient -->
+      <div class="position-absolute w-100 h-100" style="background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.9) 0%, rgba(var(--bs-primary-rgb), 0.7) 100%); mix-blend-mode: multiply;"></div>
+      <!-- Additional overlay for readability -->
+      <div class="position-absolute w-100 h-100" style="background-color: rgba(0,0,0,0.2);"></div>
       
-      <div class="z-1 text-center p-5 d-flex flex-column justify-content-center align-items-center h-100">
+      <div class="z-1 text-center p-5 d-flex flex-column justify-content-center align-items-center h-100 text-white">
         <div class="d-inline-flex align-items-center gap-2 mb-4">
           <div class="d-flex align-items-center justify-content-center bg-white text-primary rounded font-display fw-bold shadow-sm" style="width: 32px; height: 32px; font-size: 0.85rem">
             Λ

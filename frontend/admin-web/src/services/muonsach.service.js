@@ -1,53 +1,39 @@
-// Tên tệp: src/services/muonsach.service.js
-
+// src/services/muonsach.service.js (admin-web)
 import http from "./http-common";
 
 class MuonSachService {
-  // 1. Admin: Lấy tất cả phiếu mượn
-  getAll() {
-    return http.get("/muonsach");
+  /**
+   * Get all borrow records.
+   * @param {string|null} status - filter by status value stored in DB (e.g. 'chờ duyệt')
+   */
+  getAll(status = null) {
+    const params = status ? { status } : {};
+    return http.get("/muonsach", { params });
   }
 
-  // 2. Admin: Lấy 1 phiếu mượn (để xem chi tiết/sửa)
-  get(id) {
+  /** Get one borrow record by ID */
+  getById(id) {
     return http.get(`/muonsach/${id}`);
   }
 
-  // 3. Admin/Nhân viên: Cập nhật trạng thái phiếu (Duyệt, Trả, Từ chối)
-  // data sẽ là { trangThai: "...", nhanVienId: "..." }
-  update(id, data) {
-    return http.put(`/muonsach/${id}`, data);
+  /** Approve a borrow request → status "đã duyệt" */
+  approve(id) {
+    return http.put(`/muonsach/${id}/approve`);
   }
 
-  // 4. Admin: Xóa 1 phiếu (khi bị lỗi)
+  /** Reject a borrow request → status "từ chối" */
+  reject(id, reason = "") {
+    return http.put(`/muonsach/${id}/reject`, { reason });
+  }
+
+  /** Confirm book return → status "đã trả" */
+  confirmReturn(id) {
+    return http.put(`/muonsach/${id}/confirm-return`);
+  }
+
+  /** Delete a borrow record (Admin only) */
   delete(id) {
     return http.delete(`/muonsach/${id}`);
-  }
-  
-  // 5. Độc giả: Tạo phiếu mượn (Dùng cho trang của độc giả sau này)
-  // data sẽ là { docGiaId, sachId, ngayMuon, ngayTra }
-  create(data) {
-     return http.post("/muonsach", data);
-  }
-
-  // 6. Độc giả: Lấy lịch sử mượn của mình (Dùng cho trang của độc giả sau này)
-  getForDocGia(docGiaId) {
-    return http.get(`/muonsach/docgia/${docGiaId}`);
-  }
-
-  // 7. Độc giả: Yêu cầu trả sách
-  requestReturn(id) {
-    return http.put(`/muonsach/${id}/request-return`);
-  }
-
-  // 8. Nhân viên: Xác nhận trả sách (cập nhật ngayTraThucTe + SoQuyen)
-  confirmReturn(id, nhanVienId) {
-    return http.put(`/muonsach/${id}/confirm-return`, { nhanVienId });
-  }
-
-  // 9. Độc giả: Xác nhận đã nộp phạt
-  confirmFinePayment(id) {
-    return http.put(`/muonsach/${id}/confirm-fine-payment`);
   }
 }
 

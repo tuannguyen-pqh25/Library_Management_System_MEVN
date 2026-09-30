@@ -68,6 +68,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthService from '@/services/auth.service'
+import eventBus from '@/services/eventBus'
 
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -89,6 +90,7 @@ const handleLogin = async () => {
 
   try {
     await AuthService.login(form)
+    eventBus.emit('auth-change') // Báo AppHeader reload trạng thái đăng nhập
     router.push('/sach')
   } catch (error) {
     errorMessage.value = error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'

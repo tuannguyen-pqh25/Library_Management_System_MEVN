@@ -54,8 +54,8 @@ class MuonSachService {
             throw new Error("Số lượng mượn phải lớn hơn 0");
         }
 
-        if (soLuong > 3) {
-            throw new Error("Mỗi lần chỉ được mượn tối đa 3 quyển");
+        if (soLuong > 10) {
+            throw new Error("Mỗi lần chỉ được mượn tối đa 10 quyển");
         }
 
         // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
@@ -80,18 +80,6 @@ class MuonSachService {
             throw new Error(`Bạn đã mượn ${currentBorrowCount} quyển. Không thể vượt quá hạn mức 10 quyển`);
         }
 
-        // --- 3.85. KIỂM TRA MAX 3 QUYỂN PER SÁCH ---
-        const bookBorrowRecords = await this.MuonSach.find({
-            docGiaId: docGiaId,
-            sachId: sachId,
-            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
-        }).toArray();
-
-        const bookBorrowCount = bookBorrowRecords.reduce((sum, record) => sum + (record.soLuong || 1), 0);
-
-        if (bookBorrowCount + soLuong > 3) {
-            throw new Error(`Cuốn sách này bạn chỉ được mượn tối đa 3 quyển. Hiện tại bạn đã mượn ${bookBorrowCount} quyển`);
-        }
 
         // Độc giả tạo luôn là "chờ duyệt", nhân viên sẽ duyệt sau
         let trangThaiMoi = "chờ duyệt";
@@ -126,6 +114,67 @@ class MuonSachService {
         return await this.MuonSach.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
+    }
+
+    /**
+     * 3.5. findAllPopulated: Lấy toàn bộ phiếu mượn, đã populate đầy đủ
+     * Sách (TenSach, HinhAnh), DocGia (HoTen, DienThoai), NhanVien (HoTen)
+     */
+    async findAllPopulated(filter = {}) {
+        const records = await this.MuonSach.find(filter)
+            .sort({ ngayMuon: -1 })
+            .toArray();
+
+        return await Promise.all(records.map(async (rec) => {
+            const out = { ...rec };
+
+            // Populate Sách
+            if (rec.sachId) {
+                try {
+                    const sach = await this.Sach.findOne({ _id: this._normalizeObjectId(rec.sachId) });
+                    if (sach) {
+                        out.TenSach = sach.TenSach || sach.TENSACH || '—';
+                        out.HinhAnh = sach.HinhAnh || null;
+                        out.MaSach = sach.MaSach || sach.MASACH || '—';
+                        // Populate NXB name
+                        if (sach.MaNXB) {
+                            try {
+                                let nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MaNXB: sach.MaNXB });
+                                if (!nxb && ObjectId.isValid(sach.MaNXB)) {
+                                    nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(sach.MaNXB) });
+                                }
+                                out.TenNXB = nxb ? nxb.TenNXB : sach.MaNXB;
+                            } catch (_) { out.TenNXB = '—'; }
+                        }
+                    }
+                } catch (e) { console.error("Populate sach error:", e); }
+            }
+
+            // Populate DocGia
+            if (rec.docGiaId) {
+                try {
+                    const docGia = await this.client.db().collection("DOCGIA").findOne({ _id: this._normalizeObjectId(rec.docGiaId) });
+                    if (docGia) {
+                        out.TenDocGia = ((docGia.HoLot || docGia.HOLOT || '') + ' ' + (docGia.Ten || docGia.TEN || '')).trim() || docGia.Email || '—';
+                        out.EmailDocGia = docGia.Email || docGia.EMAIL || '—';
+                        out.DienThoaiDocGia = docGia.DienThoai || docGia.DIENTHOAI || '—';
+                    }
+                } catch (e) { console.error("Populate docgia error:", e); }
+            }
+
+            // Populate NhanVien
+            const nhanVienId = this._normalizeObjectId(rec.nhanVienId);
+            if (nhanVienId) {
+                try {
+                    const nv = await this.client.db().collection("NHANVIEN").findOne({ _id: nhanVienId });
+                    if (nv) {
+                        out.TenNhanVien = ((nv.HOLOT || '') + ' ' + (nv.TEN || nv.HoTenNV || '')).trim() || 'Nhân viên không xác định';
+                    }
+                } catch (e) { console.error("Populate nhanvien error:", e); }
+            }
+
+            return out;
+        }));
     }
 
     _normalizeObjectId(value) {
