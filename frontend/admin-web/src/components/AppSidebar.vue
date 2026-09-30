@@ -14,37 +14,37 @@
     <!-- Navigation -->
     <nav class="flex-grow-1 overflow-auto py-3">
       <ul class="nav flex-column px-3 gap-1">
-        <li class="nav-item">
+        <li v-if="canBorrow" class="nav-item">
           <router-link to="/dashboard" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-chart-pie" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Dashboard</span>
           </router-link>
         </li>
-        <li class="nav-item">
+        <li v-if="canBorrow" class="nav-item">
           <router-link to="/muonsach" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-clipboard-list" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý Mượn Sách</span>
           </router-link>
         </li>
-        <li class="nav-item">
+        <li v-if="canManageBooks" class="nav-item">
           <router-link to="/sach" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-book" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý Sách</span>
           </router-link>
         </li>
-        <li class="nav-item">
+        <li v-if="canManageBooks" class="nav-item">
           <router-link to="/nxb" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý NXB</span>
           </router-link>
         </li>
-        <li class="nav-item">
+        <li v-if="isAdmin" class="nav-item">
           <router-link to="/nhanvien" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-users-cog" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý Nhân Viên</span>
           </router-link>
         </li>
-        <li class="nav-item">
+        <li v-if="isAdmin" class="nav-item">
           <router-link to="/docgia" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-user-graduate" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý Độc Giả</span>
@@ -55,25 +55,13 @@
   </aside>
 </template>
 
-<script>
-import AuthService from "@/services/auth.service";
+<script setup>
+import { BOOK_ROLES, BORROW_ROLES, ROLES, readAdminSession } from '@/services/adminRoles'
 
-export default {
-  name: "AppSidebar",
-  data() {
-    return {
-      currentUser: null,
-    };
-  },
-  computed: {
-    isAdmin() {
-      return this.currentUser && this.currentUser.Chucvu === "Admin";
-    },
-  },
-  created() {
-    this.currentUser = AuthService.getCurrentUser();
-  },
-};
+const role = readAdminSession()?.role
+const canBorrow = BORROW_ROLES.includes(role)
+const canManageBooks = BOOK_ROLES.includes(role)
+const isAdmin = role === ROLES.admin
 </script>
 
 <style scoped>

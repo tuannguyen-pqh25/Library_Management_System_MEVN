@@ -42,9 +42,9 @@ class NhanVienService {
             throw new Error("Mật khẩu là bắt buộc");
         }
         
-        // FIX 2: Sửa logic kiểm tra (chấp nhận "Admin" (hoa))
-        if (!nhanvienData.ChucVu || !["Staff", "Admin"].includes(nhanvienData.ChucVu)) {
-             nhanvienData.ChucVu = "Staff"; // Mặc định là "Staff" (hoa)
+        const allowedRoles = ["Admin", "NhanVienQuanLySach", "NhanVienDuyetMuon"];
+        if (!allowedRoles.includes(nhanvienData.ChucVu)) {
+            throw new Error("Chức vụ không hợp lệ");
         }
 
         // (Đã sửa lỗi insertedId)
@@ -126,6 +126,9 @@ class NhanVienService {
     }
    
     async update(id, payload) {
+        if (payload.ChucVu !== undefined && !["Admin", "NhanVienQuanLySach", "NhanVienDuyetMuon"].includes(payload.ChucVu)) {
+            throw new Error("Chức vụ không hợp lệ");
+        }
         const filter = {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
@@ -156,7 +159,7 @@ class NhanVienService {
             { returnDocument: "after" }
         );
         
-        if (result.value) delete result.value.Password;
+        if (result) delete result.Password;
         return result;
     }
 

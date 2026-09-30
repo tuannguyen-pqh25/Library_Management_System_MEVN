@@ -9,41 +9,7 @@ import SachEdit from "@/views/SachEdit.vue";
 import MuonSachManagement from "@/views/MuonSachManagement.vue";
 import NhanVienManagement from "@/views/NhanVienManagement.vue";
 import DocGiaManagement from "@/views/DocGiaManagement.vue";
-
-const decodeToken = (token) => {
-  if (!token) return null;
-
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-    const raw = atob(padded);
-    return JSON.parse(raw);
-  } catch (error) {
-    return null;
-  }
-};
-
-const isValidAdminToken = () => {
-  const token = localStorage.getItem("token");
-  const payload = decodeToken(token);
-
-  if (!payload || !payload.aud || payload.aud !== "admin") {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return false;
-  }
-
-  if (payload.exp && Date.now() >= payload.exp * 1000) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return false;
-  }
-
-  return true;
-};
+import { ALL_ROLES, BOOK_ROLES, BORROW_ROLES, ROLES, readAdminSession, defaultAdminPath } from "@/services/adminRoles";
 
 const routes = [
   {
@@ -58,48 +24,56 @@ const routes = [
   {
     path: "/",
     component: AdminLayout,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ALL_ROLES },
     children: [
       {
         path: "dashboard",
         name: "StaffDashboard",
         component: StaffDashboard,
+        meta: { roles: BORROW_ROLES },
       },
       {
         path: "sach",
         name: "StaffSachManagement",
         component: StaffSachManagement,
+        meta: { roles: BOOK_ROLES },
       },
       {
         path: "sach/add",
         name: "SachAdd",
         component: SachAdd,
+        meta: { roles: BOOK_ROLES },
       },
       {
         path: "sach/edit/:id",
         name: "SachEdit",
         component: SachEdit,
+        meta: { roles: BOOK_ROLES },
         props: true,
       },
       {
         path: "nxb",
         name: "StaffNhaXuatBanManagement",
         component: StaffNhaXuatBanManagement,
+        meta: { roles: BOOK_ROLES },
       },
       {
         path: "muonsach",
         name: "MuonSachManagement",
         component: MuonSachManagement,
+        meta: { roles: BORROW_ROLES },
       },
       {
         path: "nhanvien",
         name: "NhanVienManagement",
         component: NhanVienManagement,
+        meta: { roles: [ROLES.admin] },
       },
       {
         path: "docgia",
         name: "DocGiaManagement",
         component: DocGiaManagement,
+        meta: { roles: [ROLES.admin] },
       }
     ]
   }
@@ -110,22 +84,17 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem("token");
-
-  if (to.meta.requiresAuth) {
-    if (!token || !isValidAdminToken()) {
-      next("/login");
-      return;
-    }
+router.beforeEach((to) => {
+  const session = readAdminSession();
+  if (to.meta.requiresAuth && !session) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return "/login";
   }
-
-  if (to.path === "/login" && token && isValidAdminToken()) {
-    next("/dashboard");
-    return;
+  if (to.path === "/login" && session) return defaultAdminPath(session.role);
+  if (to.meta.roles && session && !to.meta.roles.includes(session.role)) {
+    return defaultAdminPath(session.role);
   }
-
-  next();
 });
 
 export default router;

@@ -57,7 +57,7 @@ export default {
     },
     userRoleLabel() {
       if (!this.currentUser) return "Admin";
-      return this.currentUser.Chucvu || "Nhân viên";
+      return this.currentUser.ChucVu || "Nhân viên";
     }
   },
   methods: {

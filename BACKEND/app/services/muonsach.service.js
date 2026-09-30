@@ -295,21 +295,22 @@ class MuonSachService {
 
         const newTrangThai = payload.trangThai;
         const oldTrangThai = currentPhieuMuon.trangThai;
+        const allowedTransitions = {
+            "chờ duyệt": ["đã duyệt", "từ chối"],
+            "đã duyệt": ["đang mượn", "đang chờ trả", "đã trả", "từ chối"],
+            "đang mượn": ["đang chờ trả", "đã trả", "từ chối"],
+            "đang chờ trả": ["đã trả", "từ chối"],
+        };
+        if (newTrangThai && !allowedTransitions[oldTrangThai]?.includes(newTrangThai)) {
+            throw new Error("Chuyển trạng thái phiếu mượn không hợp lệ");
+        }
         const sachId = currentPhieuMuon.sachId;
 
         // B. Kiểm tra và cập nhật số lượng sách
         const soLuong = currentPhieuMuon.soLuong || 1; // Lấy số lượng từ phiếu
+        let stockDeducted = false;
 
-        // Giảm SoQuyen khi duyệt phiếu mượn (giảm theo số lượng)
-        if (newTrangThai === "đã duyệt" && oldTrangThai === "chờ duyệt") {
-            const sach = await this.Sach.findOne({ _id: sachId });
-            if (!sach) throw new Error("Không tìm thấy sách");
-            if (sach.SoQuyen < soLuong) throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không đủ để duyệt`);
-            await this.Sach.updateOne(
-                { _id: sachId },
-                { $inc: { SoQuyen: -soLuong } }
-            );
-        }
+        // Việc trừ kho thực hiện sau khi đã kiểm tra toàn bộ payload.
 
         // Trả sách (+ SOQUYEN) nếu:
         // 1. Trạng thái mới là "đã trả" (VÀ trạng thái cũ chưa phải là "đã trả")
@@ -318,17 +319,13 @@ class MuonSachService {
         const isReturning = (newTrangThai === "đã trả" && oldTrangThai !== "đã trả");
         const isRejected = (newTrangThai === "từ chối" && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(oldTrangThai));
 
-        if (isReturning || isRejected) {
-            // Cộng soLuong trả lại SoQuyen cho sách
-            await this.Sach.updateOne(
-                { _id: sachId },
-                { $inc: { SoQuyen: +soLuong } }
-            );
+        if ((isReturning || isRejected) && !await this.Sach.findOne({ _id: sachId })) {
+            throw new Error("Không tìm thấy sách để hoàn kho");
         }
         // --- KẾT THÚC LOGIC QUẢN LÝ SÁCH ---
 
         // C. Cập nhật phiếu mượn
-        const filter = { _id: phieuMuonId };
+        const filter = { _id: phieuMuonId, trangThai: oldTrangThai };
         const updateData = {};
         const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối"];
 
@@ -378,12 +375,31 @@ class MuonSachService {
             updateData.daNopPhat = payload.daNopPhat;
         }
 
-        const result = await this.MuonSach.findOneAndUpdate(
-            filter,
-            { $set: updateData },
-            { returnDocument: "after" }
-        );
-        return result;
+        if (newTrangThai === "đã duyệt") {
+            const stock = await this.Sach.updateOne(
+                { _id: sachId, SoQuyen: { $gte: soLuong } },
+                { $inc: { SoQuyen: -soLuong } }
+            );
+            if (!stock.matchedCount) throw new Error("Không đủ sách để duyệt");
+            stockDeducted = true;
+        }
+        try {
+            const result = await this.MuonSach.findOneAndUpdate(
+                filter,
+                { $set: updateData },
+                { returnDocument: "after" }
+            );
+            if (!result) throw new Error("Phiếu mượn đã được xử lý");
+            if (isReturning || isRejected) {
+                await this.Sach.updateOne({ _id: sachId }, { $inc: { SoQuyen: soLuong } });
+            }
+            return result;
+        } catch (error) {
+            if (stockDeducted) {
+                await this.Sach.updateOne({ _id: sachId }, { $inc: { SoQuyen: soLuong } });
+            }
+            throw error;
+        }
     }
 
     /**
@@ -395,21 +411,21 @@ class MuonSachService {
         const phieuMuon = await this.findById(id);
         if (phieuMuon) {
             const { trangThai, sachId } = phieuMuon;
-            const soLuong = phieuMuon.soLuong || 1; // Lấy số lượng từ phiếu
             // Nếu phiếu bị xóa khi sách đang ở ngoài (chờ, đã duyệt, đang mượn)
             // thì phải trả sách về kho
-            if (["chờ duyệt", "đã duyệt", "đang mượn"].includes(trangThai)) {
-                await this.Sach.updateOne(
-                    { _id: sachId },
-                    { $inc: { SoQuyen: +soLuong } }
-                );
+            if (["đã duyệt", "đang mượn", "đang chờ trả"].includes(trangThai) && !await this.Sach.findOne({ _id: sachId })) {
+                throw new Error("Không tìm thấy sách để hoàn kho");
             }
         }
 
         // B. Xóa phiếu mượn
         const result = await this.MuonSach.findOneAndDelete({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
+            ...(phieuMuon ? { trangThai: phieuMuon.trangThai } : {}),
         });
+        if (result && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(result.trangThai)) {
+            await this.Sach.updateOne({ _id: result.sachId }, { $inc: { SoQuyen: result.soLuong || 1 } });
+        }
         return result;
     }
 }

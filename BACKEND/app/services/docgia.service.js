@@ -71,6 +71,8 @@ class DocGiaService {
 
         const salt = await bcrypt.genSalt(10);
         docgiaData.MatKhau = await bcrypt.hash(docgiaData.MatKhau, salt);
+        // Field legacy `password` vẫn được giữ để tương thích, nhưng không lưu mật khẩu thô.
+        docgiaData.password = docgiaData.MatKhau;
         docgiaData.TrangThaiTaiKhoan = docgiaData.TrangThaiTaiKhoan || "BinhThuong";
 
         await this.DocGia.insertOne(docgiaData);

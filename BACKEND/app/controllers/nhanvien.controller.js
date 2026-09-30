@@ -22,6 +22,7 @@ exports.create = async (req, res, next) => {
         if (error.message.includes("MSNV")) {
             return next(new ApiError(409, error.message)); // 409 = Conflict
         }
+        if (error.message === "Chức vụ không hợp lệ") return next(new ApiError(400, error.message));
         return next(
             new ApiError(500, "Lỗi xảy ra khi đang tạo nhân viên")
         );
@@ -103,6 +104,7 @@ exports.update = async (req, res, next) => {
         }
         return res.send({ message: "Nhân viên được cập nhật thành công", data: document });
     } catch (error) {
+        if (error.message === "Chức vụ không hợp lệ") return next(new ApiError(400, error.message));
         return next(
             new ApiError(500, `Lỗi khi cập nhật nhân viên với id=${req.params.id}`)
         );
@@ -111,11 +113,14 @@ exports.update = async (req, res, next) => {
 
 // (Delete và DeleteAll giữ nguyên)
 exports.delete = async (req, res, next) => {
+    if (req.user?._id === req.params.id) {
+        return next(new ApiError(400, "Không thể xóa tài khoản đang đăng nhập"));
+    }
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
         const document = await nhanVienService.delete(req.params.id);
 
-        if (!document || (document.value === null && document.ok !== 1)) {
+        if (!document) {
             return next(new ApiError(404, "Không tìm thấy nhân viên để xóa"));
         }
         return res.send({ message: "Nhân viên đã được xóa thành công" });

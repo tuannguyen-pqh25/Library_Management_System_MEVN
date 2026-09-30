@@ -9,10 +9,10 @@ const router = express.Router();
 router.use(auth.verifyAdminToken);
 
 // GET /api/admin/muonsach        — Get all borrow records (filter by ?status=)
-router.get("/", requireRole(["Admin", "NhanVienDuyetMuon", "NhanVienQuanLySach"]), muonsach.findAll);
+router.get("/", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.findAll);
 
 // GET /api/admin/muonsach/:id    — Get one borrow record
-router.get("/:id", requireRole(["Admin", "NhanVienDuyetMuon", "NhanVienQuanLySach"]), muonsach.findOne);
+router.get("/:id", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.findOne);
 
 // PUT /api/admin/muonsach/:id/approve  — Approve borrow request → "đã duyệt"
 router.put("/:id/approve", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.approve);

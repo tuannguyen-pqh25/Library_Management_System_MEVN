@@ -112,6 +112,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthService from '@/services/auth.service'
 import eventBus from '@/services/eventBus'
+import { defaultAdminPath, readAdminSession } from '@/services/adminRoles'
 
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -144,7 +145,7 @@ const handleUnifiedLogin = async () => {
     successMessage.value = 'Đăng nhập thành công! Xin chào ' + loggedInUser.HoTenNV
 
     setTimeout(() => {
-      router.push('/dashboard')
+      router.push(defaultAdminPath(readAdminSession()?.role))
     }, 700)
   } catch (error) {
     if (error.response?.status === 423) {

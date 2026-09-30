@@ -14,6 +14,7 @@ const adminAuthRouter = require("./app/routes/admin/auth.route");
 const adminSachRouter = require("./app/routes/admin/sach.route");
 const adminNxbRouter = require("./app/routes/admin/nhaxuatban.route");
 const adminMuonRouter = require("./app/routes/admin/muonsach.route");
+const adminNhanVienRouter = require("./app/routes/admin/nhanvien.route");
 const userAuthRouter = require("./app/routes/user/auth.route");
 const userSachRouter = require("./app/routes/user/sach.route");
 const userMuonRouter = require("./app/routes/user/muonsach.route");
@@ -22,14 +23,17 @@ const userProfileRouter = require("./app/routes/user/profile.route");
 const docgiaRouter = require("./app/routes/docgia.route");
 const muonsachRouter = require("./app/routes/muonsach.route");
 const chatbotRouter = require("./app/routes/chatbot.route");
+const { verifyAdminToken } = require("./app/middlewares/auth");
+const requireRole = require("./app/middlewares/requireRole");
 
 // Namespace Admin
 app.use("/api/admin/auth", adminAuthRouter);
 app.use("/api/admin/sach", adminSachRouter);
 app.use("/api/admin/nxb", adminNxbRouter);
 app.use("/api/admin/muonsach", adminMuonRouter);
-app.use("/api/admin/docgia", docgiaRouter);
-app.use("/api/admin/muonsach-legacy", muonsachRouter);
+app.use("/api/admin/nhanvien", adminNhanVienRouter);
+app.use("/api/admin/docgia", verifyAdminToken, requireRole(["Admin"]), docgiaRouter);
+app.use("/api/admin/muonsach-legacy", verifyAdminToken, requireRole(["Admin"]), muonsachRouter);
 
 // Namespace User
 app.use("/api/user/auth", userAuthRouter);
