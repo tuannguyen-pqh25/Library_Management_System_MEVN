@@ -1,466 +1,608 @@
 <template>
-  <div class="page-shell py-4">
-    <div class="container-fluid">
+  <div class="dashboard-page py-4">
+    <div class="container-fluid px-4">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 class="font-display fw-bold text-dark mb-1">Dashboard</h2>
-          <p class="text-muted-custom mb-0">Quản lý các yêu cầu mượn trả sách</p>
+          <h2 class="font-display fw-bold mb-1" style="font-size: 1.6rem;">
+            <i class="fas fa-chart-line me-2 text-primary"></i>Dashboard Thống Kê
+          </h2>
+          <p class="text-muted mb-0 small">
+            Tổng quan hệ thống thư viện — Cập nhật lúc {{ lastUpdated }}
+          </p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="fetchStats" :disabled="loading">
+          <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loading }"></i>
+          Làm mới
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-3 text-muted">Đang tải dữ liệu thống kê...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="alert alert-danger d-flex align-items-center gap-2">
+        <i class="fas fa-exclamation-circle"></i>
+        <div>
+          <strong>Không thể tải dữ liệu:</strong> {{ error }}
+          <button class="btn btn-sm btn-outline-danger ms-3" @click="fetchStats">Thử lại</button>
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <BaseCard class="h-100 border-0 shadow-sm">
-            <div class="d-flex align-items-center gap-3">
-              <div class="bg-warning-subtle text-warning rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                <i class="fas fa-clock fa-2x"></i>
+      <!-- Main Content -->
+      <div v-else>
+        <!-- === KPI CARDS ROW === -->
+        <div class="row g-3 mb-4">
+          <!-- Tổng đầu sách -->
+          <div class="col-6 col-md-3">
+            <div class="kpi-card h-100" style="--accent: #6366f1;">
+              <div class="kpi-icon" style="background: rgba(99,102,241,0.15); color: #6366f1;">
+                <i class="fas fa-books fa-lg"></i>
               </div>
-              <div>
-                <div class="text-muted-custom small fw-semibold">Yêu Cầu Chờ Xử Lý</div>
-                <h3 class="fw-bold mb-0 text-dark">{{ pendingCount }}</h3>
-              </div>
-            </div>
-          </BaseCard>
-        </div>
-        <div class="col-md-4">
-          <BaseCard class="h-100 border-0 shadow-sm">
-            <div class="d-flex align-items-center gap-3">
-              <div class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                <i class="fas fa-book-reader fa-2x"></i>
-              </div>
-              <div>
-                <div class="text-muted-custom small fw-semibold">Sách Đang Mượn</div>
-                <h3 class="fw-bold mb-0 text-dark">{{ borrowedCount }}</h3>
+              <div class="kpi-body">
+                <div class="kpi-label">Tổng Đầu Sách</div>
+                <div class="kpi-value">{{ stats.tongQuan?.tongSach || 0 }}</div>
+                <div class="kpi-sub text-muted">đầu sách trong kho</div>
               </div>
             </div>
-          </BaseCard>
-        </div>
-        <div class="col-md-4">
-          <BaseCard class="h-100 border-0 shadow-sm">
-            <div class="d-flex align-items-center gap-3">
-              <div class="bg-success-subtle text-success rounded-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
-                <i class="fas fa-undo fa-2x"></i>
-              </div>
-              <div>
-                <div class="text-muted-custom small fw-semibold">Yêu Cầu Trả</div>
-                <h3 class="fw-bold mb-0 text-dark">{{ returnCount }}</h3>
-              </div>
-            </div>
-          </BaseCard>
-        </div>
-      </div>
-
-      <!-- Filters & Search -->
-      <BaseCard class="mb-4 border-0 shadow-sm">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-          <!-- Search -->
-          <div class="input-group" style="max-width: 350px;">
-            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="form-control border-start-0 ps-0" 
-              placeholder="Tìm kiếm độc giả, mã sách..."
-              @input="handleSearch"
-            />
           </div>
 
-          <!-- Tabs -->
-          <div class="btn-group" role="group">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" value="CHO_XU_LY" v-model="activeTab" @change="handleSearch">
-            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio1">Chờ Xử Lý</label>
+          <!-- Tổng độc giả -->
+          <div class="col-6 col-md-3">
+            <div class="kpi-card h-100" style="--accent: #10b981;">
+              <div class="kpi-icon" style="background: rgba(16,185,129,0.15); color: #10b981;">
+                <i class="fas fa-users fa-lg"></i>
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-label">Tổng Độc Giả</div>
+                <div class="kpi-value">{{ stats.tongQuan?.tongDocGia || 0 }}</div>
+                <div class="kpi-sub">
+                  <span class="text-danger fw-semibold">{{ stats.tongQuan?.docGiaBiKhoa || 0 }}</span>
+                  <span class="text-muted"> bị khóa</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" value="DA_MUON" v-model="activeTab" @change="handleSearch">
-            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio2">Đang Mượn</label>
+          <!-- Đang mượn -->
+          <div class="col-6 col-md-3">
+            <div class="kpi-card h-100" style="--accent: #3b82f6;">
+              <div class="kpi-icon" style="background: rgba(59,130,246,0.15); color: #3b82f6;">
+                <i class="fas fa-book-reader fa-lg"></i>
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-label">Đang Mượn</div>
+                <div class="kpi-value">{{ stats.tongQuan?.dangMuon || 0 }}</div>
+                <div class="kpi-sub text-muted">{{ stats.tongQuan?.tongSoQuyenDangMuon || 0 }} quyển ngoài kho</div>
+              </div>
+            </div>
+          </div>
 
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" value="CHO_TRA" v-model="activeTab" @change="handleSearch">
-            <label class="btn btn-outline-primary fw-medium px-4" for="btnradio3">Yêu Cầu Trả</label>
+          <!-- Chờ duyệt & Quá hạn -->
+          <div class="col-6 col-md-3">
+            <div class="kpi-card h-100" style="--accent: #f59e0b;">
+              <div class="kpi-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
+                <i class="fas fa-exclamation-triangle fa-lg"></i>
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-label">Cần Xử Lý</div>
+                <div class="kpi-value">{{ (stats.tongQuan?.choDuyet || 0) + (stats.tongQuan?.quaHan || 0) }}</div>
+                <div class="kpi-sub">
+                  <span class="text-warning fw-semibold">{{ stats.tongQuan?.choDuyet || 0 }}</span>
+                  <span class="text-muted"> chờ</span> &bull;
+                  <span class="text-danger fw-semibold">{{ stats.tongQuan?.quaHan || 0 }}</span>
+                  <span class="text-muted"> quá hạn</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </BaseCard>
 
-      <!-- Table -->
-      <BaseCard class="border-0 shadow-sm overflow-hidden p-0">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 border-top">
-            <thead class="table-light text-muted-custom">
-              <tr>
-                <th class="ps-4 py-3 fw-semibold">STT</th>
-                <th class="py-3 fw-semibold">Độc Giả</th>
-                <th class="py-3 fw-semibold">Sách</th>
-                <th class="py-3 fw-semibold">Ngày Mượn</th>
-                <th class="py-3 fw-semibold">Hạn Trả</th>
-                <th class="py-3 fw-semibold">Trạng Thái</th>
-                <th class="py-3 fw-semibold text-center">Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="filteredData.length === 0">
-                <td colspan="7" class="text-center text-muted py-4">
-                  <div class="mb-2"><i class="fas fa-inbox fa-2x opacity-50"></i></div>
-                  Không tìm thấy dữ liệu phù hợp
-                </td>
-              </tr>
-              <tr v-for="(item, index) in paginatedData" :key="item._id">
-                <td class="ps-4 text-muted fw-medium">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
-                <td class="fw-semibold text-dark">{{ item.maDocGia?.Ten || item.maDocGia?.HoLot || item.maDocGia?.tenDocGia || '-' }}</td>
-                <td>
-                  <span class="d-inline-block text-truncate text-dark fw-medium" style="max-width: 200px;" :title="item.maSach?.TenSach || item.maSach?.tenSach">
-                    {{ item.maSach?.TenSach || item.maSach?.tenSach || '-' }}
-                  </span>
-                </td>
-                <td>{{ formatDate(item.NgayMuon || item.ngayMuon) }}</td>
-                <td>{{ formatDate(item.NgayHenTra || item.hanTra) }}</td>
-                <td>
-                  <span class="badge rounded-pill px-3 py-2 fw-medium border" :class="getStatusClass(item.TrangThai || item.trangThai)">
-                    {{ getStatusLabel(item.TrangThai || item.trangThai) }}
-                  </span>
-                </td>
-                <td>
-                  <div class="d-flex justify-content-center gap-2">
-                    <button 
-                      v-if="(item.TrangThai || item.trangThai) === 'CHO_XU_LY'"
-                      class="btn btn-sm btn-success rounded-circle shadow-sm icon-btn"
-                      @click="openConfirmModal(item)"
-                      title="Duyệt mượn"
-                    >
-                      <i class="fas fa-check"></i>
-                    </button>
-                    <button 
-                      v-if="(item.TrangThai || item.trangThai) === 'DA_MUON'"
-                      class="btn btn-sm btn-primary rounded-circle shadow-sm icon-btn"
-                      @click="openReturnModal(item)"
-                      title="Xác nhận trả"
-                    >
-                      <i class="fas fa-undo"></i>
-                    </button>
-                    <button 
-                      v-if="(item.TrangThai || item.trangThai) === 'CHO_XU_LY' || (item.TrangThai || item.trangThai) === 'DA_MUON'"
-                      class="btn btn-sm btn-danger rounded-circle shadow-sm icon-btn"
-                      @click="rejectRequest(item._id)"
-                      title="Từ chối / Hủy"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
+        <!-- === CHARTS ROW === -->
+        <div class="row g-4 mb-4">
+          <!-- Line Chart: Mượn theo tháng -->
+          <div class="col-12 col-lg-8">
+            <div class="chart-card h-100">
+              <div class="chart-card-header">
+                <div>
+                  <h6 class="chart-title mb-0">
+                    <i class="fas fa-chart-area me-2 text-primary"></i>Hoạt Động Mượn Sách (6 tháng)
+                  </h6>
+                  <p class="chart-subtitle mb-0">Số phiếu mượn và số quyển sách mượn mỗi tháng</p>
+                </div>
+              </div>
+              <div class="chart-body" style="height: 260px;">
+                <canvas ref="lineChartRef"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doughnut Chart: Trạng thái phiếu mượn -->
+          <div class="col-12 col-lg-4">
+            <div class="chart-card h-100">
+              <div class="chart-card-header">
+                <div>
+                  <h6 class="chart-title mb-0">
+                    <i class="fas fa-chart-pie me-2 text-success"></i>Phân Bổ Trạng Thái
+                  </h6>
+                  <p class="chart-subtitle mb-0">Tổng phiếu mượn theo trạng thái</p>
+                </div>
+              </div>
+              <div class="chart-body d-flex align-items-center justify-content-center" style="height: 260px;">
+                <canvas ref="doughnutChartRef" style="max-width: 220px; max-height: 220px;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- === TOP SÁCH + TRẠNG THÁI CHI TIẾT === -->
+        <div class="row g-4">
+          <!-- Bar Chart: Top sách -->
+          <div class="col-12 col-lg-7">
+            <div class="chart-card h-100">
+              <div class="chart-card-header">
+                <div>
+                  <h6 class="chart-title mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>Top Sách Được Mượn Nhiều Nhất
+                  </h6>
+                  <p class="chart-subtitle mb-0">Tính theo tổng số lượng quyển đã được mượn</p>
+                </div>
+              </div>
+              <div class="chart-body" style="height: 280px;">
+                <canvas ref="barChartRef"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Detail Table -->
+          <div class="col-12 col-lg-5">
+            <div class="chart-card h-100">
+              <div class="chart-card-header">
+                <div>
+                  <h6 class="chart-title mb-0">
+                    <i class="fas fa-list-check me-2 text-info"></i>Chi Tiết Theo Trạng Thái
+                  </h6>
+                  <p class="chart-subtitle mb-0">Số phiếu mượn chia theo từng trạng thái</p>
+                </div>
+              </div>
+              <div class="chart-body">
+                <div class="status-list">
+                  <div
+                    v-for="item in statusDetailList"
+                    :key="item.key"
+                    class="status-row"
+                  >
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="status-dot" :style="{ background: item.color }"></span>
+                      <span class="status-name">{{ item.label }}</span>
+                      <span class="ms-auto status-count fw-bold" :style="{ color: item.color }">
+                        {{ item.count }}
+                      </span>
+                    </div>
+                    <div class="progress" style="height: 6px; border-radius: 99px;">
+                      <div
+                        class="progress-bar"
+                        :style="{
+                          width: totalPhieuMuon > 0 ? (item.count / totalPhieuMuon * 100) + '%' : '0%',
+                          background: item.color
+                        }"
+                      ></div>
+                    </div>
                   </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </BaseCard>
 
-      <!-- Pagination -->
-      <div class="d-flex justify-content-center mt-4" v-if="totalPages > 1">
-        <div class="btn-group shadow-sm rounded-pill overflow-hidden">
-          <button class="btn btn-light border" :disabled="currentPage === 1" @click="currentPage--">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="btn btn-light border-top border-bottom fw-medium px-4 text-dark" style="pointer-events: none;">
-            Trang {{ currentPage }} / {{ totalPages }}
-          </span>
-          <button class="btn btn-light border" :disabled="currentPage === totalPages" @click="currentPage++">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+                  <div class="mt-3 pt-3 border-top text-center">
+                    <small class="text-muted">
+                      Tổng: <strong class="text-dark">{{ totalPhieuMuon }}</strong> phiếu mượn trong hệ thống
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions row -->
+        <div class="row g-3 mt-2">
+          <div class="col-12">
+            <div class="quick-actions-bar">
+              <span class="quick-title">Lối tắt nhanh:</span>
+              <router-link to="/muonsach" class="quick-btn">
+                <i class="fas fa-clock me-1"></i>Phiếu chờ duyệt
+                <span v-if="stats.tongQuan?.choDuyet" class="badge bg-warning text-dark ms-1">{{ stats.tongQuan.choDuyet }}</span>
+              </router-link>
+              <router-link to="/muonsach" class="quick-btn">
+                <i class="fas fa-exclamation-triangle me-1 text-danger"></i>Quá hạn
+                <span v-if="stats.tongQuan?.quaHan" class="badge bg-danger ms-1">{{ stats.tongQuan.quaHan }}</span>
+              </router-link>
+              <router-link to="/docgia" class="quick-btn">
+                <i class="fas fa-user-lock me-1 text-secondary"></i>Tài khoản bị khóa
+                <span v-if="stats.tongQuan?.docGiaBiKhoa" class="badge bg-secondary ms-1">{{ stats.tongQuan.docGiaBiKhoa }}</span>
+              </router-link>
+              <router-link to="/sach" class="quick-btn">
+                <i class="fas fa-book me-1 text-primary"></i>Quản lý sách
+              </router-link>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Modals (Custom Simple Modals for now to avoid Bootstrap JS dependency issues) -->
-    <!-- Confirm Borrow Modal -->
-    <div v-if="showConfirmModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
-      <BaseCard class="modal-card border-0 shadow-lg">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0 text-dark">Duyệt Phiếu Mượn</h5>
-          <button class="btn-close" @click="closeConfirmModal"></button>
-        </div>
-        <div v-if="selectedItem" class="mb-4">
-          <div class="bg-light p-3 rounded-3 mb-3">
-            <div class="row mb-2">
-              <div class="col-4 text-muted-custom small">Độc giả:</div>
-              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maDocGia?.Ten || selectedItem.maDocGia?.tenDocGia }}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4 text-muted-custom small">Sách:</div>
-              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maSach?.TenSach || selectedItem.maSach?.tenSach }}</div>
-            </div>
-            <div class="row">
-              <div class="col-4 text-muted-custom small">Hạn trả:</div>
-              <div class="col-8 fw-semibold text-primary">{{ formatDate(selectedItem.NgayHenTra || selectedItem.hanTra) }}</div>
-            </div>
-          </div>
-          <p class="mb-0 text-muted-custom small">Xác nhận cho độc giả này mượn quyển sách trên?</p>
-        </div>
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <BaseButton variant="outline-secondary" @click="closeConfirmModal">Hủy bỏ</BaseButton>
-          <BaseButton variant="success" @click="confirmBorrow" :disabled="loadingAction">
-            <i class="fas fa-check me-2"></i> Xác nhận mượn
-          </BaseButton>
-        </div>
-      </BaseCard>
-    </div>
-
-    <!-- Confirm Return Modal -->
-    <div v-if="showReturnModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
-      <BaseCard class="modal-card border-0 shadow-lg">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0 text-dark">Xác Nhận Trả Sách</h5>
-          <button class="btn-close" @click="closeReturnModal"></button>
-        </div>
-        <div v-if="selectedItem" class="mb-4">
-          <div class="bg-light p-3 rounded-3 mb-3">
-            <div class="row mb-2">
-              <div class="col-4 text-muted-custom small">Độc giả:</div>
-              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maDocGia?.Ten || selectedItem.maDocGia?.tenDocGia }}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4 text-muted-custom small">Sách:</div>
-              <div class="col-8 fw-semibold text-dark">{{ selectedItem.maSach?.TenSach || selectedItem.maSach?.tenSach }}</div>
-            </div>
-            <div class="row">
-              <div class="col-4 text-muted-custom small">Ngày mượn:</div>
-              <div class="col-8 fw-semibold text-primary">{{ formatDate(selectedItem.NgayMuon || selectedItem.ngayMuon) }}</div>
-            </div>
-          </div>
-          <p class="mb-0 text-muted-custom small">Sách đã được thu hồi và xác nhận tình trạng tốt?</p>
-        </div>
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <BaseButton variant="outline-secondary" @click="closeReturnModal">Hủy bỏ</BaseButton>
-          <BaseButton variant="primary" @click="confirmReturn" :disabled="loadingAction">
-            <i class="fas fa-undo me-2"></i> Xác nhận trả
-          </BaseButton>
-        </div>
-      </BaseCard>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import MuonSachService from "@/services/muonsach.service"
-import AuthService from "@/services/auth.service"
-import BaseCard from '@/components/ui/BaseCard.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import {
+  Chart,
+  LineElement, BarElement, ArcElement,
+  PointElement, LinearScale, CategoryScale,
+  Tooltip, Legend, Filler,
+  DoughnutController, LineController, BarController
+} from 'chart.js'
+import DashboardService from '@/services/dashboard.service'
 
-const muonSachList = ref([])
-const filteredData = ref([])
-const searchQuery = ref('')
-const activeTab = ref('CHO_XU_LY')
-const currentPage = ref(1)
-const pageSize = 10
-const currentUser = ref(null)
+// Register Chart.js components
+Chart.register(
+  LineElement, BarElement, ArcElement,
+  PointElement, LinearScale, CategoryScale,
+  Tooltip, Legend, Filler,
+  DoughnutController, LineController, BarController
+)
 
-const showConfirmModal = ref(false)
-const showReturnModal = ref(false)
-const selectedItem = ref(null)
-const loadingAction = ref(false)
+// Refs
+const lineChartRef = ref(null)
+const doughnutChartRef = ref(null)
+const barChartRef = ref(null)
 
-// Cập nhật lại enum matching với backend (Backend sử dụng ChoDuyet, DangMuon, DaTra, QuaHan, TuChoi)
-// Note: code cũ xài CHO_XU_LY, DA_MUON, v.v., ta sẽ cần điều chỉnh lại data nếu BE trả về khác.
-// Vì UI filter yêu cầu 3 tab, ta map cho linh hoạt
-const enumMap = {
-  'CHO_XU_LY': ['choduyet', 'cho_xu_ly'],
-  'DA_MUON': ['dangmuon', 'da_muon', 'quahan'],
-  'CHO_TRA': ['dangmuon', 'cho_tra'] // Nếu không có trạng thái chờ trả, gộp vào Đang Mượn.
-}
+let lineChart = null
+let doughnutChart = null
+let barChart = null
 
-const pendingCount = computed(() => muonSachList.value.filter(i => {
-  const t = String(i.TrangThai || i.trangThai).toLowerCase();
-  return enumMap['CHO_XU_LY'].includes(t);
-}).length)
+const loading = ref(true)
+const error = ref(null)
+const stats = ref({})
+const lastUpdated = ref('')
 
-const borrowedCount = computed(() => muonSachList.value.filter(i => {
-  const t = String(i.TrangThai || i.trangThai).toLowerCase();
-  return enumMap['DA_MUON'].includes(t);
-}).length)
+// ========== Status detail config ==========
+const STATUS_CONFIG = [
+  { key: 'chờ duyệt',     label: 'Chờ Duyệt',       color: '#f59e0b' },
+  { key: 'đã duyệt',      label: 'Đã Duyệt',         color: '#3b82f6' },
+  { key: 'đang mượn',     label: 'Đang Mượn',         color: '#6366f1' },
+  { key: 'đang chờ trả',  label: 'Đang Chờ Trả',     color: '#8b5cf6' },
+  { key: 'đã trả',        label: 'Đã Trả',            color: '#10b981' },
+  { key: 'quá hạn',       label: 'Quá Hạn',           color: '#ef4444' },
+  { key: 'từ chối',       label: 'Từ Chối',           color: '#6b7280' },
+]
 
-const returnCount = computed(() => muonSachList.value.filter(i => {
-  const t = String(i.TrangThai || i.trangThai).toLowerCase();
-  return t === 'dangmuon' || t === 'da_muon'; // Tạm thay bằng đang mượn
-}).length)
-
-const totalPages = computed(() => Math.ceil(filteredData.value.length / pageSize) || 1)
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredData.value.slice(start, start + pageSize)
+const statusDetailList = computed(() => {
+  const detail = stats.value?.chiTietTrangThai || {}
+  return STATUS_CONFIG.map(cfg => ({
+    ...cfg,
+    count: detail[cfg.key]?.count || 0,
+  }))
 })
 
-const fetchAll = async () => {
-  try {
-    const response = await MuonSachService.getAll()
-    muonSachList.value = response.data || []
-    applyFilter()
-  } catch (error) {
-    console.error("Lỗi khi tải danh sách mượn sách:", error)
+const totalPhieuMuon = computed(() =>
+  statusDetailList.value.reduce((sum, s) => sum + s.count, 0)
+)
+
+// ========== Chart helpers ==========
+function destroyCharts() {
+  if (lineChart) { lineChart.destroy(); lineChart = null }
+  if (doughnutChart) { doughnutChart.destroy(); doughnutChart = null }
+  if (barChart) { barChart.destroy(); barChart = null }
+}
+
+function buildLineChart(data) {
+  if (!lineChartRef.value) return
+  const ctx = lineChartRef.value.getContext('2d')
+
+  // Tạo danh sách 6 tháng gần nhất
+  const months = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
   }
-}
 
-const handleSearch = () => {
-  currentPage.value = 1
-  applyFilter()
-}
+  const labelMap = {}
+  ;(data || []).forEach(row => { labelMap[row._id] = row })
 
-const applyFilter = () => {
-  let filtered = muonSachList.value.filter(item => {
-    const t = String(item.TrangThai || item.trangThai).toLowerCase();
-    return enumMap[activeTab.value].includes(t);
+  const phieuData = months.map(m => labelMap[m]?.soPhieuMuon || 0)
+  const quyenData = months.map(m => labelMap[m]?.soSachMuon || 0)
+
+  const labels = months.map(m => {
+    const [y, mo] = m.split('-')
+    return `T${parseInt(mo)}/${y}`
   })
 
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(item => {
-      const dgTen = (item.maDocGia?.Ten || item.maDocGia?.tenDocGia || '').toLowerCase()
-      const sTen = (item.maSach?.TenSach || item.maSach?.tenSach || '').toLowerCase()
-      const dgId = (item.maDocGia?._id || '').toLowerCase()
-      const sId = (item.maSach?._id || '').toLowerCase()
-      return dgTen.includes(query) || sTen.includes(query) || dgId.includes(query) || sId.includes(query)
-    })
-  }
-  
-  filteredData.value = filtered
+  lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Số phiếu mượn',
+          data: phieuData,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.12)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: 'Số quyển sách',
+          data: quyenData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 12 } } },
+        tooltip: { mode: 'index', intersect: false },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+      },
+    },
+  })
 }
 
-const openConfirmModal = (item) => {
-  selectedItem.value = item
-  showConfirmModal.value = true
+function buildDoughnutChart() {
+  if (!doughnutChartRef.value) return
+  const ctx = doughnutChartRef.value.getContext('2d')
+
+  const labels = statusDetailList.value.filter(s => s.count > 0).map(s => s.label)
+  const data   = statusDetailList.value.filter(s => s.count > 0).map(s => s.count)
+  const colors = statusDetailList.value.filter(s => s.count > 0).map(s => s.color)
+
+  doughnutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 8,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.raw} phiếu`
+          }
+        },
+      },
+    },
+  })
 }
 
-const closeConfirmModal = () => {
-  showConfirmModal.value = false
-  selectedItem.value = null
+function buildBarChart(topSach) {
+  if (!barChartRef.value) return
+  const ctx = barChartRef.value.getContext('2d')
+
+  const top = (topSach || []).slice(0, 7)
+  const labels = top.map(s => {
+    const name = s.tenSach || 'Không xác định'
+    return name.length > 22 ? name.substring(0, 22) + '…' : name
+  })
+  const data   = top.map(s => s.soLanMuon || 0)
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 250)
+  gradient.addColorStop(0, 'rgba(99,102,241,0.9)')
+  gradient.addColorStop(1, 'rgba(139,92,246,0.5)')
+
+  barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Số quyển mượn',
+        data,
+        backgroundColor: gradient,
+        borderRadius: 8,
+        borderSkipped: false,
+        barThickness: 28,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.raw} quyển mượn`
+          }
+        },
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      },
+    },
+  })
 }
 
-const confirmBorrow = async () => {
-  if (!selectedItem.value) return
-  loadingAction.value = true
+// ========== Data fetching ==========
+const fetchStats = async () => {
+  loading.value = true
+  error.value = null
+  destroyCharts()
+
   try {
-    // API Duyệt yêu cầu mượn
-    await MuonSachService.update(selectedItem.value._id, {
-      trangThai: "DangMuon",
-      nhanVienId: currentUser.value?._id,
-    })
-    closeConfirmModal()
-    await fetchAll()
-  } catch (error) {
-    alert("Lỗi: " + (error.response?.data?.message || error.message))
-  } finally {
-    loadingAction.value = false
+    const res = await DashboardService.getStats()
+    stats.value = res.data
+
+    const now = new Date()
+    lastUpdated.value = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+
+    loading.value = false
+    await nextTick()
+
+    buildLineChart(stats.value.muonTheoThang)
+    buildDoughnutChart()
+    buildBarChart(stats.value.topSach)
+  } catch (err) {
+    loading.value = false
+    error.value = err.response?.data?.message || err.message || 'Lỗi không xác định'
   }
 }
 
-const openReturnModal = (item) => {
-  selectedItem.value = item
-  showReturnModal.value = true
-}
-
-const closeReturnModal = () => {
-  showReturnModal.value = false
-  selectedItem.value = null
-}
-
-const confirmReturn = async () => {
-  if (!selectedItem.value) return
-  loadingAction.value = true
-  try {
-    // API Xác nhận trả
-    await MuonSachService.update(selectedItem.value._id, {
-      trangThai: "DaTra",
-      nhanVienId: currentUser.value?._id,
-    })
-    closeReturnModal()
-    await fetchAll()
-  } catch (error) {
-    alert("Lỗi: " + (error.response?.data?.message || error.message))
-  } finally {
-    loadingAction.value = false
-  }
-}
-
-const rejectRequest = async (id) => {
-  if (!confirm("Bạn chắc chắn muốn từ chối / hủy yêu cầu này?")) return
-  try {
-    await MuonSachService.update(id, {
-      trangThai: "TuChoi",
-      nhanVienId: currentUser.value?._id,
-    })
-    await fetchAll()
-  } catch (error) {
-    alert("Lỗi: " + (error.response?.data?.message || error.message))
-  }
-}
-
-const formatDate = (date) => {
-  if (!date) return "-"
-  return new Date(date).toLocaleDateString("vi-VN")
-}
-
-const getStatusLabel = (status) => {
-  const s = String(status || '').toLowerCase()
-  if (s.includes('choduyet') || s.includes('cho_xu_ly')) return "Chờ Duyệt"
-  if (s.includes('dangmuon') || s.includes('da_muon')) return "Đang Mượn"
-  if (s.includes('datra') || s.includes('da_tra')) return "Đã Trả"
-  if (s.includes('tuchoi') || s.includes('tu_choi')) return "Từ Chối"
-  if (s.includes('quahan')) return "Quá Hạn"
-  return "Chờ Xử Lý"
-}
-
-const getStatusClass = (status) => {
-  const s = String(status || '').toLowerCase()
-  if (s.includes('choduyet') || s.includes('cho_xu_ly')) return "bg-warning text-dark border-warning-subtle"
-  if (s.includes('dangmuon') || s.includes('da_muon')) return "bg-primary text-white border-primary-subtle"
-  if (s.includes('datra') || s.includes('da_tra')) return "bg-success text-white border-success-subtle"
-  if (s.includes('tuchoi') || s.includes('tu_choi') || s.includes('quahan')) return "bg-danger text-white border-danger-subtle"
-  return "bg-secondary text-white"
-}
-
-onMounted(() => {
-  currentUser.value = AuthService.getCurrentUser()
-  fetchAll()
-})
+onMounted(fetchStats)
+onBeforeUnmount(destroyCharts)
 </script>
 
 <style scoped>
-.icon-btn {
-  width: 32px;
-  height: 32px;
+.dashboard-page {
+  background: #f8f9fb;
+  min-height: 100vh;
+}
+
+/* ---- KPI Cards ---- */
+.kpi-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e9ecef;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+.kpi-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  transition: transform 0.2s;
+  flex-shrink: 0;
 }
-.icon-btn:hover {
-  transform: scale(1.1);
+.kpi-body { flex: 1; }
+.kpi-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin-bottom: 2px;
 }
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+.kpi-sub { font-size: 0.75rem; }
 
-.modal-backdrop-custom {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  z-index: 1050;
-}
-
-.modal-card {
-  width: 90%;
-  max-width: 450px;
+/* ---- Chart Cards ---- */
+.chart-card {
+  background: #fff;
   border-radius: 16px;
-  animation: modalIn 0.3s ease;
+  padding: 1.2rem 1.4rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+.chart-card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.chart-title {
+  font-weight: 700;
+  color: #111827;
+  font-size: 0.88rem;
+}
+.chart-subtitle {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+.chart-body {
+  flex: 1;
+  position: relative;
 }
 
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+/* ---- Status Detail List ---- */
+.status-list { padding: 0.25rem 0; }
+.status-row { margin-bottom: 0.85rem; }
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
 }
+.status-name { font-size: 0.82rem; color: #374151; }
+.status-count { font-size: 0.88rem; }
 
-.btn-check:checked + .btn-outline-primary {
-  background-color: var(--bs-primary);
-  color: white;
-  border-color: var(--bs-primary);
+/* ---- Quick Actions ---- */
+.quick-actions-bar {
+  background: #fff;
+  border-radius: 14px;
+  padding: 0.85rem 1.2rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid #e9ecef;
+}
+.quick-title {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 0.25rem;
+}
+.quick-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  background: #f3f4f6;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  border: 1px solid #e5e7eb;
+}
+.quick-btn:hover {
+  background: #e0e7ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
 }
 </style>

@@ -11,7 +11,8 @@
             </p>
             <div class="d-flex gap-3 flex-wrap">
               <router-link class="btn btn-primary btn-lg" to="/sach">Xem danh sách sách</router-link>
-              <router-link class="btn btn-outline-primary btn-lg" to="/login">Đăng nhập</router-link>
+              <router-link v-if="!isLoggedIn" class="btn btn-outline-primary btn-lg" to="/login">Đăng nhập</router-link>
+              <router-link v-else class="btn btn-outline-primary btn-lg" to="/lich-su">Lịch sử mượn sách</router-link>
             </div>
           </div>
 
@@ -75,15 +76,25 @@
 
 <script>
 import SachService from '@/services/sach.service'
+import AuthService from '@/services/auth.service'
+import eventBus from '@/services/eventBus'
 
 export default {
   name: 'HomeUser',
   data() {
     return {
       books: [],
+      isLoggedIn: false
+    }
+  },
+  methods: {
+    checkLoginStatus() {
+      this.isLoggedIn = !!AuthService.getCurrentUser();
     }
   },
   async created() {
+    this.checkLoginStatus();
+    eventBus.on('auth-change', this.checkLoginStatus);
     try {
       const response = await SachService.getAll()
       this.books = Array.isArray(response.data) ? response.data.slice(0, 4) : []
@@ -91,5 +102,8 @@ export default {
       console.error('Không thể tải danh sách sách:', error)
     }
   },
+  unmounted() {
+    eventBus.off('auth-change', this.checkLoginStatus);
+  }
 }
 </script>

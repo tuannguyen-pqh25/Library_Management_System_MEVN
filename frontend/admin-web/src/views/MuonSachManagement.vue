@@ -41,6 +41,7 @@
                 <option value="đang chờ trả">Đang chờ trả</option>
                 <option value="đã trả">Đã trả</option>
                 <option value="từ chối">Từ chối</option>
+                <option value="quá hạn">Quá hạn</option>
               </select>
             </div>
           </div>
@@ -199,9 +200,20 @@
                       <i class="fas fa-times"></i>
                     </button>
 
-                    <!-- Xác nhận trả (khi "đang chờ trả" hoặc "đã duyệt" / "đang mượn") -->
+                    <!-- Giao sách (chỉ hiện khi "đã duyệt") -->
                     <button
-                      v-if="['đang chờ trả', 'đã duyệt', 'đang mượn'].includes(record.trangThai)"
+                      v-if="record.trangThai === 'đã duyệt'"
+                      class="btn btn-sm btn-light text-primary rounded-circle action-btn"
+                      title="Giao sách cho độc giả"
+                      :disabled="processingId === record._id"
+                      @click="handleAction(record, 'handover')"
+                    >
+                      <i class="fas" :class="processingId === record._id ? 'fa-spinner fa-spin' : 'fa-hand-holding'"></i>
+                    </button>
+
+                    <!-- Xác nhận trả (khi "đang chờ trả" hoặc "đã duyệt" / "đang mượn" / "quá hạn") -->
+                    <button
+                      v-if="['đang chờ trả', 'đã duyệt', 'đang mượn', 'quá hạn'].includes(record.trangThai)"
                       class="btn btn-sm btn-light text-warning rounded-circle action-btn"
                       title="Xác nhận trả sách"
                       :disabled="processingId === record._id"
@@ -304,6 +316,10 @@
                     <small class="text-muted text-uppercase fw-bold d-block" style="font-size:0.7rem;">Ngày trả thực tế</small>
                     <span class="fw-semibold text-success">{{ formatDate(selectedRecord.ngayTraThucTe) }}</span>
                   </div>
+                  <div class="col-sm-4" v-else-if="selectedRecord.ngayDuKienTra">
+                    <small class="text-muted text-uppercase fw-bold d-block" style="font-size:0.7rem;">Ngày hẹn mang sách trả</small>
+                    <span class="fw-semibold text-warning">{{ formatDate(selectedRecord.ngayDuKienTra) }}</span>
+                  </div>
                   <div class="col-sm-4">
                     <small class="text-muted text-uppercase fw-bold d-block" style="font-size:0.7rem;">Trạng thái</small>
                     <span class="badge rounded-pill px-3 py-2" :class="statusBadgeClass(selectedRecord.trangThai)">
@@ -348,7 +364,15 @@
               <i class="fas fa-times me-2"></i>Từ chối
             </button>
             <button
-              v-if="['đang chờ trả', 'đã duyệt', 'đang mượn'].includes(selectedRecord.trangThai)"
+              v-if="selectedRecord.trangThai === 'đã duyệt'"
+              class="btn btn-primary rounded-pill px-4 fw-bold"
+              :disabled="processingId === selectedRecord._id"
+              @click="handleAction(selectedRecord, 'handover', true)"
+            >
+              <i class="fas fa-hand-holding me-2"></i>Giao sách
+            </button>
+            <button
+              v-if="['đang chờ trả', 'đã duyệt', 'đang mượn', 'quá hạn'].includes(selectedRecord.trangThai)"
               class="btn btn-warning rounded-pill px-4 fw-bold"
               :disabled="processingId === selectedRecord._id"
               @click="handleAction(selectedRecord, 'confirm-return', true)"
@@ -514,14 +538,20 @@ const openRejectModal = (record, fromDetail = false) => {
 }
 
 const handleAction = async (record, action, fromDetail = false) => {
-  const actionLabel = action === 'approve' ? 'Duyệt' : 'Xác nhận trả'
-  if (!confirm(`${actionLabel} phiếu mượn sách "${record.TenSach}" của "${record.TenDocGia}"?`)) return
+  let actionLabel = 'Duyệt'
+  if (action === 'confirm-return') actionLabel = 'Xác nhận trả'
+  if (action === 'handover') actionLabel = 'Giao'
+
+  if (!confirm(`${actionLabel} sách "${record.TenSach}" cho "${record.TenDocGia}"?`)) return
 
   processingId.value = record._id
   try {
     if (action === 'approve') {
       await MuonSachService.approve(record._id)
       showToast('Duyệt phiếu mượn thành công!', 'success')
+    } else if (action === 'handover') {
+      await MuonSachService.handover(record._id)
+      showToast('Đã giao sách cho độc giả!', 'success')
     } else if (action === 'confirm-return') {
       await MuonSachService.confirmReturn(record._id)
       showToast('Xác nhận trả sách thành công!', 'success')
@@ -596,6 +626,7 @@ const statusBadgeClass = (status) => {
     'đang chờ trả': 'bg-orange-subtle text-warning-emphasis border border-warning-subtle',
     'đã trả': 'bg-success-subtle text-success-emphasis border border-success-subtle',
     'từ chối': 'bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+    'quá hạn': 'bg-danger text-white border border-danger',
   }
   return map[status] || 'bg-secondary-subtle text-secondary-emphasis'
 }
@@ -608,6 +639,7 @@ const statusIcon = (status) => {
     'đang chờ trả': 'fa-clock',
     'đã trả': 'fa-check-double',
     'từ chối': 'fa-ban',
+    'quá hạn': 'fa-exclamation-circle',
   }
   return map[status] || 'fa-circle'
 }

@@ -59,6 +59,10 @@ class MuonSachService {
         }
 
         // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
+        const docGiaData = await this.client.db().collection("DOCGIA").findOne({ _id: docGiaId });
+        if (docGiaData && docGiaData.TrangThaiTaiKhoan === "BiKhoa") {
+            throw new Error("Tài khoản của bạn đã bị khóa. Không thể mượn sách.");
+        }
         const sach = await this.Sach.findOne({ _id: sachId });
         if (!sach) throw new Error("Không tìm thấy sách");
 
@@ -101,9 +105,27 @@ class MuonSachService {
     }
 
 
+    async _checkAndUpdateOverdue() {
+        try {
+            const today = new Date().toISOString();
+            await this.MuonSach.updateMany(
+                {
+                    trangThai: { $in: ["đang mượn", "đã duyệt"] },
+                    ngayTra: { $lt: today }
+                },
+                {
+                    $set: { trangThai: "quá hạn" }
+                }
+            );
+        } catch (error) {
+            console.error("Lỗi khi cập nhật trạng thái quá hạn:", error);
+        }
+    }
+
     //2. Find: Chức năng cho Nhân Viên/Admin xem tất cả phiếu mượn.
 
     async find(filter) {
+        await this._checkAndUpdateOverdue();
         const cursor = await this.MuonSach.find(filter);
         const records = await cursor.toArray();
         return await this._populateMuonSachRecords(records);
@@ -111,6 +133,7 @@ class MuonSachService {
 
     //3. Find by ID: Lấy chi tiết 1 phiếu mượn. 
     async findById(id) {
+        await this._checkAndUpdateOverdue();
         return await this.MuonSach.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
@@ -121,6 +144,7 @@ class MuonSachService {
      * Sách (TenSach, HinhAnh), DocGia (HoTen, DienThoai), NhanVien (HoTen)
      */
     async findAllPopulated(filter = {}) {
+        await this._checkAndUpdateOverdue();
         const records = await this.MuonSach.find(filter)
             .sort({ ngayMuon: -1 })
             .toArray();
@@ -297,8 +321,9 @@ class MuonSachService {
         const oldTrangThai = currentPhieuMuon.trangThai;
         const allowedTransitions = {
             "chờ duyệt": ["đã duyệt", "từ chối"],
-            "đã duyệt": ["đang mượn", "đang chờ trả", "đã trả", "từ chối"],
-            "đang mượn": ["đang chờ trả", "đã trả", "từ chối"],
+            "đã duyệt": ["đang mượn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"],
+            "đang mượn": ["đang chờ trả", "đã trả", "từ chối", "quá hạn"],
+            "quá hạn": ["đang chờ trả", "đã trả"],
             "đang chờ trả": ["đã trả", "từ chối"],
         };
         if (newTrangThai && !allowedTransitions[oldTrangThai]?.includes(newTrangThai)) {
@@ -327,7 +352,7 @@ class MuonSachService {
         // C. Cập nhật phiếu mượn
         const filter = { _id: phieuMuonId, trangThai: oldTrangThai };
         const updateData = {};
-        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối"];
+        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"];
 
         if (newTrangThai && validStates.includes(newTrangThai)) {
             updateData.trangThai = newTrangThai;
@@ -373,6 +398,9 @@ class MuonSachService {
 
         if (payload.daNopPhat !== undefined) {
             updateData.daNopPhat = payload.daNopPhat;
+        }
+        if (payload.ngayDuKienTra) {
+            updateData.ngayDuKienTra = payload.ngayDuKienTra;
         }
 
         if (newTrangThai === "đã duyệt") {

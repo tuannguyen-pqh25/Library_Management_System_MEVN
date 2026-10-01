@@ -20,6 +20,9 @@ router.put("/:id/approve", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach
 // PUT /api/admin/muonsach/:id/reject   — Reject borrow request  → "từ chối"
 router.put("/:id/reject", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.reject);
 
+// PUT /api/admin/muonsach/:id/handover — Giao sách → "đang mượn"
+router.put("/:id/handover", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.handover);
+
 // PUT /api/admin/muonsach/:id/confirm-return — Confirm book return → "đã trả"
 router.put("/:id/confirm-return", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.confirmReturn);
 

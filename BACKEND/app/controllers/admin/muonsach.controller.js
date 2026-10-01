@@ -97,6 +97,33 @@ exports.reject = async (req, res, next) => {
 };
 
 /**
+ * PUT /api/admin/muonsach/:id/handover
+ * Giao sách cho độc giả → status "đang mượn".
+ */
+exports.handover = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const staffId = req.user?._id || req.user?.sub;
+        if (!staffId) {
+            return next(new ApiError(401, "Cannot identify the processing staff"));
+        }
+
+        const payload = {
+            trangThai: "đang mượn",
+            nhanVienId: staffId,
+        };
+
+        const result = await muonSachService.update(req.params.id, payload);
+        if (!result) {
+            return next(new ApiError(404, "Borrow record not found"));
+        }
+        return res.status(200).json({ message: "Book handed over successfully", data: result });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Failed to handover book"));
+    }
+};
+
+/**
  * PUT /api/admin/muonsach/:id/confirm-return
  * Confirm book return → status "đã trả", log return date, restore SoQuyen.
  */

@@ -1,53 +1,34 @@
-// Tên tệp: src/services/docgia.service.js
-
 import http from "./http-common";
 
-// Service này dùng cho Admin quản lý,
-// (AuthService đã xử lý đăng nhập/đăng ký)
+/**
+ * Admin DocGia Service
+ * Base URL: /api/admin (đã cấu hình trong http-common)
+ * Endpoints: /docgia/*
+ */
 class DocGiaService {
-  // Admin: Lấy tất cả độc giả
-  getAll() {
-    return http.get("/docgia");
+  // Lấy tất cả độc giả (hỗ trợ ?search=...&trangThai=...)
+  getAll(params = {}) {
+    return http.get("/docgia", { params });
   }
 
-  // Admin: Lấy 1 độc giả
+  // Lấy chi tiết 1 độc giả (kèm thống kê mượn sách)
   get(id) {
     return http.get(`/docgia/${id}`);
   }
 
-  // Admin: Cập nhật độc giả
-  update(id, data) {
-    return http.put(`/docgia/${id}`, data);
+  // Khóa / Mở khóa tài khoản
+  toggleAccountStatus(id, data) {
+    return http.put(`/docgia/${id}/status`, data);
   }
 
-  // Admin/Staff: Tạo mới độc giả
-  create(data) {
-    return http.post(`/docgia`, data);
+  // Lấy lịch sử mượn sách của 1 độc giả
+  getBorrowHistory(id) {
+    return http.get(`/docgia/${id}/history`);
   }
 
-  // Admin: Xóa độc giả
-  delete(id) {
-    return http.delete(`/docgia/${id}`);
-  }
-
-  // Kiểm tra username có tồn tại không
-  checkUsernameExists(username) {
-    return http.get(`/docgia/check-username/${username}`);
-  }
-
-  // Thêm sách vào yêu thích
-  addFavorite(docGiaId, sachId) {
-    return http.post(`/docgia/${docGiaId}/favorites`, { sachId });
-  }
-
-  // Xóa sách khỏi yêu thích
-  removeFavorite(docGiaId, sachId) {
-    return http.delete(`/docgia/${docGiaId}/favorites/${sachId}`);
-  }
-
-  // Lấy danh sách sách yêu thích
-  getFavorites(docGiaId) {
-    return http.get(`/docgia/${docGiaId}/favorites`);
+  // Đặt lại mật khẩu về mặc định
+  resetPassword(id) {
+    return http.put(`/docgia/${id}/reset-password`);
   }
 }
 

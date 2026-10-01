@@ -21,6 +21,11 @@ class MuonSachService {
     return http.put(`/muonsach/${id}/approve`);
   }
 
+  /** Handover a book → status "đang mượn" */
+  handover(id) {
+    return http.put(`/muonsach/${id}/handover`);
+  }
+
   /** Reject a borrow request → status "từ chối" */
   reject(id, reason = "") {
     return http.put(`/muonsach/${id}/reject`, { reason });

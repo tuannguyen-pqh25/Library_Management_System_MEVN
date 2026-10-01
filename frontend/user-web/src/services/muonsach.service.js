@@ -13,6 +13,10 @@ class MuonSachService {
   getHistory() {
     return http.get('/user/muon/lich-su')
   }
+
+  requestReturn(id, ngayDuKienTra = null) {
+    return http.post(`/user/muon/${id}/request-return`, { ngayDuKienTra })
+  }
 }
 
 export default new MuonSachService()

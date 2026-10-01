@@ -12,5 +12,6 @@ router.route("/")
     .post(muonsach.create);
 
 router.get("/lich-su", muonsach.getHistory);
+router.post("/:id/request-return", muonsach.requestReturn);
 
 module.exports = router;
