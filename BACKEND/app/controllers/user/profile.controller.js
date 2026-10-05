@@ -66,7 +66,7 @@ exports.changePassword = async (req, res, next) => {
             return next(new ApiError(404, "Không tìm thấy người dùng"));
         }
 
-        const hash = currentUser.MatKhau || currentUser.password;
+        const hash = currentUser.Password;
         const isMatch = await bcrypt.compare(currentPassword, hash);
 
         if (!isMatch) {
@@ -74,7 +74,7 @@ exports.changePassword = async (req, res, next) => {
         }
 
         const updated = await docGiaService.update(req.user._id, {
-            MatKhau: newPassword,
+            Password: newPassword,
         });
 
         return res.status(200).json({

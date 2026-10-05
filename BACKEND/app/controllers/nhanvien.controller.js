@@ -7,8 +7,8 @@ const config = require("../config");
 // 1. Create (Register): Tạo nhân viên mới
 exports.create = async (req, res, next) => {
     // FIX 1: Kiểm tra "password" (thường)
-    if (!req.body?.MSNV || !req.body?.password) {
-        return next(new ApiError(400, "MSNV và Mật khẩu là bắt buộc"));
+    if (!req.body?.Password && !req.body?.password) {
+        return next(new ApiError(400, "Mật khẩu là bắt buộc"));
     }
 
     try {

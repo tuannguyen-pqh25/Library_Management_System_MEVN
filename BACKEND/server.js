@@ -19,3 +19,4 @@ async function startServer() {
 }
 
 startServer();
+// Trigger nodemon restart 4

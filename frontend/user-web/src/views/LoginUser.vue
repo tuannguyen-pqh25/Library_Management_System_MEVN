@@ -32,7 +32,7 @@
             />
 
             <BaseInput
-              v-model="form.MatKhau"
+              v-model="form.Password"
               label="Mật khẩu"
               type="password"
               placeholder="••••••••"
@@ -78,7 +78,7 @@ const router = useRouter()
 
 const form = reactive({
   Email: '',
-  MatKhau: '',
+  Password: '',
 })
 
 const errorMessage = ref('')

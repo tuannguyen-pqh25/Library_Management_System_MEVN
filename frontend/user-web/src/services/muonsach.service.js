@@ -17,6 +17,14 @@ class MuonSachService {
   requestReturn(id, ngayDuKienTra = null) {
     return http.post(`/user/muon/${id}/request-return`, { ngayDuKienTra })
   }
+
+  updatePending(id, soLuong) {
+    return http.put(`/user/muon/${id}`, { soLuong })
+  }
+
+  deletePending(id) {
+    return http.delete(`/user/muon/${id}`)
+  }
 }
 
 export default new MuonSachService()

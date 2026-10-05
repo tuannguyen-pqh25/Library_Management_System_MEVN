@@ -95,10 +95,13 @@
                     <ErrorMessage name="TacGia" class="text-danger small mt-1" />
                  </div>
                  <div class="col-md-6">
-                    <label class="form-label fw-semibold text-secondary small">Mã NXB <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold text-secondary small">Nhà Xuất Bản <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
-                       <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-barcode text-muted"></i></span>
-                       <Field name="MaNXB" type="text" class="form-control bg-light border-0 ps-2" placeholder="Mã nhà xuất bản" />
+                       <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-building text-muted"></i></span>
+                       <Field name="MaNXB" as="select" class="form-select bg-light border-0 ps-2">
+                          <option value="" disabled selected>Chọn nhà xuất bản...</option>
+                          <option v-for="nxb in publishers" :key="nxb.MaNXB" :value="nxb.MaNXB">{{ nxb.TenNXB }}</option>
+                       </Field>
                     </div>
                     <ErrorMessage name="MaNXB" class="text-danger small mt-1" />
                  </div>
@@ -106,7 +109,10 @@
                     <label class="form-label fw-semibold text-secondary small">Thể Loại <span class="text-danger">*</span></label>
                     <div class="input-group input-group-merge">
                         <span class="input-group-text bg-light border-0 ps-3"><i class="fas fa-tags text-muted"></i></span>
-                        <Field name="TheLoai" type="text" class="form-control bg-light border-0 ps-2" placeholder="Ví dụ: Khoa học, Văn học..." />
+                        <Field name="TheLoai" as="select" class="form-select bg-light border-0 ps-2">
+                           <option value="" disabled selected>Chọn thể loại...</option>
+                           <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                        </Field>
                     </div>
                     <ErrorMessage name="TheLoai" class="text-danger small mt-1" />
                  </div>
@@ -206,6 +212,7 @@
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import SachService from "@/services/sach.service";
+import NhaXuatBanService from "@/services/nhaxuatban.service";
 
 export default {
   name: "SachAdd",
@@ -237,7 +244,17 @@ export default {
       uploadAbortController: null,
       showSuccessNotification: false,
       showErrorNotification: false, // State mới cho toast lỗi
+      publishers: [],
+      categories: ["Khoa học", "Văn học", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa"],
     };
+  },
+  async mounted() {
+    try {
+      const response = await NhaXuatBanService.getAll();
+      this.publishers = response.data || [];
+    } catch (e) {
+      console.error(e);
+    }
   },
   methods: {
     // Helper function để hiển thị lỗi dạng Toast

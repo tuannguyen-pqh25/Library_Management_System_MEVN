@@ -46,7 +46,7 @@
               <div class="col-sm-6">
                 <div class="position-relative">
                   <BaseInput
-                    v-model="form.MatKhau"
+                    v-model="form.Password"
                     label="Mật khẩu"
                     :type="showPwd ? 'text' : 'password'"
                     placeholder="Min 8 ký tự, A-z, 0-9, !@#..."
@@ -55,7 +55,7 @@
                   <button type="button" class="btn position-absolute border-0 shadow-none text-muted px-3"
                     style="top: 36px; right: 0;"
                     @click="showPwd = !showPwd"
-                    v-if="form.MatKhau">
+                    v-if="form.Password">
                     <i :class="showPwd ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
                   </button>
                 </div>
@@ -63,7 +63,7 @@
               <div class="col-sm-6">
                 <div class="position-relative">
                   <BaseInput
-                    v-model="form.XacNhanMatKhau"
+                    v-model="form.XacNhanPassword"
                     label="Xác nhận mật khẩu"
                     :type="showPwd2 ? 'text' : 'password'"
                     placeholder="Nhập lại mật khẩu"
@@ -72,7 +72,7 @@
                   <button type="button" class="btn position-absolute border-0 shadow-none text-muted px-3"
                     style="top: 36px; right: 0;"
                     @click="showPwd2 = !showPwd2"
-                    v-if="form.XacNhanMatKhau">
+                    v-if="form.XacNhanPassword">
                     <i :class="showPwd2 ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
                   </button>
                 </div>
@@ -186,8 +186,8 @@ const router = useRouter();
 
 const form = reactive({
   Email: "",
-  MatKhau: "",
-  XacNhanMatKhau: "",
+  Password: "",
+  XacNhanPassword: "",
   HoLot: "",
   Ten: "",
   NgaySinh: "",
@@ -206,11 +206,11 @@ const showPwd2 = ref(false);
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
 const validateForm = () => {
-  if (!PASSWORD_REGEX.test(form.MatKhau)) {
+  if (!PASSWORD_REGEX.test(form.Password)) {
     errorMessage.value = "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt (!@#$...).";
     return false;
   }
-  if (form.MatKhau !== form.XacNhanMatKhau) {
+  if (form.Password !== form.XacNhanPassword) {
     errorMessage.value = "Mật khẩu xác nhận không khớp.";
     return false;
   }

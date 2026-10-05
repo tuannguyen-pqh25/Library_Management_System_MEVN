@@ -4,13 +4,10 @@ const ApiError = require("../../api-error");
 
 // 1. Create: Tạo NXB
 exports.create = async (req, res, next) => {
-    if (!req.body?.MANXB) {
-        return next(new ApiError(400, "Mã NXB không được để trống"));
-    }
-    if (!req.body?.TENNXB) {
+    if (!req.body?.TenNXB) {
         return next(new ApiError(400, "Tên NXB không được để trống"));
     }
-    if (!req.body?.DIACHI) {
+    if (!req.body?.DiaChi) {
         return next(new ApiError(400, "Địa chỉ không được để trống"));
     }
 
@@ -33,10 +30,10 @@ exports.findAll = async (req, res, next) => {
     let documents = [];
     try {
         const nxbService = new NhaXuatBanService(MongoDB.client);
-        const { TENNXB } = req.query; 
+        const { TenNXB } = req.query; 
 
-        if (TENNXB) {
-            documents = await nxbService.findByTen(TENNXB);
+        if (TenNXB) {
+            documents = await nxbService.findByTen(TenNXB);
         } else {
             documents = await nxbService.find({});
         }

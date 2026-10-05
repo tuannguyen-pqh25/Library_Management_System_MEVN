@@ -40,7 +40,7 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card h-100" style="--accent: #6366f1;">
               <div class="kpi-icon" style="background: rgba(99,102,241,0.15); color: #6366f1;">
-                <i class="fas fa-books fa-lg"></i>
+                <i class="fas fa-book fa-lg"></i>
               </div>
               <div class="kpi-body">
                 <div class="kpi-label">Tổng Đầu Sách</div>

@@ -137,10 +137,13 @@
                         <ErrorMessage name="TacGia" class="text-danger small mt-1 fw-bold" />
                      </div>
                      <div class="col-md-6">
-                        <label class="form-label fw-bold text-dark small">Mã NXB <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold text-dark small">Nhà Xuất Bản <span class="text-danger">*</span></label>
                         <div class="input-group">
-                           <span class="input-group-text bg-light border-end-0"><i class="fas fa-barcode text-secondary"></i></span>
-                           <Field name="MaNXB" type="text" class="form-control border-start-0 ps-0" placeholder="Mã nhà xuất bản" />
+                           <span class="input-group-text bg-light border-end-0"><i class="fas fa-building text-secondary"></i></span>
+                           <Field name="MaNXB" as="select" class="form-select border-start-0 ps-0">
+                              <option value="" disabled>Chọn nhà xuất bản...</option>
+                              <option v-for="nxb in publishers" :key="nxb.MaNXB" :value="nxb.MaNXB">{{ nxb.TenNXB }}</option>
+                           </Field>
                         </div>
                         <ErrorMessage name="MaNXB" class="text-danger small mt-1 fw-bold" />
                      </div>
@@ -148,7 +151,10 @@
                         <label class="form-label fw-bold text-dark small">Thể Loại <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-tags text-secondary"></i></span>
-                            <Field name="TheLoai" type="text" class="form-control border-start-0 ps-0" placeholder="Ví dụ: Khoa học..." />
+                            <Field name="TheLoai" as="select" class="form-select border-start-0 ps-0">
+                               <option value="" disabled>Chọn thể loại...</option>
+                               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            </Field>
                         </div>
                         <ErrorMessage name="TheLoai" class="text-danger small mt-1 fw-bold" />
                      </div>
@@ -213,6 +219,7 @@
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import SachService from "@/services/sach.service";
+import NhaXuatBanService from "@/services/nhaxuatban.service";
 
 export default {
   name: "SachEdit",
@@ -246,6 +253,8 @@ export default {
       uploadAbortController: null,
       showSuccessNotification: false,
       showErrorNotification: false,
+      publishers: [],
+      categories: ["Khoa học", "Văn học", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa"],
     };
   },
   methods: {
@@ -381,7 +390,13 @@ export default {
       }
     }
   },
-  mounted() {
+  async mounted() {
+    try {
+      const response = await NhaXuatBanService.getAll();
+      this.publishers = response.data || [];
+    } catch (e) {
+      console.error(e);
+    }
     const id = this.$route.params.id;
     if (id) {
         this.getBook(id);

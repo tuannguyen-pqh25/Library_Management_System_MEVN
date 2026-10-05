@@ -18,11 +18,11 @@
         <div v-if="formError" class="alert alert-danger" role="alert">{{ formError }}</div>
         <form @submit.prevent="save">
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label" for="staffCode">MSNV</label><input id="staffCode" v-model.trim="form.MSNV" class="form-control" :disabled="!!editId" required></div>
+            <div class="col-md-6" v-if="editId"><label class="form-label" for="staffCode">MSNV (Tự động)</label><input id="staffCode" :value="form.MSNV" class="form-control bg-light text-muted" disabled></div>
             <div class="col-md-6"><label class="form-label" for="staffName">Họ tên</label><input id="staffName" v-model.trim="form.HoTenNV" class="form-control" required></div>
             <div class="col-md-6"><label class="form-label" for="staffEmail">Email</label><input id="staffEmail" v-model.trim="form.EMAIL" class="form-control" type="email"></div>
             <div class="col-md-6"><label class="form-label" for="staffRole">Chức vụ</label><select id="staffRole" v-model="form.ChucVu" class="form-select" required><option v-for="option in roleOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></div>
-            <div class="col-md-6"><label class="form-label" for="staffPassword">Mật khẩu {{ editId ? '(để trống để giữ nguyên)' : '' }}</label><input id="staffPassword" v-model="form.password" class="form-control" type="password" :required="!editId" minlength="8" autocomplete="new-password"></div>
+            <div class="col-md-6"><label class="form-label" for="staffPassword">Mật khẩu {{ editId ? '(để trống để giữ nguyên)' : '' }}</label><input id="staffPassword" v-model="form.Password" class="form-control" type="password" :required="!editId" minlength="8" autocomplete="new-password"></div>
           </div>
           <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit" :disabled="saving">{{ saving ? 'Đang lưu...' : 'Lưu' }}</button><button class="btn btn-outline-secondary" type="button" :disabled="saving" @click="editing = false">Hủy</button></div>
         </form>
@@ -125,14 +125,14 @@ const retrieveStaff = async () => {
 
 const openCreate = () => {
   editId.value = null
-  form.value = { MSNV: '', HoTenNV: '', EMAIL: '', ChucVu: ROLES.books, password: '' }
+  form.value = { MSNV: '', HoTenNV: '', EMAIL: '', ChucVu: ROLES.books, Password: '' }
   formError.value = ''
   editing.value = true
 }
 
 const openEdit = (record) => {
   editId.value = record._id
-  form.value = { MSNV: record.MSNV, HoTenNV: record.HoTenNV || '', EMAIL: record.EMAIL || '', ChucVu: record.ChucVu, password: '' }
+  form.value = { MSNV: record.MSNV, HoTenNV: record.HoTenNV || '', EMAIL: record.EMAIL || '', ChucVu: record.ChucVu, Password: '' }
   formError.value = ''
   editing.value = true
 }
@@ -142,9 +142,9 @@ const save = async () => {
   formError.value = ''
   try {
     const payload = { HoTenNV: form.value.HoTenNV, EMAIL: form.value.EMAIL, ChucVu: form.value.ChucVu }
-    if (form.value.password) payload.password = form.value.password
+    if (form.value.Password) payload.Password = form.value.Password
     if (editId.value) await NhanVienService.update(editId.value, payload)
-    else await NhanVienService.create({ ...payload, MSNV: form.value.MSNV })
+    else await NhanVienService.create(payload)
     editing.value = false
     noticeType.value = 'success'
     notice.value = editId.value ? 'Đã cập nhật nhân viên.' : 'Đã tạo nhân viên.'

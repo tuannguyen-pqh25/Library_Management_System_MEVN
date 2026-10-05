@@ -1,6 +1,13 @@
 <template>
   <div class="page-shell py-5">
     <div class="container">
+      <!-- Toast Notification -->
+      <div v-if="toast.show" class="alert alert-dismissible fade show toast-fixed shadow" :class="toast.type === 'success' ? 'alert-success' : 'alert-danger'" role="alert">
+        <i class="fas me-2" :class="toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+        {{ toast.message }}
+        <button type="button" class="btn-close" @click="toast.show = false"></button>
+      </div>
+
       <!-- Header Section -->
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
         <div>
@@ -8,28 +15,55 @@
           <p class="text-muted-custom mb-0">Khám phá kho sách phong phú của Thư viện Số</p>
         </div>
 
-        <!-- Search Bar -->
+        <!-- Search Bar with Category Filter -->
         <div class="search-box">
           <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border">
-            <span class="input-group-text bg-transparent border-0 text-muted ps-3 pe-2">
-              <i class="fa-solid fa-search"></i>
-            </span>
+            <select 
+              class="form-select border-0 shadow-none bg-transparent py-2 ps-3" 
+              style="max-width: 160px; border-right: 1px solid #dee2e6 !important;" 
+              v-model="selectedCategory" 
+              @change="fetchBooks" 
+              :disabled="loading"
+            >
+              <option value="">Tất cả thể loại</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
             <input 
               v-model="searchText" 
               type="text" 
-              class="form-control border-0 shadow-none bg-transparent py-2" 
+              class="form-control border-0 shadow-none bg-transparent py-2 px-3" 
               placeholder="Tìm kiếm tên sách..." 
               @keyup.enter="fetchBooks" 
+              :disabled="loading"
             />
-            <BaseButton variant="primary" class="rounded-pill m-1 px-4" @click="fetchBooks">
-              Tìm
+            <BaseButton variant="primary" class="rounded-pill m-1 px-4" @click="fetchBooks" :disabled="loading">
+              <i class="fas fa-spinner fa-spin me-1" v-if="loading"></i>
+              <span v-else>Tìm</span>
             </BaseButton>
           </div>
         </div>
       </div>
 
+      <!-- Loading State (Skeleton) -->
+      <div v-if="loading" class="row g-4">
+        <div v-for="i in 8" :key="i" class="col-sm-6 col-md-4 col-lg-3">
+          <div class="card border-0 shadow-sm h-100 placeholder-glow">
+            <div class="placeholder w-100" style="height: 250px; border-radius: 16px 16px 0 0;"></div>
+            <div class="card-body mt-2">
+              <div class="placeholder w-25 mb-2 rounded-pill" style="height: 20px;"></div>
+              <h6 class="card-title"><span class="placeholder col-10"></span></h6>
+              <p class="card-text mb-3"><span class="placeholder col-6"></span></p>
+              <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                <span class="placeholder col-4"></span>
+                <span class="placeholder col-3"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Book Grid -->
-      <div v-if="books.length" class="row g-4">
+      <div v-else-if="books.length" class="row g-4">
         <div v-for="book in books" :key="book._id" class="col-sm-6 col-md-4 col-lg-3">
           <BaseCard class="book-card h-100 hover-elevate">
             <template #img-top>
@@ -73,7 +107,7 @@
         </div>
         <h5 class="fw-bold text-dark">Không tìm thấy sách</h5>
         <p class="text-muted-custom">Thử tìm kiếm với một từ khóa khác hoặc quay lại sau.</p>
-        <BaseButton variant="outline-primary" @click="clearSearch" v-if="searchText">
+        <BaseButton variant="outline-primary" @click="clearSearch" v-if="searchText || selectedCategory">
           Xóa tìm kiếm
         </BaseButton>
       </div>
@@ -88,19 +122,45 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const books = ref([])
+const categories = ref([])
 const searchText = ref('')
+const selectedCategory = ref('')
+const loading = ref(false)
+const toast = ref({ show: false, message: '', type: 'success' })
+
+const showToast = (message, type = 'error') => {
+  toast.value = { show: true, message, type }
+  setTimeout(() => { toast.value.show = false }, 4000)
+}
+
+const fetchCategories = async () => {
+  try {
+    const response = await SachService.getAll()
+    const allBooks = Array.isArray(response.data) ? response.data : []
+    const rawCategories = allBooks.map(b => b.TheLoai).filter(Boolean)
+    categories.value = [...new Set(rawCategories)].sort()
+  } catch (error) {
+    console.error('Lỗi khi lấy danh mục', error)
+  }
+}
 
 const fetchBooks = async () => {
+  loading.value = true
+  toast.value.show = false
   try {
-    const response = await SachService.getAll(searchText.value)
+    const response = await SachService.getAll(searchText.value, selectedCategory.value)
     books.value = Array.isArray(response.data) ? response.data : []
   } catch (error) {
     console.error('Không thể tải danh sách sách:', error)
+    showToast(error.response?.data?.message || 'Lỗi khi tải danh sách sách')
+  } finally {
+    loading.value = false
   }
 }
 
 const clearSearch = () => {
   searchText.value = ''
+  selectedCategory.value = ''
   fetchBooks()
 }
 
@@ -110,6 +170,7 @@ const formatPrice = (price) => {
 }
 
 onMounted(() => {
+  fetchCategories()
   fetchBooks()
 })
 </script>
@@ -117,7 +178,7 @@ onMounted(() => {
 <style scoped>
 .search-box {
   width: 100%;
-  max-width: 400px;
+  max-width: 550px;
 }
 
 .img-wrapper {
@@ -176,9 +237,16 @@ onMounted(() => {
 }
 
 .text-accent {
-  color: var(--bs-warning); /* Assuming accent is warning/yellow in the design system */
+  color: var(--bs-warning);
 }
 .border-accent-subtle {
   border-color: rgba(var(--bs-warning-rgb), 0.5) !important;
+}
+.toast-fixed {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+  min-width: 250px;
 }
 </style>

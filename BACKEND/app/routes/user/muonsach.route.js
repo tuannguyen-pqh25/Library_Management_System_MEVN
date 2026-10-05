@@ -14,4 +14,8 @@ router.route("/")
 router.get("/lich-su", muonsach.getHistory);
 router.post("/:id/request-return", muonsach.requestReturn);
 
+router.route("/:id")
+    .put(muonsach.updatePending)
+    .delete(muonsach.deletePending);
+
 module.exports = router;

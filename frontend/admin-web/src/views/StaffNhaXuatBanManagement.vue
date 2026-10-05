@@ -157,10 +157,9 @@
 
             <div class="modal-body bg-light p-4">
                <Form @submit="saveNxb" :validation-schema="nxbSchema" v-slot="{ errors }">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-muted">Mã Nhà Xuất Bản <span class="text-danger">*</span></label>
-                        <Field name="MaNXB" type="text" class="form-control bg-white border-0 shadow-sm" :class="{'is-invalid': errors.MaNXB}" placeholder="VD: NXB01" v-model="formData.MaNXB" />
-                        <ErrorMessage name="MaNXB" class="invalid-feedback small" />
+                    <div class="mb-3" v-if="isEdit">
+                        <label class="form-label fw-semibold small text-muted">Mã Nhà Xuất Bản (Tự động)</label>
+                        <input type="text" class="form-control bg-light border-0 shadow-sm text-muted" disabled :value="formData.MaNXB" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small text-muted">Tên Nhà Xuất Bản <span class="text-danger">*</span></label>
@@ -211,7 +210,6 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const nxbSchema = yup.object().shape({
-  MaNXB: yup.string().required("Mã NXB là bắt buộc").max(10, "Tối đa 10 ký tự"),
   TenNXB: yup.string().required("Tên NXB là bắt buộc").max(200, "Tối đa 200 ký tự"),
   DiaChi: yup.string().required("Địa chỉ là bắt buộc").max(500, "Tối đa 500 ký tự")
 })

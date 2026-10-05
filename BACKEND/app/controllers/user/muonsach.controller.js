@@ -64,3 +64,26 @@ exports.requestReturn = async (req, res, next) => {
         return next(new ApiError(400, error.message || "Không thể yêu cầu trả sách"));
     }
 };
+
+exports.updatePending = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const soLuong = req.body.soLuong;
+        if (!soLuong) return next(new ApiError(400, "Vui lòng cung cấp số lượng"));
+        
+        const result = await muonSachService.updatePendingRequest(req.params.id, req.user._id, soLuong);
+        return res.status(200).json({ message: "Đã cập nhật số lượng", data: result });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Không thể cập nhật phiếu mượn"));
+    }
+};
+
+exports.deletePending = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const result = await muonSachService.deletePendingRequest(req.params.id, req.user._id);
+        return res.status(200).json({ message: "Đã hủy yêu cầu mượn sách", data: result });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Không thể hủy phiếu mượn"));
+    }
+};

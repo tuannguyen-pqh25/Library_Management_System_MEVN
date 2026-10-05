@@ -70,7 +70,7 @@
                 <!-- Label handled by BaseInput or custom -->
               </div>
               <BaseInput
-                v-model="form.password"
+                v-model="form.Password"
                 label="Mật khẩu"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="••••••••"
@@ -81,7 +81,7 @@
                 class="btn position-absolute border-0 shadow-none text-muted px-3"
                 style="top: 36px; right: 0;"
                 @click="showPassword = !showPassword"
-                v-if="form.password"
+                v-if="form.Password"
               >
                 <i :class="showPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
               </button>
@@ -122,7 +122,7 @@ const router = useRouter()
 
 const form = reactive({
   identifier: '',
-  password: '',
+  Password: '',
 })
 
 const loading = ref(false)
@@ -138,7 +138,7 @@ const handleUnifiedLogin = async () => {
   try {
     const loggedInUser = await AuthService.loginNhanVien({
       MSNV: form.identifier.trim(),
-      password: form.password,
+      password: form.Password,
     })
 
     eventBus.emit('auth-change')

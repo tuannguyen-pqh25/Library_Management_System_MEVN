@@ -16,48 +16,58 @@
 
       <BaseCard v-else-if="records.length" class="overflow-hidden shadow-sm border-0">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+          <table class="table custom-table align-middle mb-0">
+            <thead>
               <tr>
-                <th class="ps-4 py-3 text-muted-custom fw-semibold">#</th>
-                <th class="py-3 text-muted-custom fw-semibold">Tên Sách</th>
-                <th class="py-3 text-muted-custom fw-semibold">Ngày mượn</th>
-                <th class="py-3 text-muted-custom fw-semibold">Hạn trả</th>
-                <th class="py-3 text-muted-custom fw-semibold text-center">Trạng thái</th>
-                <th class="py-3 text-muted-custom fw-semibold text-center">Thao tác</th>
+                <th class="ps-4 py-3 text-uppercase font-display text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">#</th>
+                <th class="py-3 text-uppercase font-display text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Tên Sách</th>
+                <th class="py-3 text-uppercase font-display text-muted text-center" style="font-size: 0.75rem; letter-spacing: 0.5px;">SL</th>
+                <th class="py-3 text-uppercase font-display text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Ngày mượn</th>
+                <th class="py-3 text-uppercase font-display text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Hạn trả</th>
+                <th class="py-3 text-uppercase font-display text-muted text-center" style="font-size: 0.75rem; letter-spacing: 0.5px;">Trạng thái</th>
+                <th class="py-3 text-uppercase font-display text-muted text-center pe-4" style="font-size: 0.75rem; letter-spacing: 0.5px;">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(record, index) in records" :key="record._id || index">
-                <td class="ps-4 fw-medium text-muted">{{ index + 1 }}</td>
-                <td class="fw-semibold text-dark">
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+              <tr v-for="(record, index) in records" :key="record._id || index" class="bg-white border-bottom table-row-hover">
+                <td class="ps-4 fw-medium text-muted-custom" style="font-size: 0.9rem;">{{ index + 1 }}</td>
+                <td class="fw-bold text-dark py-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="book-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
                       <i class="fas fa-book"></i>
                     </div>
-                    <span class="line-clamp-1" style="max-width: 250px;" :title="record.TenSach || 'Sách'">{{ record.TenSach || 'Sách' }}</span>
+                    <span class="line-clamp-1" style="max-width: 250px; font-size: 0.95rem;" :title="record.TenSach || 'Sách'">{{ record.TenSach || 'Sách' }}</span>
                   </div>
                 </td>
-                <td>{{ formatDate(record.ngayMuon) }}</td>
-                <td>{{ formatDate(record.ngayTra) }}</td>
+                <td class="fw-bold text-center text-primary" style="font-size: 0.95rem;">{{ record.soLuong || 1 }}</td>
+                <td class="fw-medium text-dark" style="font-size: 0.9rem;">{{ formatDate(record.ngayMuon) }}</td>
+                <td class="fw-medium text-dark" style="font-size: 0.9rem;">{{ formatDate(record.ngayTra) }}</td>
                 <td class="text-center">
-                  <span class="badge rounded-pill px-3 py-2 fw-medium border" :class="statusClass(record.trangThai)">
+                  <span class="badge rounded-pill px-3 py-2 fw-bold" :class="statusClass(record.trangThai)" style="font-size: 0.75rem;">
                     <i class="fas me-1" :class="statusIcon(record.trangThai)"></i>
                     {{ formatStatus(record.trangThai) }}
                   </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center pe-4">
                   <button
                     v-if="['đã duyệt', 'đang mượn', 'quá hạn'].includes(record.trangThai)"
-                    class="btn btn-sm btn-warning text-dark rounded-pill fw-bold shadow-sm px-3"
+                    class="btn btn-sm btn-outline-warning text-dark border-warning border-2 rounded-pill fw-bold hover-scale px-3"
                     @click="openReturnModal(record)"
                     :disabled="isProcessing === record._id"
                   >
                     <i class="fas" :class="isProcessing === record._id ? 'fa-spinner fa-spin' : 'fa-undo'"></i>
-                    Xin trả sách
+                    Hẹn trả sách
                   </button>
-                  <span v-else-if="record.trangThai === 'đang chờ trả'" class="text-muted small">
-                    Đang chờ xác nhận
+                  <div v-else-if="record.trangThai === 'chờ duyệt'" class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-2 hover-scale" @click="openEditModal(record)" title="Sửa số lượng" :disabled="isProcessing === record._id">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-2 hover-scale" @click="cancelRequest(record)" title="Hủy yêu cầu" :disabled="isProcessing === record._id">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <span v-else-if="record.trangThai === 'đang chờ trả'" class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-3 py-2">
+                    <i class="fas fa-hourglass-half me-1"></i> Đang chờ
                   </span>
                 </td>
               </tr>
@@ -111,6 +121,44 @@
         </div>
       </div>
     </div>
+    
+    <!-- Modal Sửa Số Lượng -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header bg-primary text-white py-3 px-4 border-0">
+            <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>Sửa số lượng mượn</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="text-muted mb-3">
+              Bạn đang sửa số lượng cho sách <strong class="text-dark">{{ editTarget?.TenSach }}</strong>.
+            </p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Số lượng mượn mới <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" type="button" @click="editQuantity = Math.max(1, editQuantity - 1)">-</button>
+                <input type="number" class="form-control text-center text-primary fw-bold bg-light" v-model="editQuantity" min="1" max="10">
+                <button class="btn btn-outline-secondary" type="button" @click="editQuantity = Math.min(10, editQuantity + 1)">+</button>
+              </div>
+              <small class="text-muted mt-2 d-block">Lưu ý: Tổng số sách mượn không được vượt quá 10 quyển.</small>
+            </div>
+          </div>
+          <div class="modal-footer border-top pt-3">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+            <button
+              type="button"
+              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
+              :disabled="isProcessing === editTarget?._id || editQuantity < 1"
+              @click="submitEditRequest"
+            >
+              <i class="fas" :class="isProcessing === editTarget?._id ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+              Lưu thay đổi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script setup>
@@ -125,8 +173,11 @@ const isProcessing = ref(null)
 
 
 let returnModalInst = null
+let editModalInst = null
 const returnTarget = ref(null)
 const returnDate = ref('')
+const editTarget = ref(null)
+const editQuantity = ref(1)
 
 const todayDate = computed(() => {
   return new Date().toISOString().split('T')[0]
@@ -186,15 +237,48 @@ const submitReturnRequest = async () => {
   }
 }
 
+const openEditModal = (record) => {
+  editTarget.value = record
+  editQuantity.value = record.soLuong || 1
+  editModalInst?.show()
+}
+
+const submitEditRequest = async () => {
+  if (!editTarget.value) return
+  isProcessing.value = editTarget.value._id
+  try {
+    await MuonSachService.updatePending(editTarget.value._id, editQuantity.value)
+    editModalInst?.hide()
+    await fetchHistory()
+  } catch (error) {
+    alert(error.response?.data?.message || "Không thể cập nhật số lượng")
+  } finally {
+    isProcessing.value = null
+  }
+}
+
+const cancelRequest = async (record) => {
+  if (!confirm(`Bạn có chắc chắn muốn hủy phiếu mượn cuốn sách "${record.TenSach}"?`)) return
+  isProcessing.value = record._id
+  try {
+    await MuonSachService.deletePending(record._id)
+    await fetchHistory()
+  } catch (error) {
+    alert(error.response?.data?.message || "Không thể hủy phiếu mượn")
+  } finally {
+    isProcessing.value = null
+  }
+}
+
 const statusClass = (value) => {
   const text = String(value || '').toLowerCase()
-  if (text === 'chờ duyệt') return 'bg-warning text-dark border-warning-subtle'
-  if (text === 'đã duyệt') return 'bg-info text-dark border-info-subtle'
-  if (text === 'đang mượn') return 'bg-primary text-white border-primary-subtle'
-  if (text === 'đang chờ trả') return 'bg-orange text-white border-warning-subtle'
-  if (text === 'đã trả') return 'bg-success text-white border-success-subtle'
-  if (text === 'từ chối' || text === 'mat') return 'bg-danger text-white border-danger-subtle'
-  if (text === 'quá hạn') return 'bg-danger text-white border-danger-subtle'
+  if (text === 'chờ duyệt') return 'bg-warning bg-opacity-10 text-warning-emphasis'
+  if (text === 'đã duyệt') return 'bg-info bg-opacity-10 text-info-emphasis'
+  if (text === 'đang mượn') return 'bg-primary bg-opacity-10 text-primary'
+  if (text === 'đang chờ trả') return 'bg-secondary bg-opacity-10 text-secondary'
+  if (text === 'đã trả') return 'bg-success bg-opacity-10 text-success'
+  if (text === 'từ chối' || text === 'mat') return 'bg-danger bg-opacity-10 text-danger'
+  if (text === 'quá hạn') return 'bg-danger text-white border-danger shadow-sm'
   return 'bg-secondary text-white'
 }
 
@@ -212,6 +296,7 @@ const statusIcon = (value) => {
 
 onMounted(() => {
   returnModalInst = new Modal(document.getElementById('returnModal'))
+  editModalInst = new Modal(document.getElementById('editModal'))
   fetchHistory()
 })
 </script>
@@ -230,7 +315,31 @@ onMounted(() => {
 .hover-scale:hover {
   transform: scale(1.05);
 }
-.table > :not(caption) > * > * {
-  padding: 1rem 0.5rem;
+
+/* Custom Table Design */
+.custom-table {
+  --bs-table-bg: transparent;
+  --bs-table-border-color: #f1f3f5;
+}
+.custom-table thead th {
+  border-bottom: 2px solid #e9ecef;
+  background-color: transparent;
+}
+.table-row-hover {
+  transition: all 0.2s ease;
+}
+.table-row-hover:hover {
+  background-color: #f8f9fa !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.custom-table > :not(caption) > * > * {
+  padding: 1.25rem 0.5rem;
+  vertical-align: middle;
+}
+.book-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
 }
 </style>

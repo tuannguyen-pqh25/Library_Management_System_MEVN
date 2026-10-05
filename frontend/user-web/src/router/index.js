@@ -7,6 +7,8 @@ import BookList from '@/views/BookList.vue'
 import BookDetail from '@/views/BookDetail.vue'
 import BorrowHistory from '@/views/BorrowHistory.vue'
 import ProfileUser from '@/views/ProfileUser.vue'
+import WishlistUser from '@/views/WishlistUser.vue'
+import CartUser from '@/views/CartUser.vue'
 
 const routes = [
   {
@@ -45,6 +47,18 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: ProfileUser,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/yeuthich',
+    name: 'wishlist',
+    component: WishlistUser,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/gio-muon',
+    name: 'cart',
+    component: CartUser,
     meta: { requiresAuth: true },
   },
   {

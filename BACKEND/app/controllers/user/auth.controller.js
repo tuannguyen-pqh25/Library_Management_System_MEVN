@@ -5,9 +5,9 @@ const MongoDB = require("../../utils/mongodb.util");
 const DocGiaService = require("../../services/docgia.service");
 
 exports.register = async (req, res, next) => {
-    const { Email, MatKhau, MaDocGia, HoLot, Ten, NgaySinh, Phai, DiaChi, DienThoai } = req.body || {};
+    const { Email, Password, MaDocGia, HoLot, Ten, NgaySinh, Phai, DiaChi, DienThoai } = req.body || {};
 
-    if (!Email || !MatKhau) {
+    if (!Email || !Password) {
         return next(new ApiError(400, "Email và mật khẩu là bắt buộc"));
     }
 
@@ -15,7 +15,7 @@ exports.register = async (req, res, next) => {
         const docGiaService = new DocGiaService(MongoDB.client);
         const docGia = await docGiaService.create({
             Email,
-            MatKhau,
+            Password,
             MaDocGia,
             HoLot,
             Ten,
@@ -38,17 +38,17 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     const ip = req.headers["x-test-user"] || req.ip;
-    const { Email, MatKhau, password } = req.body || {};
+    const { Email, Password } = req.body || {};
 
-    if ((!Email && !req.body?.email) || !(MatKhau || password)) {
+    if (!Email || !Password) {
         return next(new ApiError(400, "Email và mật khẩu là bắt buộc"));
     }
 
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
         const docGia = await docGiaService.login({
-            Email: Email ?? req.body?.email,
-            MatKhau: MatKhau ?? password,
+            Email,
+            Password,
         }, ip);
 
         const token = jwt.sign(

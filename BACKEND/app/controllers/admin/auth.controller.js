@@ -8,7 +8,7 @@ const config = require("../../config");
 exports.login = async (req, res, next) => {
     const ip = req.headers["x-test-user"] || req.ip;
 
-    if (!req.body?.MSNV || !req.body?.password) {
+    if (!req.body?.MSNV || !req.body?.Password) {
         return next(new ApiError(400, "MSNV và Mật khẩu là bắt buộc"));
     }
 

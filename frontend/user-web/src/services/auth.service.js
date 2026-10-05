@@ -11,12 +11,9 @@ class AuthService {
   }
 
   async login(payload) {
-    const email = payload.Email ?? payload.email
-    const password = payload.MatKhau ?? payload.password
-
     const response = await http.post('/user/auth/login', {
-      Email: email,
-      MatKhau: password,
+      Email: payload.Email,
+      Password: payload.Password,
     })
 
     const user = response.data?.data || null
@@ -35,8 +32,8 @@ class AuthService {
 
   async register(payload) {
     const response = await http.post('/user/auth/register', {
-      Email: payload.Email ?? payload.email,
-      MatKhau: payload.MatKhau ?? payload.password,
+      Email: payload.Email,
+      Password: payload.Password,
       MaDocGia: payload.MaDocGia,
       HoLot: payload.HoLot,
       Ten: payload.Ten,

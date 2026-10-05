@@ -5,12 +5,17 @@ const ApiError = require("../../api-error");
 exports.findAll = async (req, res, next) => {
     try {
         const sachService = new SachService(MongoDB.client);
-        const { TenSach } = req.query;
-        const searchKeyword = TenSach;
+        const { TenSach, TheLoai } = req.query;
+        
+        const filter = {};
+        if (TenSach) {
+            filter.TenSach = { $regex: new RegExp(TenSach, "i") };
+        }
+        if (TheLoai) {
+            filter.TheLoai = TheLoai;
+        }
 
-        const documents = searchKeyword
-            ? await sachService.findByName(searchKeyword)
-            : await sachService.find({});
+        const documents = await sachService.find(filter);
 
         return res.status(200).json(documents);
     } catch (error) {

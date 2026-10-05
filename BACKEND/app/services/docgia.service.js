@@ -8,29 +8,18 @@ class DocGiaService {
     }
 
     #extractDocGiaData(payload = {}) {
-        const normalizedEmail = payload.Email ?? payload.email ?? payload.username ?? null;
-        const normalizedPassword = payload.MatKhau ?? payload.password ?? payload.Password ?? null;
-
         const docgia = {
-            MaDocGia: payload.MaDocGia ?? payload.maDocGia ?? payload.MADOCGIA ?? null,
-            HoLot: payload.HoLot ?? payload.hoLot ?? payload.HOLOT ?? null,
-            Ten: payload.Ten ?? payload.ten ?? payload.TEN ?? null,
-            NgaySinh: payload.NgaySinh ?? payload.ngaySinh ?? payload.NGAYSINH ?? null,
-            Phai: payload.Phai ?? payload.gioiTinh ?? payload.GIOITINH ?? "Khác",
-            DiaChi: payload.DiaChi ?? payload.diaChi ?? payload.DIACHI ?? null,
-            DienThoai: payload.DienThoai ?? payload.dienThoai ?? payload.DIENTHOAI ?? null,
-            Email: normalizedEmail,
-            MatKhau: normalizedPassword,
-            TrangThaiTaiKhoan: payload.TrangThaiTaiKhoan ?? "BinhThuong",
-            favorites: payload.favorites ?? [],
-            username: payload.username ?? normalizedEmail,
-            password: normalizedPassword,
-            HOLOT: payload.HOLOT ?? payload.HoLot ?? null,
-            TEN: payload.TEN ?? payload.Ten ?? null,
-            NGAYSINH: payload.NGAYSINH ?? payload.NgaySinh ?? null,
-            GIOITINH: payload.GIOITINH ?? payload.Phai ?? null,
-            DIACHI: payload.DIACHI ?? payload.DiaChi ?? null,
-            DIENTHOAI: payload.DIENTHOAI ?? payload.DienThoai ?? null,
+            MaDocGia: payload.MaDocGia,
+            HoLot: payload.HoLot,
+            Ten: payload.Ten,
+            NgaySinh: payload.NgaySinh,
+            Phai: payload.Phai || "Khác",
+            DiaChi: payload.DiaChi,
+            DienThoai: payload.DienThoai,
+            Email: payload.Email,
+            Password: payload.Password,
+            TrangThaiTaiKhoan: payload.TrangThaiTaiKhoan || "BinhThuong",
+            favorites: payload.favorites || []
         };
 
         Object.keys(docgia).forEach(
@@ -53,7 +42,7 @@ class DocGiaService {
             throw new Error("Email là bắt buộc");
         }
 
-        if (!docgiaData.MatKhau) {
+        if (!docgiaData.Password) {
             throw new Error("Mật khẩu là bắt buộc");
         }
 
@@ -70,26 +59,23 @@ class DocGiaService {
         }
 
         const salt = await bcrypt.genSalt(10);
-        docgiaData.MatKhau = await bcrypt.hash(docgiaData.MatKhau, salt);
-        // Field legacy `password` vẫn được giữ để tương thích, nhưng không lưu mật khẩu thô.
-        docgiaData.password = docgiaData.MatKhau;
+        docgiaData.Password = await bcrypt.hash(docgiaData.Password, salt);
         docgiaData.TrangThaiTaiKhoan = docgiaData.TrangThaiTaiKhoan || "BinhThuong";
 
         await this.DocGia.insertOne(docgiaData);
 
-        delete docgiaData.MatKhau;
-        delete docgiaData.password;
+        delete docgiaData.Password;
         return docgiaData;
     }
 
     /**
      * Đăng nhập độc giả.
-     * @param {object} payload Chứa Email và MatKhau
+     * @param {object} payload Chứa Email và Password
      * @returns {object} Thông tin độc giả (đã bỏ password)
      */
     async login(payload, ip) {
-        const email = payload.Email ?? payload.email ?? payload.username;
-        const password = payload.MatKhau ?? payload.password ?? payload.Password;
+        const email = payload.Email ?? payload.email;
+        const password = payload.Password ?? payload.password ?? payload.MatKhau;
 
         if (!email || !password) {
             throw {
@@ -128,7 +114,7 @@ class DocGiaService {
             };
         }
 
-        const hash = docgia.MatKhau || docgia.password;
+        const hash = docgia.Password;
         const isMatch = await bcrypt.compare(password, hash);
 
         if (!isMatch) {
@@ -138,8 +124,7 @@ class DocGiaService {
             };
         }
 
-        delete docgia.MatKhau;
-        delete docgia.password;
+        delete docgia.Password;
         return docgia;
     }
 
@@ -152,7 +137,7 @@ class DocGiaService {
     //Tìm độc giả băng tên
     async findByTen(ten) {
         return await this.find({
-            TEN: { $regex: new RegExp(ten), $options: "i" },
+            Ten: { $regex: new RegExp(ten), $options: "i" },
         });
     }
 
@@ -184,17 +169,12 @@ class DocGiaService {
         const update = this.#extractDocGiaData(payload);
 
         // Nếu người dùng cập nhật cả password, ta phải hash nó
-        if (update.password) {
+        if (update.Password) {
             const salt = await bcrypt.genSalt(10);
-            update.password = await bcrypt.hash(update.password, salt);
+            update.Password = await bcrypt.hash(update.Password, salt);
         } else {
             // Nếu không có pass mới, xóa trường này để không ghi đè
-            delete update.password;
-        }
-
-        // Nếu không có username mới, xóa trường này để không ghi đè
-        if (update.username === undefined) {
-             delete update.username;
+            delete update.Password;
         }
 
         // Nếu favorites không được cung cấp, xóa khỏi update để không ghi đè
@@ -208,7 +188,7 @@ class DocGiaService {
             { returnDocument: "after" }
         );
 
-        if (result.value) delete result.value.password;
+        if (result.value) delete result.value.Password;
         return result;
     }
 
@@ -264,7 +244,7 @@ class DocGiaService {
             throw new Error("Không tìm thấy độc giả");
         }
 
-        delete updatedDoc.password;
+        delete updatedDoc.Password;
         return updatedDoc;
     }
 
@@ -297,7 +277,7 @@ class DocGiaService {
             throw new Error("Không tìm thấy độc giả");
         }
 
-        delete updatedDoc.password;
+        delete updatedDoc.Password;
         return updatedDoc;
     }
 
@@ -326,12 +306,12 @@ class DocGiaService {
     }
 
     /**
-     * Kiểm tra username có tồn tại không
+     * Kiểm tra username (hoặc email) có tồn tại không
      * @param {string} username Tên đăng nhập cần kiểm tra
      * @returns {boolean} True nếu tồn tại, false nếu không
      */
     async checkUsernameExists(username) {
-        const count = await this.DocGia.countDocuments({ username });
+        const count = await this.DocGia.countDocuments({ Email: username });
         return count > 0;
     }
 }

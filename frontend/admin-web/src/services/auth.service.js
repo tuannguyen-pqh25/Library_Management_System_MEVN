@@ -7,7 +7,7 @@ class AuthService {
   async loginNhanVien(staff) {
     const response = await http.post("/auth/login", {
       MSNV: staff.MSNV,
-      password: staff.password,
+      Password: staff.password,
     });
 
     const user = response.data?.data || null;

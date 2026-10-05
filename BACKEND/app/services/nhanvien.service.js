@@ -9,7 +9,7 @@ class NhanVienService {
     #extractNhanVienData(payload) {
         const nhanvien = {
             MSNV: payload.MSNV,
-            Password: payload.password, // Nhận "password" (thường)
+            Password: payload.Password || payload.password,
             HoTenNV: payload.HoTenNV,
             ChucVu: payload.ChucVu, // <-- FIX 1: Bỏ (|| "staff")
             DiaChi: payload.DiaChi,
@@ -29,9 +29,21 @@ class NhanVienService {
         const nhanvienData = this.#extractNhanVienData(payload);
 
         // (Kiểm tra MSNV đã tồn tại - giữ nguyên)
-        const existingNhanVien = await this.NhanVien.findOne({ MSNV: nhanvienData.MSNV });
+        if (!nhanvienData.MSNV) {
+            const count = await this.NhanVien.countDocuments();
+            nhanvienData.MSNV = `NV${String(count + 1).padStart(3, '0')}`;
+            let isExist = await this.NhanVien.findOne({ MSNV: nhanvienData.MSNV });
+            let counter = count + 1;
+            while (isExist) {
+                counter++;
+                nhanvienData.MSNV = `NV${String(counter).padStart(3, '0')}`;
+                isExist = await this.NhanVien.findOne({ MSNV: nhanvienData.MSNV });
+            }
+        } else {
+            const existingNhanVien = await this.NhanVien.findOne({ MSNV: nhanvienData.MSNV });
         if (existingNhanVien) {
             throw new Error("MSNV đã tồn tại");
+        }
         }
 
         // (Băm mật khẩu - giữ nguyên)
@@ -73,7 +85,7 @@ class NhanVienService {
         if (!nhanvien) {
             throw new Error("MSNV hoặc Mật khẩu không đúng");
         }
-        const isMatch = await bcrypt.compare(payload.password, nhanvien.Password);
+        const isMatch = await bcrypt.compare(payload.Password, nhanvien.Password);
         
         if (!isMatch) {
             const attempts = await redis.incr(failKey);
@@ -148,9 +160,9 @@ class NhanVienService {
         );
 
         // Xử lý password nếu được cung cấp
-        if (payload.password) {
+        if (payload.Password) {
             const salt = await bcrypt.genSalt(10);
-            updatePayload.Password = await bcrypt.hash(payload.password, salt);
+            updatePayload.Password = await bcrypt.hash(payload.Password, salt);
         }
 
         const result = await this.NhanVien.findOneAndUpdate(

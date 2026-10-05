@@ -98,6 +98,8 @@ class MuonSachService {
             trangThai: trangThaiMoi,
             nhanVienId: nhanVienXuLyId,
             ngayTraThucTe: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         };
 
         const result = await this.MuonSach.insertOne(phieuMuonData);
@@ -126,7 +128,7 @@ class MuonSachService {
 
     async find(filter) {
         await this._checkAndUpdateOverdue();
-        const cursor = await this.MuonSach.find(filter);
+        const cursor = await this.MuonSach.find(filter).sort({ createdAt: -1, ngayMuon: -1 });
         const records = await cursor.toArray();
         return await this._populateMuonSachRecords(records);
     }
@@ -146,7 +148,7 @@ class MuonSachService {
     async findAllPopulated(filter = {}) {
         await this._checkAndUpdateOverdue();
         const records = await this.MuonSach.find(filter)
-            .sort({ ngayMuon: -1 })
+            .sort({ createdAt: -1, ngayMuon: -1 })
             .toArray();
 
         return await Promise.all(records.map(async (rec) => {
@@ -403,6 +405,8 @@ class MuonSachService {
             updateData.ngayDuKienTra = payload.ngayDuKienTra;
         }
 
+        updateData.updatedAt = new Date().toISOString();
+
         if (newTrangThai === "đã duyệt") {
             const stock = await this.Sach.updateOne(
                 { _id: sachId, SoQuyen: { $gte: soLuong } },
@@ -455,6 +459,64 @@ class MuonSachService {
             await this.Sach.updateOne({ _id: result.sachId }, { $inc: { SoQuyen: result.soLuong || 1 } });
         }
         return result;
+    }
+
+    // 7. Update pending request (cho độc giả)
+    async updatePendingRequest(id, docGiaId, soLuong) {
+        const phieuMuonId = ObjectId.isValid(id) ? new ObjectId(id) : null;
+        if (!phieuMuonId) throw new Error("ID Phiếu Mượn không hợp lệ");
+
+        const record = await this.findById(phieuMuonId);
+        if (!record || record.docGiaId.toString() !== docGiaId.toString()) {
+            throw new Error("Không tìm thấy phiếu mượn");
+        }
+        if (record.trangThai !== "chờ duyệt") {
+            throw new Error("Chỉ có thể sửa số lượng khi phiếu mượn đang chờ duyệt");
+        }
+        
+        soLuong = parseInt(soLuong);
+        if (isNaN(soLuong) || soLuong < 1 || soLuong > 10) {
+            throw new Error("Số lượng phải từ 1 đến 10");
+        }
+        
+        const sach = await this.Sach.findOne({ _id: record.sachId });
+        if (!sach) throw new Error("Không tìm thấy sách");
+        
+        if (sach.SoQuyen < soLuong) {
+            throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không thể mượn ${soLuong} quyển`);
+        }
+        
+        const docGiaMuonSach = await this.MuonSach.find({
+            docGiaId: record.docGiaId,
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
+        }).toArray();
+        
+        const currentCount = docGiaMuonSach.reduce((sum, r) => sum + (r._id.toString() === id.toString() ? 0 : (r.soLuong || 1)), 0);
+        if (currentCount + soLuong > 10) {
+            throw new Error(`Bạn đã mượn/chờ duyệt ${currentCount} quyển. Không thể sửa thành ${soLuong} quyển vì sẽ vượt giới hạn 10`);
+        }
+
+        return await this.MuonSach.findOneAndUpdate(
+            { _id: phieuMuonId },
+            { $set: { soLuong, updatedAt: new Date().toISOString() } },
+            { returnDocument: "after" }
+        );
+    }
+
+    // 8. Delete pending request (cho độc giả)
+    async deletePendingRequest(id, docGiaId) {
+        const phieuMuonId = ObjectId.isValid(id) ? new ObjectId(id) : null;
+        if (!phieuMuonId) throw new Error("ID Phiếu Mượn không hợp lệ");
+
+        const record = await this.findById(phieuMuonId);
+        if (!record || record.docGiaId.toString() !== docGiaId.toString()) {
+            throw new Error("Không tìm thấy phiếu mượn");
+        }
+        if (record.trangThai !== "chờ duyệt") {
+            throw new Error("Chỉ có thể xóa phiếu mượn khi đang chờ duyệt");
+        }
+        
+        return await this.MuonSach.findOneAndDelete({ _id: phieuMuonId });
     }
 }
 

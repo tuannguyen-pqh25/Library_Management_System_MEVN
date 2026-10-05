@@ -7,16 +7,21 @@
     <main class="flex-grow-1 bg-body">
       <router-view />
     </main>
+
+    <!-- Chat Widget -->
+    <ChatWidget />
   </div>
 </template>
 
 <script>
 import AppHeader from '@/components/AppHeader.vue'
+import ChatWidget from '@/components/ui/ChatWidget.vue'
 
 export default {
   name: 'App',
   components: {
-    AppHeader
+    AppHeader,
+    ChatWidget
   }
 }
 </script>

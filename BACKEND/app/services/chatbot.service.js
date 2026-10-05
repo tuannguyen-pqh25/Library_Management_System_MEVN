@@ -69,7 +69,7 @@ class ChatbotService {
         try {
             this.genAI = new GoogleGenerativeAI(apiKey);
             this.model = this.genAI.getGenerativeModel({
-                model: "gemini-2.5-flash",
+                model: "gemini-3.8-flash",
                 systemInstruction: "Ban la tro ly thu vien. NHIEM VU: Giup doc gia tra loi cau hoi ve thu vien.\n\nPHAM VI:\n1. Tra cuu sach (ten, tac gia, noi dung, the loai)\n2. Xem sach dang muon, tre han\n3. Lich su muon, sach yeu thich\n4. Tien phat\n5. Quy dinh thu vien\n\nQUY TAC BAT BUOC:\n- Khi doc gia hoi ve sach -> GOI NGAY tim_sach()\n- Neu tim_sach tra ve 0 -> GOI NGAY tim_sach_de_xuat()\n- Khi hoi noi dung/mo ta sach -> GOI xem_chi_tiet_sach(id)\n- Khi hoi sach dang muon -> GOI xem_sach_dang_muon()\n- Khi hoi sach tre han -> GOI xem_sach_tre_han()\n- Khi hoi lich su -> GOI xem_lich_su_muon()\n- Khi hoi tien phat -> GOI xem_tien_phat()\n- Khi hoi quy dinh -> GOI xem_quy_dinh_muon()\n- Khi hoi sach yeu thich -> GOI xem_sach_yeu_thich()\n\nKHONG duoc hoi lai ID doc gia. KHONG dung markdown. Tra loi tieng Viet tu nhien."
             });
             console.log("Gemini init OK, key index: " + this.currentKeyIndex);
@@ -634,8 +634,9 @@ class ChatbotService {
         } catch (error) {
             console.error("Chatbot error:", error.message || error);
             let errorMsg = "Da co loi xay ra. Vui long thu lai sau.";
-            if (error.status === 429) errorMsg = "Ban da gui qua nhieu cau hoi.";
-            else if (error.status === 403) errorMsg = "Chatbot chua duoc cau hinh.";
+            if (error.status === 429) errorMsg = "Ban da gui qua nhieu cau hoi. Vui long thu lai sau.";
+            else if (error.status === 403) errorMsg = "Chatbot chua duoc cau hinh dung API Key.";
+            else if (error.status === 503) errorMsg = "Hệ thống AI đang quá tải, vui lòng thử lại sau vài phút nhé.";
             return { reply: errorMsg, conversationId: convId };
         }
     }

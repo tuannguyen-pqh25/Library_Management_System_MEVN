@@ -26,7 +26,7 @@ http.interceptors.response.use(
       
       // Dispatch event cho AppHeader cập nhật giao diện
       import('./eventBus').then(module => {
-        module.default.emit('auth-changed')
+        module.default.emit('auth-change')
       }).catch(err => console.error(err))
 
       // Nếu đang không ở trang login, cảnh báo cho người dùng

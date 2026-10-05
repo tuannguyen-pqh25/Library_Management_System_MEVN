@@ -31,12 +31,25 @@ class NhaXuatBanService {
             throw new Error("Tên Nhà Xuất Bản đã tồn tại");
         }
         
-        // Kiểm tra xem MaNXB đã tồn tại chưa (nếu bạn muốn MaNXB là duy nhất)
-        if (nxbData.MaNXB) {
-             const existingMaNXB = await this.NhaXuatBan.findOne({ MaNXB: nxbData.MaNXB });
-             if (existingMaNXB) {
+        // Auto-generate MaNXB if not provided or to ensure it's generated on server
+        if (!nxbData.MaNXB) {
+            const count = await this.NhaXuatBan.countDocuments();
+            nxbData.MaNXB = `NXB${String(count + 1).padStart(2, '0')}`;
+            
+            // Đảm bảo không bị trùng (trong trường hợp có xóa)
+            let isExist = await this.NhaXuatBan.findOne({ MaNXB: nxbData.MaNXB });
+            let counter = count + 1;
+            while (isExist) {
+                counter++;
+                nxbData.MaNXB = `NXB${String(counter).padStart(2, '0')}`;
+                isExist = await this.NhaXuatBan.findOne({ MaNXB: nxbData.MaNXB });
+            }
+        } else {
+            // Kiểm tra xem MaNXB đã tồn tại chưa (nếu người dùng cố tình gửi)
+            const existingMaNXB = await this.NhaXuatBan.findOne({ MaNXB: nxbData.MaNXB });
+            if (existingMaNXB) {
                 throw new Error("Mã Nhà Xuất Bản đã tồn tại");
-             }
+            }
         }
 
         // Chèn NXB mới vào CSDL

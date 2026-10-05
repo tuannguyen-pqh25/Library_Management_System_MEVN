@@ -108,7 +108,7 @@
                    <button class="btn btn-sm btn-light text-warning rounded-circle action-btn shadow-sm" @click.stop="openEditModal(book)" title="Chỉnh sửa">
                       <i class="fas fa-pen"></i>
                    </button>
-                   <button class="btn btn-sm btn-light text-danger rounded-circle action-btn shadow-sm" @click.stop="deleteSach(book._id, book.TenSach)" title="Xóa sách">
+                   <button class="btn btn-sm btn-light text-danger rounded-circle action-btn shadow-sm" @click.stop="deleteSach(book)" title="Xóa sách">
                       <i class="fas fa-trash"></i>
                    </button>
                 </div>
@@ -208,7 +208,10 @@
                                       </div>
                                        <div class="col-md-6">
                                           <label class="form-label fw-semibold small text-muted">Nhà Xuất Bản</label>
-                                          <Field name="MaNXB" type="text" class="form-control bg-light border-0" :class="{'is-invalid': errors.MaNXB}" placeholder="Mã NXB" v-model="formData.MaNXB" />
+                                          <Field name="MaNXB" as="select" class="form-select bg-light border-0" :class="{'is-invalid': errors.MaNXB}" v-model="formData.MaNXB">
+                                              <option value="" disabled>Chọn nhà xuất bản...</option>
+                                              <option v-for="nxb in publishers" :key="nxb.MaNXB" :value="nxb.MaNXB">{{ nxb.TenNXB }}</option>
+                                          </Field>
                                           <ErrorMessage name="MaNXB" class="invalid-feedback small" />
                                       </div>
                                   </div>
@@ -220,15 +223,10 @@
                                   <div class="row g-3">
                                       <div class="col-md-4">
                                            <label class="form-label fw-semibold small text-muted">Thể Loại</label>
-                                           <Field name="TheLoai" type="text" class="form-control bg-light border-0" :class="{'is-invalid': errors.TheLoai}" v-model="formData.TheLoai" list="genreOptions" placeholder="Chọn hoặc nhập..."/>
-                                           <datalist id="genreOptions">
-                                                <option value="Khoa học"></option>
-                                                <option value="Văn học"></option>
-                                                <option value="Kinh tế"></option>
-                                                <option value="Truyện tranh"></option>
-                                                <option value="Lịch sử"></option>
-                                                <option value="Kỹ năng sống"></option>
-                                           </datalist>
+                                           <Field name="TheLoai" as="select" class="form-select bg-light border-0" :class="{'is-invalid': errors.TheLoai}" v-model="formData.TheLoai">
+                                               <option value="" disabled>Chọn thể loại...</option>
+                                               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                                           </Field>
                                            <ErrorMessage name="TheLoai" class="invalid-feedback small" />
                                       </div>
                                       <div class="col-md-4">
@@ -371,7 +369,7 @@
                           <button class="btn btn-outline-primary fw-bold px-4 rounded-pill" @click="closeDetailModal(); openEditModal(selectedBook);">
                               <i class="fas fa-edit me-2"></i>Chỉnh sửa
                           </button>
-                          <button class="btn btn-outline-danger fw-bold px-4 rounded-pill" @click="closeDetailModal(); deleteSach(selectedBook._id, selectedBook.TenSach);">
+                          <button class="btn btn-outline-danger fw-bold px-4 rounded-pill" @click="closeDetailModal(); deleteSach(selectedBook);">
                               <i class="fas fa-trash me-2"></i>Xóa
                           </button>
                       </div>
@@ -404,6 +402,7 @@ import { Modal, Toast } from "bootstrap"
 import { Form, Field, ErrorMessage } from "vee-validate"
 import * as yup from "yup"
 import SachService from "@/services/sach.service"
+import NhaXuatBanService from "@/services/nhaxuatban.service"
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
@@ -433,6 +432,9 @@ const itemsPerPage = ref(8)
 const selectedBook = ref(null)
 const isEdit = ref(false)
 const notificationMessage = ref("")
+
+const publishers = ref([])
+const categories = ["Khoa học", "Văn học", "Văn học Việt Nam", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa", "Truyện tranh"]
 
 const formData = ref({
   TenSach: "",
@@ -582,17 +584,25 @@ const saveSach = async () => {
   }
 }
 
-const deleteSach = async (id, name) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa sách "${name}" không?`)) {
-    try {
-      await SachService.delete(id)
-      notificationMessage.value = "Xóa sách thành công!"
-      await retrieveBooks()
-      toastInstance?.show()
-    } catch (error) {
-      console.error("Lỗi xóa sách:", error)
-      alert("Lỗi khi xóa sách")
+const deleteSach = async (book) => {
+  if (book.SoQuyen > 0) {
+    if (!confirm(`CẢNH BÁO: Sách "${book.TenSach}" hiện đang còn ${book.SoQuyen} quyển trong kho.\n\nViệc xóa sách đang còn tồn kho có thể gây mất đồng bộ dữ liệu nếu sách này đang được Độc giả mượn.\n\nBạn có CHẮC CHẮN muốn tiếp tục xóa?`)) {
+      return
     }
+  } else {
+    if (!confirm(`Bạn có chắc chắn muốn xóa sách "${book.TenSach}" không?`)) {
+      return
+    }
+  }
+
+  try {
+    await SachService.delete(book._id)
+    notificationMessage.value = "Xóa sách thành công!"
+    await retrieveBooks()
+    toastInstance?.show()
+  } catch (error) {
+    console.error("Lỗi xóa sách:", error)
+    alert("Lỗi khi xóa sách")
   }
 }
 
@@ -724,8 +734,14 @@ const toggleVoiceSearch = () => {
   recognition.start()
 }
 
-onMounted(() => {
+onMounted(async () => {
   retrieveBooks()
+  try {
+    const res = await NhaXuatBanService.getAll()
+    publishers.value = res.data || []
+  } catch (e) {
+    console.error(e)
+  }
   detailModalInstance = new Modal(document.getElementById("sachDetailModal"))
   sachModalInstance = new Modal(document.getElementById("sachModal"))
   toastInstance = new Toast(document.getElementById("successToast"))
