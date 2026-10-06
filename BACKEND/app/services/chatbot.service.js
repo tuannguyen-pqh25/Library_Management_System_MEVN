@@ -15,6 +15,9 @@ const TRANG_THAI = {
     TRE_HAN: "trễ hạn"
 };
 
+// System instruction dùng chung cho mọi model
+const SYSTEM_INSTRUCTION = "Ban la tro ly thu vien. NHIEM VU: Giup doc gia tra loi cau hoi ve thu vien.\n\nPHAM VI:\n1. Tra cuu sach (ten, tac gia, noi dung, the loai)\n2. Xem sach dang muon, tre han\n3. Lich su muon, sach yeu thich\n4. Tien phat\n5. Quy dinh thu vien\n\nQUY TAC BAT BUOC:\n- Khi doc gia hoi ve sach -> GOI NGAY tim_sach()\n- Neu tim_sach tra ve 0 -> GOI NGAY tim_sach_de_xuat()\n- Khi hoi noi dung/mo ta sach -> GOI xem_chi_tiet_sach(id)\n- Khi hoi sach dang muon -> GOI xem_sach_dang_muon()\n- Khi hoi sach tre han -> GOI xem_sach_tre_han()\n- Khi hoi lich su -> GOI xem_lich_su_muon()\n- Khi hoi tien phat -> GOI xem_tien_phat()\n- Khi hoi quy dinh -> GOI xem_quy_dinh_muon()\n- Khi hoi sach yeu thich -> GOI xem_sach_yeu_thich()\n\nKHONG duoc hoi lai ID doc gia. KHONG dung markdown. Tra loi tieng Viet tu nhien.";
+
 class ChatbotService {
     constructor() {
         this.genAI = null;
@@ -22,6 +25,13 @@ class ChatbotService {
         this.apiKeyList = [];
         this.currentKeyIndex = 0;
         this.failedKeys = new Set();
+        // Model fallback chain: khi model chính bị 503, tự động chuyển xuống model nhẹ hơn
+        this.modelChain = config.gemini.modelChain || ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+        this.currentModelIndex = 0;
+        // Retry config
+        this.retryConfig = config.gemini.retry || { maxRetries: 3, initialDelayMs: 1000, maxDelayMs: 15000 };
+        // Thời điểm model bị 503 liên tục → tạm thời chuyển model, auto reset sau 5 phút
+        this._modelCooldowns = {};
         this._loadApiKeys();
         this._initGemini();
     }
@@ -38,10 +48,41 @@ class ChatbotService {
         this.currentKeyIndex = 0;
         this.failedKeys = new Set();
         if (keys.length > 0) {
-            console.log("Loaded " + keys.length + " Gemini API key(s)");
+            console.log("[Chatbot] Loaded " + keys.length + " Gemini API key(s)");
+            console.log("[Chatbot] Model chain: " + this.modelChain.join(" → "));
         } else {
-            console.warn("No Gemini API key configured.");
+            console.warn("[Chatbot] No Gemini API key configured.");
         }
+    }
+
+    /**
+     * Chọn model tốt nhất hiện tại (skip model đang bị cooldown do 503)
+     */
+    _selectBestModel() {
+        const now = Date.now();
+        for (let i = 0; i < this.modelChain.length; i++) {
+            const modelName = this.modelChain[i];
+            const cooldownUntil = this._modelCooldowns[modelName] || 0;
+            if (now >= cooldownUntil) {
+                // Cooldown đã hết, model sẵn sàng
+                this.currentModelIndex = i;
+                return modelName;
+            }
+        }
+        // Tất cả model đều bị cooldown → dùng model cuối cùng (nhẹ nhất) và xóa cooldown
+        const fallback = this.modelChain[this.modelChain.length - 1];
+        delete this._modelCooldowns[fallback];
+        this.currentModelIndex = this.modelChain.length - 1;
+        return fallback;
+    }
+
+    /**
+     * Đánh dấu model bị overload → cooldown 5 phút, chuyển sang model tiếp theo
+     */
+    _markModelOverloaded(modelName) {
+        const cooldownMs = 5 * 60 * 1000; // 5 phút
+        this._modelCooldowns[modelName] = Date.now() + cooldownMs;
+        console.warn("[Chatbot] Model '" + modelName + "' bị quá tải → cooldown " + (cooldownMs / 1000) + "s");
     }
 
     _switchToNextKey() {
@@ -63,19 +104,169 @@ class ChatbotService {
     _initGemini(apiKeyOverride) {   
         const apiKey = apiKeyOverride || this.apiKeyList[this.currentKeyIndex];
         if (!apiKey) {
-            console.warn("No Gemini API key.");
+            console.warn("[Chatbot] No Gemini API key.");
             return;
         }
         try {
             this.genAI = new GoogleGenerativeAI(apiKey);
+            const modelName = this._selectBestModel();
             this.model = this.genAI.getGenerativeModel({
-                model: "gemini-3.8-flash",
-                systemInstruction: "Ban la tro ly thu vien. NHIEM VU: Giup doc gia tra loi cau hoi ve thu vien.\n\nPHAM VI:\n1. Tra cuu sach (ten, tac gia, noi dung, the loai)\n2. Xem sach dang muon, tre han\n3. Lich su muon, sach yeu thich\n4. Tien phat\n5. Quy dinh thu vien\n\nQUY TAC BAT BUOC:\n- Khi doc gia hoi ve sach -> GOI NGAY tim_sach()\n- Neu tim_sach tra ve 0 -> GOI NGAY tim_sach_de_xuat()\n- Khi hoi noi dung/mo ta sach -> GOI xem_chi_tiet_sach(id)\n- Khi hoi sach dang muon -> GOI xem_sach_dang_muon()\n- Khi hoi sach tre han -> GOI xem_sach_tre_han()\n- Khi hoi lich su -> GOI xem_lich_su_muon()\n- Khi hoi tien phat -> GOI xem_tien_phat()\n- Khi hoi quy dinh -> GOI xem_quy_dinh_muon()\n- Khi hoi sach yeu thich -> GOI xem_sach_yeu_thich()\n\nKHONG duoc hoi lai ID doc gia. KHONG dung markdown. Tra loi tieng Viet tu nhien."
+                model: modelName,
+                systemInstruction: SYSTEM_INSTRUCTION
             });
-            console.log("Gemini init OK, key index: " + this.currentKeyIndex);
+            console.log("[Chatbot] Init OK → model: " + modelName + ", key index: " + this.currentKeyIndex);
         } catch (e) {
-            console.error("Gemini init error: " + e.message);
+            console.error("[Chatbot] Init error: " + e.message);
         }
+    }
+
+    /**
+     * Tạo model instance cho tên model cụ thể (dùng cho fallback)
+     */
+    _createModelInstance(modelName) {
+        const apiKey = this.apiKeyList[this.currentKeyIndex];
+        if (!apiKey || !this.genAI) return null;
+        try {
+            return this.genAI.getGenerativeModel({
+                model: modelName,
+                systemInstruction: SYSTEM_INSTRUCTION
+            });
+        } catch (e) {
+            console.error("[Chatbot] Create model '" + modelName + "' failed: " + e.message);
+            return null;
+        }
+    }
+
+    /**
+     * Sleep helper cho retry delay
+     */
+    _sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Exponential backoff delay tính toán với jitter
+     * @param {number} attempt - Số lần thử (0-indexed)
+     * @returns {number} delay tính bằng milliseconds
+     */
+    _calculateBackoffDelay(attempt) {
+        const { initialDelayMs, maxDelayMs } = this.retryConfig;
+        // Exponential: 1s, 2s, 4s, 8s...
+        const exponentialDelay = initialDelayMs * Math.pow(2, attempt);
+        // Clamp to max
+        const clampedDelay = Math.min(exponentialDelay, maxDelayMs);
+        // Add jitter: ±25%
+        const jitter = clampedDelay * 0.25 * (Math.random() * 2 - 1);
+        return Math.round(clampedDelay + jitter);
+    }
+
+    /**
+     * Kiểm tra lỗi có phải transient (có thể retry) không
+     */
+    _isTransientError(error) {
+        const status = error.status || error.httpStatusCode;
+        if (status === 503 || status === 500 || status === 502 || status === 504) return true;
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("503") || msg.includes("overloaded") || msg.includes("unavailable") || msg.includes("internal")) return true;
+        return false;
+    }
+
+    /**
+     * Kiểm tra lỗi quota/key (cần đổi key, không retry)
+     */
+    _isQuotaError(error) {
+        const status = error.status || error.httpStatusCode;
+        if (status === 429 || status === 403) return true;
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("429") || msg.includes("403") || msg.includes("api_key") || msg.includes("quota")) return true;
+        return false;
+    }
+
+    /**
+     * Core: Gọi Gemini API với retry + backoff + model fallback
+     * @param {object} requestPayload - { contents, tools, generationConfig }
+     * @returns {object} Gemini API result
+     */
+    async _callWithRetryAndFallback(requestPayload) {
+        const { maxRetries } = this.retryConfig;
+        let lastError = null;
+
+        // Thử từng model trong chain
+        for (let mi = this.currentModelIndex; mi < this.modelChain.length; mi++) {
+            const modelName = this.modelChain[mi];
+            
+            // Skip nếu model đang trong cooldown (trừ model cuối cùng)
+            const cooldownUntil = this._modelCooldowns[modelName] || 0;
+            if (Date.now() < cooldownUntil && mi < this.modelChain.length - 1) {
+                console.log("[Chatbot] Skip model '" + modelName + "' (cooldown)");
+                continue;
+            }
+
+            const modelInstance = mi === this.currentModelIndex
+                ? this.model
+                : this._createModelInstance(modelName);
+            
+            if (!modelInstance) continue;
+
+            // Retry loop cho model hiện tại
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    if (attempt > 0) {
+                        const delay = this._calculateBackoffDelay(attempt - 1);
+                        console.log("[Chatbot] Retry #" + attempt + " model '" + modelName + "' sau " + delay + "ms...");
+                        await this._sleep(delay);
+                    }
+
+                    const result = await modelInstance.generateContent(requestPayload);
+                    
+                    // Thành công → reset cooldown cho model này nếu có
+                    if (this._modelCooldowns[modelName]) {
+                        delete this._modelCooldowns[modelName];
+                        console.log("[Chatbot] Model '" + modelName + "' đã hồi phục!");
+                    }
+                    // Cập nhật model hiện tại nếu fallback thành công
+                    if (mi !== this.currentModelIndex) {
+                        this.currentModelIndex = mi;
+                        this.model = modelInstance;
+                        console.log("[Chatbot] Đã chuyển sang model: " + modelName);
+                    }
+                    return result;
+                } catch (error) {
+                    lastError = error;
+
+                    // Lỗi quota → đổi key
+                    if (this._isQuotaError(error)) {
+                        console.warn("[Chatbot] Quota/Key error trên key #" + this.currentKeyIndex);
+                        this.failedKeys.add(this.currentKeyIndex);
+                        if (this._switchToNextKey()) {
+                            // Retry lại với key mới, reset attempt
+                            attempt = -1; // sẽ thành 0 sau increment
+                            continue;
+                        }
+                        // Hết key → throw
+                        throw error;
+                    }
+
+                    // Lỗi transient (503) → retry nếu còn lượt
+                    if (this._isTransientError(error)) {
+                        console.warn("[Chatbot] Transient error (" + (error.status || "unknown") + ") trên model '" + modelName + "', attempt " + (attempt + 1) + "/" + (maxRetries + 1));
+                        if (attempt === maxRetries) {
+                            // Hết retry cho model này → đánh dấu cooldown, chuyển model tiếp
+                            this._markModelOverloaded(modelName);
+                            break; // out of retry loop → try next model
+                        }
+                        continue;
+                    }
+
+                    // Lỗi không retry được → throw ngay
+                    throw error;
+                }
+            }
+        }
+
+        // Nếu tất cả model + retry đều fail → throw lỗi cuối cùng
+        if (lastError) throw lastError;
+        throw new Error("Không có model nào khả dụng.");
     }
 
     generateConversationId() {
@@ -507,7 +698,7 @@ class ChatbotService {
 
     async processMessage(message, docGiaId, conversationId) {
         if (!this.model) {
-            return { reply: "Chatbot chua duoc cau hinh API Key.", conversationId: conversationId || null };
+            return { reply: "Chatbot chưa được cấu hình API Key. Vui lòng liên hệ quản trị viên.", conversationId: conversationId || null };
         }
 
         let convId = conversationId;
@@ -555,27 +746,15 @@ class ChatbotService {
             let loopCount = 0;
             const maxLoops = 5;
 
+            const requestPayload = {
+                contents: geminiHistory,
+                tools: [tools],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
+            };
+
             while (loopCount < maxLoops) {
-                let result;
-                try {
-                    result = await this.model.generateContent({
-                        contents: geminiHistory,
-                        tools: [tools],
-                        generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
-                    });
-                } catch (apiError) {
-                    const isQuota = apiError.status === 429 || apiError.status === 403 ||
-                        (apiError.message && (apiError.message.indexOf("429") >= 0 || apiError.message.indexOf("403") >= 0 || apiError.message.indexOf("API_KEY") >= 0));
-                    if (isQuota) {
-                        this.failedKeys.add(this.currentKeyIndex);
-                        if (this._switchToNextKey()) {
-                            loopCount++;
-                            continue;
-                        }
-                        return { reply: "Chatbot tam thoi khong phan hoi duoc.", conversationId: convId };
-                    }
-                    throw apiError;
-                }
+                // Sử dụng _callWithRetryAndFallback thay vì gọi trực tiếp model.generateContent
+                const result = await this._callWithRetryAndFallback(requestPayload);
 
                 const candidate = result.response.candidates ? result.response.candidates[0] : null;
                 if (!candidate) break;
@@ -587,7 +766,7 @@ class ChatbotService {
                     const part = parts[p];
                     if (part.functionCall) {
                         hasFunctionCall = true;
-                        console.log("Gemini called: " + part.functionCall.name);
+                        console.log("[Chatbot] Function call: " + part.functionCall.name);
                         const functionResult = await this._executeFunction(part.functionCall, docGiaId);
 
                         geminiHistory.push({
@@ -603,6 +782,8 @@ class ChatbotService {
                                 }
                             }]
                         });
+                        // Cập nhật lại requestPayload cho vòng lặp tiếp theo
+                        requestPayload.contents = geminiHistory;
                     }
                     if (part.text) {
                         finalText = part.text;
@@ -615,7 +796,7 @@ class ChatbotService {
 
             if (!finalText) {
                 try {
-                    const finalResult = await this.model.generateContent({
+                    const finalResult = await this._callWithRetryAndFallback({
                         contents: geminiHistory,
                         tools: [tools],
                         generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
@@ -624,22 +805,30 @@ class ChatbotService {
                 } catch (e) {
                     finalText = "";
                 }
-                finalText = finalText || "Xin loi, chua xu ly duoc.";
+                finalText = finalText || "Xin lỗi, tôi chưa xử lý được yêu cầu này.";
             }
 
             // Save model response to MongoDB
             await this._saveMessage(convId, docGiaId, "model", finalText);
 
-            return { reply: finalText, conversationId: convId };
+            // Thông tin model đang dùng (debug)
+            const activeModel = this.modelChain[this.currentModelIndex] || "unknown";
+            return { reply: finalText, conversationId: convId, model: activeModel };
         } catch (error) {
-            console.error("Chatbot error:", error.message || error);
-            let errorMsg = "Da co loi xay ra. Vui long thu lai sau.";
-            if (error.status === 429) errorMsg = "Ban da gui qua nhieu cau hoi. Vui long thu lai sau.";
-            else if (error.status === 403) errorMsg = "Chatbot chua duoc cau hinh dung API Key.";
-            else if (error.status === 503) errorMsg = "Hệ thống AI đang quá tải, vui lòng thử lại sau vài phút nhé.";
+            console.error("[Chatbot] Error:", error.message || error);
+            let errorMsg = "Đã có lỗi xảy ra. Vui lòng thử lại sau.";
+            const status = error.status || error.httpStatusCode;
+            if (status === 429) {
+                errorMsg = "Hệ thống đang nhận quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.";
+            } else if (status === 403) {
+                errorMsg = "Chatbot chưa được cấu hình đúng API Key. Vui lòng liên hệ quản trị viên.";
+            } else if (status === 503 || this._isTransientError(error)) {
+                errorMsg = "Hệ thống AI đang quá tải. Tôi đã thử nhiều lần nhưng chưa thành công. Vui lòng thử lại sau vài phút nhé! 🙏";
+            }
             return { reply: errorMsg, conversationId: convId };
         }
     }
 }
 
 module.exports = ChatbotService;
+

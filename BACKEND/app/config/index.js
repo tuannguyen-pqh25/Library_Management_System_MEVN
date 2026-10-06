@@ -22,6 +22,14 @@ const config = {
         // Mảng nhiều key - nhập cách nhau bằng dấu phẩy trong .env
         // Ví dụ: GEMINI_API_KEYS=AIzaSyAaaa,AIzaSyBbbb,AIzaSyCccc
         apiKeys: (process.env.GEMINI_API_KEYS || "").split(",").map(k => k.trim()).filter(k => k.length > 0),
+        // Chuỗi model fallback: khi model chính bị 503, tự động chuyển xuống model nhẹ hơn
+        modelChain: (process.env.GEMINI_MODEL_CHAIN || "gemini-3.8-flash,gemini-3.5-flash-lite").split(",").map(m => m.trim()),
+        // Cấu hình retry với exponential backoff
+        retry: {
+            maxRetries: parseInt(process.env.GEMINI_MAX_RETRIES || "3", 10),
+            initialDelayMs: parseInt(process.env.GEMINI_INITIAL_DELAY_MS || "1000", 10),
+            maxDelayMs: parseInt(process.env.GEMINI_MAX_DELAY_MS || "15000", 10),
+        },
     },
     // Quy định mượn sách (dùng cho chatbot tra cứu)
     quyDinhMuonSach: {

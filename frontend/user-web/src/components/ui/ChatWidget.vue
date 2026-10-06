@@ -47,13 +47,38 @@
             </div>
             <div 
               class="message-content px-3 py-2"
-              :class="msg.role === 'user' ? 'bg-primary text-white rounded-user' : 'bg-light text-dark rounded-ai border border-light-subtle shadow-sm'"
+              :class="[
+                msg.role === 'user' ? 'bg-primary text-white rounded-user' : 'bg-light text-dark rounded-ai border border-light-subtle shadow-sm',
+                msg.isError ? 'border-warning bg-warning-subtle' : ''
+              ]"
               style="white-space: pre-wrap; font-size: 0.95rem; max-width: 85%;"
             >
+              <!-- Loading indicator -->
               <div v-if="msg.isLoading" class="typing-indicator">
                 <span></span><span></span><span></span>
+                <small v-if="msg.thinkingHard" class="d-block text-muted mt-1" style="font-size: 0.75rem;">
+                  Đang xử lý... AI cần thêm thời gian ⏳
+                </small>
               </div>
               <span v-else>{{ msg.content }}</span>
+              
+              <!-- Retry/Cancel buttons cho tin nhắn lỗi -->
+              <div v-if="msg.isError && msg.canRetry" class="mt-2 d-flex gap-2">
+                <button 
+                  class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                  @click="retryMessage"
+                  :disabled="isLoading"
+                >
+                  <i class="fas fa-redo me-1"></i>Thử lại ngay
+                </button>
+                <button 
+                  v-if="retryCountdown > 0"
+                  class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                  @click="cancelRetry"
+                >
+                  <i class="fas fa-times me-1"></i>Hủy
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -96,8 +121,14 @@ export default {
       messages: [],
       isLoading: false,
       unreadCount: 0,
-      conversationId: `conv_${Date.now()}` // Tạo ID session tạm
+      conversationId: `conv_${Date.now()}`,
+      lastFailedMessage: null, // Lưu tin nhắn cuối bị lỗi để retry
+      retryCountdown: 0,       // Đếm ngược auto-retry
+      retryTimer: null
     }
+  },
+  beforeUnmount() {
+    if (this.retryTimer) clearInterval(this.retryTimer);
   },
   methods: {
     toggleChat() {
@@ -115,14 +146,23 @@ export default {
         }
       });
     },
-    async sendMessage() {
-      if (!this.inputMessage.trim()) return;
+    async sendMessage(retryMsg = null) {
+      const userMsg = retryMsg || this.inputMessage.trim();
+      if (!userMsg) return;
       
-      const userMsg = this.inputMessage.trim();
-      this.inputMessage = '';
+      if (!retryMsg) {
+        this.inputMessage = '';
+        // Thêm tin nhắn user vào giao diện
+        this.messages.push({ role: 'user', content: userMsg });
+      }
       
-      // Thêm tin nhắn user vào giao diện
-      this.messages.push({ role: 'user', content: userMsg });
+      // Xóa countdown nếu đang chạy
+      if (this.retryTimer) {
+        clearInterval(this.retryTimer);
+        this.retryTimer = null;
+        this.retryCountdown = 0;
+      }
+      this.lastFailedMessage = null;
       this.scrollToBottom();
       
       // Hiệu ứng typing
@@ -130,14 +170,23 @@ export default {
       this.messages.push({ role: 'model', content: '', isLoading: true });
       this.scrollToBottom();
 
+      // Timer cập nhật trạng thái nếu response lâu
+      let thinkingTimer = setTimeout(() => {
+        const loadingMsg = this.messages.find(m => m.isLoading);
+        if (loadingMsg) {
+          loadingMsg.thinkingHard = true;
+        }
+      }, 6000);
+
       try {
         const user = AuthService.getCurrentUser();
         const docGiaId = user ? user._id : null;
         
         const res = await ChatbotService.sendMessage(userMsg, docGiaId, this.conversationId);
+        clearTimeout(thinkingTimer);
         
         // Cập nhật lại tin nhắn bot
-        this.messages.pop(); // Xóa tin isLoading
+        this.messages = this.messages.filter(m => !m.isLoading);
         if (res.data && res.data.reply) {
           this.messages.push({ role: 'model', content: res.data.reply });
           if (res.data.conversationId) {
@@ -147,12 +196,73 @@ export default {
           this.messages.push({ role: 'model', content: "Xin lỗi, tôi không thể trả lời lúc này." });
         }
       } catch (error) {
-        this.messages.pop();
+        clearTimeout(thinkingTimer);
+        this.messages = this.messages.filter(m => !m.isLoading);
         console.error(error);
-        this.messages.push({ role: 'model', content: "Đã xảy ra lỗi kết nối với máy chủ AI." });
+        
+        // Phân loại lỗi
+        const status = error.response?.status;
+        let errorContent = "Đã xảy ra lỗi kết nối với máy chủ AI.";
+        let canRetry = false;
+        
+        if (status === 429 || status === 503) {
+          errorContent = "⏳ Hệ thống AI đang quá tải. Tự động thử lại sau 30 giây...";
+          canRetry = true;
+        } else if (!navigator.onLine) {
+          errorContent = "📡 Không có kết nối mạng. Vui lòng kiểm tra và thử lại.";
+          canRetry = true;
+        }
+        
+        this.messages.push({ 
+          role: 'model', 
+          content: errorContent,
+          isError: true,
+          canRetry: canRetry
+        });
+        
+        this.lastFailedMessage = userMsg;
+        
+        // Auto-retry sau 30 giây nếu lỗi transient
+        if (canRetry) {
+          this.retryCountdown = 30;
+          this.retryTimer = setInterval(() => {
+            this.retryCountdown--;
+            // Cập nhật tin nhắn lỗi với countdown
+            const errorMsg = this.messages.find(m => m.isError);
+            if (errorMsg) {
+              errorMsg.content = `⏳ Hệ thống AI đang quá tải. Tự động thử lại sau ${this.retryCountdown} giây...`;
+            }
+            if (this.retryCountdown <= 0) {
+              clearInterval(this.retryTimer);
+              this.retryTimer = null;
+              // Xóa tin nhắn lỗi
+              this.messages = this.messages.filter(m => !m.isError);
+              this.retryMessage();
+            }
+          }, 1000);
+        }
       } finally {
         this.isLoading = false;
         this.scrollToBottom();
+      }
+    },
+    retryMessage() {
+      if (this.lastFailedMessage) {
+        // Xóa tin nhắn lỗi cũ
+        this.messages = this.messages.filter(m => !m.isError);
+        this.sendMessage(this.lastFailedMessage);
+      }
+    },
+    cancelRetry() {
+      if (this.retryTimer) {
+        clearInterval(this.retryTimer);
+        this.retryTimer = null;
+        this.retryCountdown = 0;
+      }
+      // Cập nhật tin nhắn lỗi
+      const errorMsg = this.messages.find(m => m.isError);
+      if (errorMsg) {
+        errorMsg.content = "Đã hủy tự động thử lại. Bạn có thể nhấn nút thử lại bên dưới.";
       }
     }
   }
