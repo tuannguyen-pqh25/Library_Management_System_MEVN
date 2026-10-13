@@ -1,12 +1,20 @@
 const SachService = require("../../services/sach.service");
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
+const Redis = require("../../utils/redis.util");
 
 exports.findAll = async (req, res, next) => {
     try {
-        const sachService = new SachService(MongoDB.client);
         const { TenSach, TheLoai } = req.query;
         
+        const cacheKey = `user:sach:all:${TenSach || "all"}:${TheLoai || "all"}`;
+        const cachedData = await Redis.get(cacheKey);
+        
+        if (cachedData) {
+            return res.status(200).json(cachedData);
+        }
+
+        const sachService = new SachService(MongoDB.client);
         const filter = {};
         if (TenSach) {
             filter.TenSach = { $regex: new RegExp(TenSach, "i") };
@@ -16,6 +24,8 @@ exports.findAll = async (req, res, next) => {
         }
 
         const documents = await sachService.find(filter);
+
+        await Redis.set(cacheKey, documents, 3600);
 
         return res.status(200).json(documents);
     } catch (error) {
@@ -31,6 +41,13 @@ exports.findOne = async (req, res, next) => {
     }
 
     try {
+        const cacheKey = `user:sach:one:${id}`;
+        const cachedData = await Redis.get(cacheKey);
+
+        if (cachedData) {
+            return res.status(200).json(cachedData);
+        }
+
         const sachService = new SachService(MongoDB.client);
         let document = await sachService.findById(id);
 
@@ -49,6 +66,8 @@ exports.findOne = async (req, res, next) => {
         if (!document) {
             return next(new ApiError(404, "Không tìm thấy sách"));
         }
+
+        await Redis.set(cacheKey, document, 3600);
 
         return res.status(200).json(document);
     } catch (error) {

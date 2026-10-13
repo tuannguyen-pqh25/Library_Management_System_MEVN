@@ -9,6 +9,11 @@ const config = {
     db: {
         uri: process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/QuanLyMuonSach"
     },
+    // Cấu hình Redis
+    redis: {
+        url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
+        cacheDuration: parseInt(process.env.REDIS_CACHE_DURATION || "3600", 10),
+    },
     // Cấu hình Cloudinary
     cloudinary: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
@@ -43,6 +48,20 @@ const config = {
     jwt: {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+    },
+    // Cấu hình OAuth 2.0 (Đăng nhập Google & Facebook cho Độc giả)
+    oauth: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/api/user/auth/google/callback",
+        },
+        facebook: {
+            appId: process.env.FACEBOOK_APP_ID || "",
+            appSecret: process.env.FACEBOOK_APP_SECRET || "",
+            callbackURL: process.env.FACEBOOK_CALLBACK_URL || "http://localhost:3000/api/user/auth/facebook/callback",
+        },
+        clientRedirectUrl: process.env.OAUTH_CLIENT_REDIRECT_URL || "http://localhost:5173/oauth-callback",
     }
 };
 

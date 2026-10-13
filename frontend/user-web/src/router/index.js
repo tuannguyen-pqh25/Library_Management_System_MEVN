@@ -9,6 +9,7 @@ import BorrowHistory from '@/views/BorrowHistory.vue'
 import ProfileUser from '@/views/ProfileUser.vue'
 import WishlistUser from '@/views/WishlistUser.vue'
 import CartUser from '@/views/CartUser.vue'
+import OAuthCallback from '@/views/OAuthCallback.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/register',
     name: 'register',
     component: RegisterUser,
+  },
+  {
+    path: '/oauth-callback',
+    name: 'oauth-callback',
+    component: OAuthCallback,
   },
   {
     path: '/sach',

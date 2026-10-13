@@ -1,5 +1,6 @@
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
+const Redis = require("../../utils/redis.util");
 
 /**
  * GET /api/admin/dashboard/stats
@@ -7,6 +8,12 @@ const ApiError = require("../../api-error");
  */
 exports.getStats = async (req, res, next) => {
     try {
+        const cacheKey = "admin:dashboard:stats";
+        const cachedData = await Redis.get(cacheKey);
+
+        if (cachedData) {
+            return res.status(200).json(cachedData);
+        }
         const db = MongoDB.client.db();
         const MuonSach = db.collection("THEODOIMUONSACH");
         const Sach = db.collection("SACH");
@@ -144,7 +151,7 @@ exports.getStats = async (req, res, next) => {
             (statusMap["đang mượn"]?.tongSoLuong || 0) +
             (statusMap["đang chờ trả"]?.tongSoLuong || 0);
 
-        return res.status(200).json({
+        const responseData = {
             tongQuan: {
                 tongSach,
                 tongDocGia,
@@ -158,7 +165,11 @@ exports.getStats = async (req, res, next) => {
             chiTietTrangThai: statsFormatted,
             topSach,
             muonTheoThang,
-        });
+        };
+
+        await Redis.set(cacheKey, responseData, 300);
+
+        return res.status(200).json(responseData);
     } catch (error) {
         return next(new ApiError(500, `Failed to get dashboard stats: ${error.message}`));
     }

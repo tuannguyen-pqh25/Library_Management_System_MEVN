@@ -85,3 +85,127 @@ exports.logout = async (_req, res) => {
         message: "Đăng xuất thành công",
     });
 };
+
+// --- OAUTH 2.0 (GOOGLE & FACEBOOK) ---
+
+const { passport, isGoogleConfigured, isFacebookConfigured } = require("../../config/passport");
+
+/**
+ * Khởi tạo quá trình đăng nhập Google OAuth 2.0
+ */
+exports.googleAuth = (req, res, next) => {
+    if (!isGoogleConfigured()) {
+        const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+        return res.redirect(`${redirectUrl}?error=${encodeURIComponent("Tính năng Google OAuth chưa được cấu hình Client ID / Secret trên máy chủ.")}`);
+    }
+    return passport.authenticate("google", {
+        scope: ["profile", "email"],
+        session: false,
+    })(req, res, next);
+};
+
+/**
+ * Xử lý callback sau khi xác thực Google thành công
+ */
+exports.googleCallback = (req, res, next) => {
+    const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+
+    passport.authenticate("google", { session: false }, (err, user) => {
+        if (err || !user) {
+            const message = err?.message || "Đăng nhập với tài khoản Google thất bại";
+            return res.redirect(`${redirectUrl}?error=${encodeURIComponent(message)}`);
+        }
+
+        // Tạo JWT token nội bộ cho độc giả
+        const token = jwt.sign(
+            {
+                _id: user._id,
+                role: "DocGia",
+                aud: "user",
+            },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        return res.redirect(`${redirectUrl}?token=${token}`);
+    })(req, res, next);
+};
+
+/**
+ * Khởi tạo quá trình đăng nhập Facebook OAuth 2.0
+ */
+exports.facebookAuth = (req, res, next) => {
+    if (!isFacebookConfigured()) {
+        const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+        return res.redirect(`${redirectUrl}?error=${encodeURIComponent("Tính năng Facebook OAuth chưa được cấu hình App ID / Secret trên máy chủ.")}`);
+    }
+    return passport.authenticate("facebook", {
+        scope: ["email"],
+        session: false,
+    })(req, res, next);
+};
+
+/**
+ * Xử lý callback sau khi xác thực Facebook thành công
+ */
+exports.facebookCallback = (req, res, next) => {
+    const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+
+    passport.authenticate("facebook", { session: false }, (err, user) => {
+        if (err || !user) {
+            const message = err?.message || "Đăng nhập với tài khoản Facebook thất bại";
+            return res.redirect(`${redirectUrl}?error=${encodeURIComponent(message)}`);
+        }
+
+        // Tạo JWT token nội bộ cho độc giả
+        const token = jwt.sign(
+            {
+                _id: user._id,
+                role: "DocGia",
+                aud: "user",
+            },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        return res.redirect(`${redirectUrl}?token=${token}`);
+    })(req, res, next);
+};
+
+/**
+ * Chế độ Demo/Mock OAuth phục vụ kiểm thử và báo cáo khi chưa có credentials thực tế
+ */
+exports.mockOAuth = async (req, res) => {
+    const provider = req.query.provider === "facebook" ? "facebook" : "google";
+    const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+
+    try {
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const email = provider === "facebook" ? "docgia.facebook@example.com" : "docgia.google@example.com";
+        const hoLot = provider === "facebook" ? "Facebook" : "Google";
+        const ten = "Độc Giả Demo";
+
+        const docGia = await docGiaService.findOrCreateByOAuth({
+            Email: email,
+            HoLot: hoLot,
+            Ten: ten,
+            provider,
+            providerId: `demo_${provider}_${Date.now()}`,
+        });
+
+        const token = jwt.sign(
+            {
+                _id: docGia._id,
+                role: "DocGia",
+                aud: "user",
+            },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        return res.redirect(`${redirectUrl}?token=${token}`);
+    } catch (error) {
+        return res.redirect(`${redirectUrl}?error=${encodeURIComponent(error.message || "Lỗi tạo tài khoản demo OAuth")}`);
+    }
+};
+

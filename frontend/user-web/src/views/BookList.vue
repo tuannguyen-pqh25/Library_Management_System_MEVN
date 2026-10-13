@@ -36,6 +36,16 @@
               @keyup.enter="fetchBooks" 
               :disabled="loading"
             />
+            <button 
+              type="button" 
+              class="btn border-0 px-3 bg-transparent" 
+              :class="isListening ? 'text-danger pulse-animation' : 'text-muted-custom hover-primary'"
+              @click="startVoiceSearch" 
+              title="Tìm kiếm bằng giọng nói"
+              :disabled="loading"
+            >
+              <i class="fas fa-microphone"></i>
+            </button>
             <BaseButton variant="primary" class="rounded-pill m-1 px-4" @click="fetchBooks" :disabled="loading">
               <i class="fas fa-spinner fa-spin me-1" v-if="loading"></i>
               <span v-else>Tìm</span>
@@ -126,6 +136,7 @@ const categories = ref([])
 const searchText = ref('')
 const selectedCategory = ref('')
 const loading = ref(false)
+const isListening = ref(false)
 const toast = ref({ show: false, message: '', type: 'success' })
 
 const showToast = (message, type = 'error') => {
@@ -162,6 +173,47 @@ const clearSearch = () => {
   searchText.value = ''
   selectedCategory.value = ''
   fetchBooks()
+}
+
+const startVoiceSearch = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    showToast('Trình duyệt của bạn không hỗ trợ tìm kiếm bằng giọng nói (Yêu cầu Chrome/Edge/Safari mới nhất).', 'error')
+    return
+  }
+
+  const recognition = new SpeechRecognition()
+  recognition.lang = 'vi-VN'
+  recognition.interimResults = false
+  recognition.maxAlternatives = 1
+
+  recognition.onstart = () => {
+    isListening.value = true
+    showToast('Đang lắng nghe... Vui lòng nói tên sách.', 'success')
+  }
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript
+    searchText.value = transcript
+    toast.value.show = false // Ẩn thông báo đang lắng nghe
+    fetchBooks() // Tự động tìm kiếm ngay khi nhận diện xong
+  }
+
+  recognition.onerror = (event) => {
+    console.error('Lỗi nhận diện giọng nói:', event.error)
+    if (event.error === 'not-allowed') {
+      showToast('Vui lòng cấp quyền sử dụng Micro trên trình duyệt để tìm kiếm.', 'error')
+    } else if (event.error !== 'aborted') {
+      showToast('Không thể nhận diện giọng nói. Vui lòng thử lại.', 'error')
+    }
+    isListening.value = false
+  }
+
+  recognition.onend = () => {
+    isListening.value = false
+  }
+
+  recognition.start()
 }
 
 const formatPrice = (price) => {
@@ -248,5 +300,18 @@ onMounted(() => {
   right: 20px;
   z-index: 1050;
   min-width: 250px;
+}
+
+.hover-primary:hover {
+  color: var(--bs-primary) !important;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pulse-animation {
+  animation: pulse 1s infinite ease-in-out;
 }
 </style>

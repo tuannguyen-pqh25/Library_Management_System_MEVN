@@ -1,6 +1,7 @@
 const MuonSachService = require("../../services/muonsach.service");
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
+const Redis = require("../../utils/redis.util");
 
 /**
  * GET /api/admin/muonsach
@@ -61,6 +62,7 @@ exports.approve = async (req, res, next) => {
         if (!result) {
             return next(new ApiError(404, "Borrow record not found"));
         }
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Borrow request approved successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to approve borrow request"));
@@ -90,6 +92,7 @@ exports.reject = async (req, res, next) => {
         if (!result) {
             return next(new ApiError(404, "Borrow record not found"));
         }
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Borrow request rejected successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to reject borrow request"));
@@ -117,6 +120,7 @@ exports.handover = async (req, res, next) => {
         if (!result) {
             return next(new ApiError(404, "Borrow record not found"));
         }
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Book handed over successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to handover book"));
@@ -144,6 +148,7 @@ exports.confirmReturn = async (req, res, next) => {
         if (!result) {
             return next(new ApiError(404, "Borrow record not found"));
         }
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Book return confirmed successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to confirm book return"));
@@ -161,6 +166,7 @@ exports.delete = async (req, res, next) => {
         if (!result) {
             return next(new ApiError(404, "Borrow record not found"));
         }
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Borrow record deleted successfully" });
     } catch (error) {
         return next(new ApiError(500, `Failed to delete borrow record: ${error.message}`));

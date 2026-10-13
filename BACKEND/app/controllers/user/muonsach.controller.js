@@ -1,6 +1,7 @@
 const MuonSachService = require("../../services/muonsach.service");
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
+const Redis = require("../../utils/redis.util");
 
 exports.create = async (req, res, next) => {
     if (!req.body?.sachId) {
@@ -18,6 +19,8 @@ exports.create = async (req, res, next) => {
         };
 
         const document = await muonSachService.create(payload);
+        
+        await Redis.del("admin:dashboard:stats");
 
         return res.status(201).json({
             message: "Yêu cầu mượn sách đã được gửi",
@@ -59,6 +62,7 @@ exports.requestReturn = async (req, res, next) => {
         };
 
         const result = await muonSachService.update(req.params.id, payload);
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Đã gửi yêu cầu xin trả sách", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Không thể yêu cầu trả sách"));
@@ -72,6 +76,7 @@ exports.updatePending = async (req, res, next) => {
         if (!soLuong) return next(new ApiError(400, "Vui lòng cung cấp số lượng"));
         
         const result = await muonSachService.updatePendingRequest(req.params.id, req.user._id, soLuong);
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Đã cập nhật số lượng", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Không thể cập nhật phiếu mượn"));
@@ -82,6 +87,7 @@ exports.deletePending = async (req, res, next) => {
     try {
         const muonSachService = new MuonSachService(MongoDB.client);
         const result = await muonSachService.deletePendingRequest(req.params.id, req.user._id);
+        await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Đã hủy yêu cầu mượn sách", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Không thể hủy phiếu mượn"));

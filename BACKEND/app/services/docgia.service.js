@@ -128,6 +128,74 @@ class DocGiaService {
         return docgia;
     }
 
+    /**
+     * Tìm hoặc tạo mới độc giả thông qua tài khoản ủy quyền OAuth (Google / Facebook)
+     * @param {object} profileData { Email, HoLot, Ten, provider, providerId }
+     * @returns {object} Document độc giả (đã bỏ Password)
+     */
+    async findOrCreateByOAuth(profileData = {}) {
+        const email = profileData.Email ? profileData.Email.trim().toLowerCase() : null;
+        if (!email) {
+            throw new Error("Không thể xác thực: Không nhận được Email từ nhà cung cấp OAuth");
+        }
+
+        let docgia = await this.DocGia.findOne({ Email: email });
+
+        if (docgia) {
+            if (docgia.TrangThaiTaiKhoan === "BiKhoa") {
+                throw {
+                    status: 403,
+                    message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ ban quản lý thư viện.",
+                };
+            }
+
+            // Đồng bộ thông tin provider nếu chưa có
+            const updateFields = {};
+            if (!docgia.oauthProvider && profileData.provider) {
+                updateFields.oauthProvider = profileData.provider;
+            }
+            if (!docgia.oauthId && profileData.providerId) {
+                updateFields.oauthId = profileData.providerId;
+            }
+
+            if (Object.keys(updateFields).length > 0) {
+                await this.DocGia.updateOne({ _id: docgia._id }, { $set: updateFields });
+                docgia = { ...docgia, ...updateFields };
+            }
+
+            delete docgia.Password;
+            return docgia;
+        }
+
+        // Chưa có tài khoản -> Tự động khởi tạo tài khoản mới cho Độc giả
+        const prefix = profileData.provider === "facebook" ? "FB" : "GG";
+        const maDocGia = `DG_${prefix}_${Date.now().toString().slice(-6)}`;
+
+        const newDocGia = {
+            MaDocGia: maDocGia,
+            HoLot: profileData.HoLot || "Độc giả",
+            Ten: profileData.Ten || (profileData.provider === "facebook" ? "Facebook" : "Google"),
+            NgaySinh: "",
+            Phai: "Khác",
+            DiaChi: "Cập nhật sau",
+            DienThoai: "",
+            Email: email,
+            Password: null,
+            TrangThaiTaiKhoan: "BinhThuong",
+            oauthProvider: profileData.provider || "oauth",
+            oauthId: profileData.providerId || "",
+            favorites: [],
+            createdAt: new Date(),
+        };
+
+        const result = await this.DocGia.insertOne(newDocGia);
+        newDocGia._id = result.insertedId;
+
+        delete newDocGia.Password;
+        return newDocGia;
+    }
+
+
     
     async find(filter) {
         const cursor = await this.DocGia.find(filter);

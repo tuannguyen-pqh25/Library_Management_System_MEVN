@@ -2,6 +2,7 @@ const SachService = require("../../services/sach.service");
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
 const { uploadImageFromBase64 } = require("../../utils/cloudinary.util");
+const Redis = require("../../utils/redis.util");
 
 //1. Tạo một cuốn sách mới
 exports.create = async (req, res, next) => {
@@ -13,6 +14,10 @@ exports.create = async (req, res, next) => {
     try {
         const sachService = new SachService(MongoDB.client);
         const document = await sachService.create(req.body);
+        
+        await Redis.clearMatch("user:sach:*");
+        await Redis.del("admin:dashboard:stats");
+        
         return res.send({ message: "Tạo sách thành công", data: document });
     } catch (error) {
         // BẮT LỖI TRÙNG LẶP (MỚI)
@@ -76,6 +81,9 @@ exports.update = async (req, res, next) => {
         if (!document) {
             return next(new ApiError(404, "Không tìm thấy sách để cập nhật"));
         }
+
+        await Redis.clearMatch("user:sach:*");
+
         return res.send({ message: "Sách được cập nhật thành công", data: document });
     } catch (error) {
         return next(
@@ -92,6 +100,10 @@ exports.delete = async (req, res, next) => {
         if (!document) {
             return next(new ApiError(404, "Không tìm thấy sách để xóa"));
         }
+
+        await Redis.clearMatch("user:sach:*");
+        await Redis.del("admin:dashboard:stats");
+
         return res.send({ message: "Sách đã được xóa thành công" });
     } catch (error) {
         return next(
@@ -108,6 +120,10 @@ exports.deleteAll = async (_req, res, next) => {
     try {
         const sachService = new SachService(MongoDB.client);
         const deletedCount = await sachService.deleteAll();
+        
+        await Redis.clearMatch("user:sach:*");
+        await Redis.del("admin:dashboard:stats");
+
         return res.send({
             message: `${deletedCount} sách đã được xóa.`,
         });
