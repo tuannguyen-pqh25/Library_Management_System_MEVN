@@ -486,7 +486,6 @@ Trong phiên làm việc này, hệ thống đã được nâng cấp 3 hạng m
   - Backend `chatbot.route.js`, `chatbot.service.js`, `redis.util.js`, `seedData.js`.
 - Kết quả quét kiểm tra tự động: **0 emoji trong toàn bộ mã nguồn**. Cả 2 dự án frontend đều build thành công 100% (`npm run build`).
 
-### 3. Git Commit Message chuẩn (Conventional Commits)
 #### D. Thiết lập Toàn diện Unique Indexes & Query Indexes cho MongoDB
 - **Mục tiêu**: Đảm bảo toàn vẹn dữ liệu nghiệp vụ, ngăn chặn hoàn toàn việc tạo trùng Mã (MaSach, MaDocGia, MSNV, MaNXB, Email), và tối ưu hóa tối đa tốc độ truy vấn mượn/trả và tìm kiếm sách.
 - **Thực thi**:
@@ -501,17 +500,27 @@ Trong phiên làm việc này, hệ thống đã được nâng cấp 3 hạng m
   - Tự động gọi `ensureIndexes()` trong `server.js` khi máy chủ khởi động (có bọc try-catch an toàn).
   - Kết quả kiểm chứng thực tế: 17 indexes đã được tạo và kích hoạt thành công 100%.
 
-### 3. Git Commit Message chuẩn (Conventional Commits)
-```git
-feat(db): establish unique and query indexes for all MongoDB collections
+### 3. Hướng dẫn Đồng bộ Đa Máy (Máy 2 Push -> Máy 1 Pull)
+- **Máy 2 (Máy đang làm việc)**:
+  - Chạy lệnh commit và push lên GitHub theo commit message ở mục 4 bên dưới.
+- **Máy 1 (Máy kéo code về)**:
+  - Chỉ cần chạy `git pull`.
+  - Không cần cài thêm thư viện npm mới nào.
+  - Khi chạy `npm start` ở backend, `server.js` sẽ tự động khởi tạo đủ 17 indexes trên CSDL MongoDB của Máy 1.
+  - Nếu Máy 1 là máy mới hoàn toàn, đảm bảo có file `BACKEND/.env` và chạy `node seed.js` để có tài khoản Admin (`ADMIN001` / `Admin@123`).
 
-- Implement centralized index definitions and ensureIndexes utility in indexes.util.js
-- Add standalone createIndexes.js migration script and npm run db:indexes command
-- Create unique indexes for MaSach, MaDocGia, MSNV, MaNXB, and Email
-- Add compound indexes for borrow queries, status filtering, and chat history
-- Integrate graceful index assertion into backend server startup in server.js
-- Update project checkpoint and roadmap documents in Cores directory
+### 4. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(system): add in-app notifications, contextual dropdowns, and database unique indexes
+
+- Integrate in-app notification bell with badge counter and bellShake animation in AppHeader.vue
+- Refactor borrow management action buttons to contextual select dropdowns in admin and user views
+- Eliminate hardcoded emoji icons across frontend and backend for production code cleanliness
+- Establish 17 unique and compound indexes for MongoDB collections in indexes.util.js
+- Integrate automatic index verification into server.js and add createIndexes.js CLI script
+- Update project documentation, academic report, and multi-machine sync guide in Cores directory
 ```
+
 
 
 

@@ -234,6 +234,12 @@ Bảng 7: Collection "THEODOIMUONSACH"
 | 8 | TrangThai | String | Trạng thái phiếu (chờ duyệt, đã duyệt, đang mượn, đang chờ trả, đã trả, từ chối, quá hạn) |
 | 9 | MaNhanVien | String | Khóa ngoại liên kết tới NHANVIEN (người thực hiện duyệt/nhận) |
 
+4. Chiến lược Đánh chỉ mục (Indexing Strategy) & Ràng buộc Toàn vẹn Dữ liệu
+Để tối ưu hóa tối đa hiệu năng truy vấn và bảo vệ toàn vẹn dữ liệu ở mức Database Engine, hệ thống đã thiết lập 17 chỉ mục (Indexes) trên các collections chính:
+- Ràng buộc Khóa duy nhất (Unique Constraints): Thiết lập Unique Index cho các trường mã nghiệp vụ gồm MaSach (bảng SACH), MaDocGia (bảng DOCGIA), MSNV (bảng NHANVIEN), MaNXB và TenNXB (bảng NHAXUATBAN). Đồng thời cấu hình Sparse Unique Index cho Email của Độc giả và Nhân viên. Cơ chế này loại bỏ hoàn toàn rủi ro tạo trùng lặp dữ liệu kể cả khi xảy ra các truy vấn đồng thời (concurrent requests).
+- Chỉ mục kết hợp (Compound Indexes): Thiết lập chỉ mục kết hợp { MaDocGia: 1, trangThai: 1 } trên bảng THEODOIMUONSACH để tăng tốc độ kiểm tra hạn mức mượn (tối đa 10 quyển/người) và truy xuất lịch sử độc giả; chỉ mục { ngayHenTra: 1 } phục vụ cơ chế Lazy-check quá hạn và hệ thống Chuông thông báo; chỉ mục { MaSach: 1 } và { trangThai: 1 } phục vụ thống kê Dashboard.
+- Cơ chế Tự động hóa Chỉ mục (Index Automation): Xây dựng module quản lý chỉ mục tập trung (indexes.util.js) và tự động thực thi kiểm tra/tạo chỉ mục an toàn ngay khi máy chủ Node.js khởi động (server.js), đi kèm script CLI độc lập (createIndexes.js) phục vụ bảo trì hệ thống.
+
 CHƯƠNG IV: THIẾT KẾ GIAO DIỆN
 1. Giao diện quản trị viên (Admin Web)
 Hệ thống Admin được xây dựng trên một dự án Vue 3 SPA riêng biệt nhằm đảm bảo bảo mật.
