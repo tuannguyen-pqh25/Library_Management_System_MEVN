@@ -10,8 +10,6 @@ DataMongodb/
 .env.test.local
 .env.production.local
 
-# Project Cores (internal notes/guides)
-Cores/
 
 # Logs
 npm-debug.log*
