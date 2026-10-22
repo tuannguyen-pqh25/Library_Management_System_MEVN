@@ -168,59 +168,42 @@
                 </td>
 
                 <!-- Thao tác -->
-                <td class="text-center">
-                  <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                <td class="text-center" style="min-width:190px;">
+                  <div class="d-flex align-items-center gap-1 justify-content-center">
                     <!-- Xem chi tiết -->
                     <button
-                      class="btn btn-sm btn-light text-primary rounded-circle action-btn"
+                      class="btn btn-sm btn-light text-primary rounded-circle action-btn flex-shrink-0"
                       title="Xem chi tiết"
                       @click="openDetail(record)"
                     >
                       <i class="fas fa-eye"></i>
                     </button>
 
-                    <!-- Duyệt (chỉ hiện khi "chờ duyệt") -->
-                    <button
-                      v-if="record.trangThai === 'chờ duyệt'"
-                      class="btn btn-sm btn-light text-success rounded-circle action-btn"
-                      title="Duyệt phiếu mượn"
-                      :disabled="processingId === record._id"
-                      @click="handleAction(record, 'approve')"
-                    >
-                      <i class="fas" :class="processingId === record._id ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                    </button>
-
-                    <!-- Từ chối (chỉ hiện khi "chờ duyệt") -->
-                    <button
-                      v-if="record.trangThai === 'chờ duyệt'"
-                      class="btn btn-sm btn-light text-danger rounded-circle action-btn"
-                      title="Từ chối"
-                      @click="openRejectModal(record)"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-
-                    <!-- Giao sách (chỉ hiện khi "đã duyệt") -->
-                    <button
-                      v-if="record.trangThai === 'đã duyệt'"
-                      class="btn btn-sm btn-light text-primary rounded-circle action-btn"
-                      title="Giao sách cho độc giả"
-                      :disabled="processingId === record._id"
-                      @click="handleAction(record, 'handover')"
-                    >
-                      <i class="fas" :class="processingId === record._id ? 'fa-spinner fa-spin' : 'fa-hand-holding'"></i>
-                    </button>
-
-                    <!-- Xác nhận trả (khi "đang chờ trả" hoặc "đã duyệt" / "đang mượn" / "quá hạn") -->
-                    <button
-                      v-if="['đang chờ trả', 'đã duyệt', 'đang mượn', 'quá hạn'].includes(record.trangThai)"
-                      class="btn btn-sm btn-light text-warning rounded-circle action-btn"
-                      title="Xác nhận trả sách"
-                      :disabled="processingId === record._id"
-                      @click="handleAction(record, 'confirm-return')"
-                    >
-                      <i class="fas" :class="processingId === record._id ? 'fa-spinner fa-spin' : 'fa-undo-alt'"></i>
-                    </button>
+                    <!-- Action dropdown -->
+                    <template v-if="getActionOptions(record.trangThai).length > 0">
+                      <select
+                        class="form-select form-select-sm action-select"
+                        v-model="actionSelected[record._id]"
+                        :id="'action-select-' + record._id"
+                      >
+                        <option value="" disabled>--- Chọn ---</option>
+                        <option
+                          v-for="opt in getActionOptions(record.trangThai)"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >{{ opt.label }}</option>
+                      </select>
+                      <button
+                        class="btn btn-sm action-exec-btn flex-shrink-0"
+                        :class="getExecBtnClass(actionSelected[record._id])"
+                        :disabled="!actionSelected[record._id] || processingId === record._id"
+                        @click="executeAction(record)"
+                        :title="actionSelected[record._id] ? '' : 'Chọn thao tác trước'"
+                      >
+                        <i class="fas" :class="processingId === record._id ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+                      </button>
+                    </template>
+                    <span v-else class="text-muted" style="font-size:0.75rem;">—</span>
                   </div>
                 </td>
               </tr>
@@ -459,7 +442,9 @@ const filterStatus = ref('')
 const searchText = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
-const processingId = ref(null) // ID of the record currently being processed (shows spinner)
+const processingId = ref(null)
+// Map: recordId → selected action value
+const actionSelected = ref({})
 
 // Modal instances
 let detailModalInst = null
@@ -479,6 +464,42 @@ const toastMessage = ref('')
 const toastVariant = ref('success')
 
 // =================== COMPUTED ===================
+/** Danh sách action options tùy trạng thái phiếu */
+const getActionOptions = (trangThai) => {
+  switch (trangThai) {
+    case 'chờ duyệt':
+      return [
+        { value: 'approve', label: 'Duyệt phiếu' },
+        { value: 'reject',  label: 'Từ chối' },
+      ]
+    case 'đã duyệt':
+      return [
+        { value: 'handover',       label: 'Giao sách' },
+        { value: 'confirm-return', label: 'Xác nhận trả' },
+      ]
+    case 'đang mượn':
+    case 'quá hạn':
+      return [
+        { value: 'confirm-return', label: 'Xác nhận trả' },
+      ]
+    case 'đang chờ trả':
+      return [
+        { value: 'confirm-return', label: 'Xác nhận trả' },
+      ]
+    default:
+      return [] // đã trả, từ chối → không có action
+  }
+}
+
+/** Màu nút Thực hiện theo action đang chọn */
+const getExecBtnClass = (action) => {
+  if (action === 'approve')        return 'btn-success text-white'
+  if (action === 'reject')         return 'btn-danger text-white'
+  if (action === 'handover')       return 'btn-primary text-white'
+  if (action === 'confirm-return') return 'btn-warning text-dark'
+  return 'btn-secondary'
+}
+
 const filteredRecords = computed(() => {
   let list = records.value
   if (searchText.value.trim()) {
@@ -525,6 +546,18 @@ const countStatus = (status) => {
 const openDetail = (record) => {
   selectedRecord.value = record
   detailModalInst?.show()
+}
+
+const executeAction = (record) => {
+  const action = actionSelected.value[record._id]
+  if (!action) return
+  if (action === 'reject') {
+    openRejectModal(record)
+  } else {
+    handleAction(record, action)
+  }
+  // Reset dropdown
+  actionSelected.value[record._id] = ''
 }
 
 const openRejectModal = (record, fromDetail = false) => {
@@ -683,6 +716,42 @@ onMounted(async () => {
 }
 .action-btn:hover:not(:disabled) {
   transform: scale(1.15);
+}
+
+/* Action select dropdown */
+.action-select {
+  min-width: 120px;
+  max-width: 140px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  border: 1.5px solid #dee2e6;
+  background-color: #f8f9fa;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.action-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13,110,253,0.15);
+  outline: none;
+}
+
+/* Nút thực hiện */
+.action-exec-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+}
+.action-exec-btn:not(:disabled):hover {
+  transform: scale(1.1);
+  filter: brightness(1.05);
 }
 
 .book-title-clamp {

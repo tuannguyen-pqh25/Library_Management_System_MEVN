@@ -48,27 +48,40 @@
                     {{ formatStatus(record.trangThai) }}
                   </span>
                 </td>
-                <td class="text-center pe-4">
-                  <button
-                    v-if="['đã duyệt', 'đang mượn', 'quá hạn'].includes(record.trangThai)"
-                    class="btn btn-sm btn-outline-warning text-dark border-warning border-2 rounded-pill fw-bold hover-scale px-3"
-                    @click="openReturnModal(record)"
-                    :disabled="isProcessing === record._id"
-                  >
-                    <i class="fas" :class="isProcessing === record._id ? 'fa-spinner fa-spin' : 'fa-undo'"></i>
-                    Hẹn trả sách
-                  </button>
-                  <div v-else-if="record.trangThai === 'chờ duyệt'" class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-2 hover-scale" @click="openEditModal(record)" title="Sửa số lượng" :disabled="isProcessing === record._id">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-2 hover-scale" @click="cancelRequest(record)" title="Hủy yêu cầu" :disabled="isProcessing === record._id">
-                      <i class="fas fa-times"></i>
-                    </button>
+                <td class="text-center pe-4" style="min-width:170px;">
+                  <div class="d-flex align-items-center gap-1 justify-content-center">
+                    <template v-if="getUserActionOptions(record.trangThai).length > 0">
+                      <select
+                        class="form-select form-select-sm action-select"
+                        v-model="actionSelected[record._id]"
+                        :id="'user-action-' + record._id"
+                      >
+                        <option value="" disabled>--- Chọn ---</option>
+                        <option
+                          v-for="opt in getUserActionOptions(record.trangThai)"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >{{ opt.label }}</option>
+                      </select>
+                      <button
+                        class="btn btn-sm action-exec-btn flex-shrink-0"
+                        :class="getUserExecBtnClass(actionSelected[record._id])"
+                        :disabled="!actionSelected[record._id] || isProcessing === record._id"
+                        @click="executeUserAction(record)"
+                      >
+                        <i class="fas" :class="isProcessing === record._id ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+                      </button>
+                    </template>
+                    <!-- Đang chờ trả — chỉ hiển thị badge -->
+                    <span
+                      v-else-if="record.trangThai === 'đang chờ trả'"
+                      class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-3 py-2"
+                    >
+                      <i class="fas fa-hourglass-half me-1"></i> Đang chờ
+                    </span>
+                    <!-- Đã trả / Từ chối — không cần thao tác -->
+                    <span v-else class="text-muted" style="font-size:0.75rem;">—</span>
                   </div>
-                  <span v-else-if="record.trangThai === 'đang chờ trả'" class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-3 py-2">
-                    <i class="fas fa-hourglass-half me-1"></i> Đang chờ
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -170,6 +183,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 const records = ref([])
 const loading = ref(true)
 const isProcessing = ref(null)
+const actionSelected = ref({}) // Map: recordId → selected action
 
 
 let returnModalInst = null
@@ -270,6 +284,41 @@ const cancelRequest = async (record) => {
   }
 }
 
+// =================== ACTION DROPDOWN (USER) ===================
+const getUserActionOptions = (trangThai) => {
+  switch (trangThai) {
+    case 'chờ duyệt':
+      return [
+        { value: 'edit',   label: 'Sửa số lượng' },
+        { value: 'cancel', label: 'Hủy yêu cầu' },
+      ]
+    case 'đã duyệt':
+    case 'đang mượn':
+    case 'quá hạn':
+      return [
+        { value: 'return', label: 'Hẹn trả sách' },
+      ]
+    default:
+      return []
+  }
+}
+
+const getUserExecBtnClass = (action) => {
+  if (action === 'edit')   return 'btn-primary text-white'
+  if (action === 'cancel') return 'btn-danger text-white'
+  if (action === 'return') return 'btn-warning text-dark'
+  return 'btn-secondary'
+}
+
+const executeUserAction = (record) => {
+  const action = actionSelected.value[record._id]
+  if (!action) return
+  actionSelected.value[record._id] = '' // reset
+  if (action === 'return') openReturnModal(record)
+  else if (action === 'edit') openEditModal(record)
+  else if (action === 'cancel') cancelRequest(record)
+}
+
 const statusClass = (value) => {
   const text = String(value || '').toLowerCase()
   if (text === 'chờ duyệt') return 'bg-warning bg-opacity-10 text-warning-emphasis'
@@ -341,5 +390,39 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   font-size: 1.1rem;
+}
+
+/* Action dropdown */
+.action-select {
+  min-width: 115px;
+  max-width: 140px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  border: 1.5px solid #dee2e6;
+  background-color: #f8f9fa;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.action-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13,110,253,0.15);
+  outline: none;
+}
+.action-exec-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.action-exec-btn:not(:disabled):hover {
+  transform: scale(1.1);
+  filter: brightness(1.05);
 }
 </style>

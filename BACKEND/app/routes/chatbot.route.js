@@ -11,7 +11,7 @@ const chatLimiter = rateLimit({
     handler: (req, res) => {
         res.status(429).json({
             success: false,
-            reply: "Bạn đang gửi quá nhiều tin nhắn. Vui lòng chờ một chút nhé! 😊"
+            reply: "Bạn đang gửi quá nhiều tin nhắn. Vui lòng chờ một chút nhé!"
         });
     }
 });

@@ -823,7 +823,7 @@ class ChatbotService {
             } else if (status === 403) {
                 errorMsg = "Chatbot chưa được cấu hình đúng API Key. Vui lòng liên hệ quản trị viên.";
             } else if (status === 503 || this._isTransientError(error)) {
-                errorMsg = "Hệ thống AI đang quá tải. Tôi đã thử nhiều lần nhưng chưa thành công. Vui lòng thử lại sau vài phút nhé! 🙏";
+                errorMsg = "Hệ thống AI đang quá tải. Tôi đã thử nhiều lần nhưng chưa thành công. Vui lòng thử lại sau vài phút nhé.";
             }
             return { reply: errorMsg, conversationId: convId };
         }

@@ -566,7 +566,7 @@ class ExportService {
         NgayTra: borrow.NgayTra || borrow.ngayTraThucTe
           ? this.formatDate(borrow.NgayTra || borrow.ngayTraThucTe) : '',
         TrangThai: statusKey,
-        GhiChu: isOverdue ? '⚠ QUÁ HẠN' : (borrow.GhiChu || borrow.ghiChu || '')
+        GhiChu: isOverdue ? 'QUÁ HẠN' : (borrow.GhiChu || borrow.ghiChu || '')
       });
 
       // Style cơ bản

@@ -151,7 +151,7 @@
                     <h5 class="fw-bold text-dark mb-0">Đánh giá & Nhận xét</h5>
                     <p class="text-muted-custom small mb-0">
                       {{ reviewStats.total }} đánh giá
-                      <span v-if="reviewStats.total > 0"> · Trung bình <strong class="text-warning">{{ reviewStats.avgRating.toFixed(1) }} ★</strong></span>
+                      <span v-if="reviewStats.total > 0"> · Trung bình <strong class="text-warning">{{ reviewStats.avgRating.toFixed(1) }} <i class="fas fa-star"></i></strong></span>
                     </p>
                   </div>
 

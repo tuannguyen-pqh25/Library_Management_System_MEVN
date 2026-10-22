@@ -298,7 +298,7 @@
                 </span>
                 <span class="badge rounded-pill px-3 py-1"
                       :class="selectedDocGia.TrangThaiTaiKhoan === 'BiKhoa' ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'">
-                  {{ selectedDocGia.TrangThaiTaiKhoan === 'BiKhoa' ? '🔒 Bị khóa' : '✅ Bình thường' }}
+                  {{ selectedDocGia.TrangThaiTaiKhoan === 'BiKhoa' ? 'Bị khóa' : 'Bình thường' }}
                 </span>
               </div>
             </div>

@@ -38,10 +38,9 @@
 - MaSach/MaDocGia/MSNV/MaNXB: Hiển thị UI, tìm kiếm nghiệp vụ, báo cáo. Cần unique index thủ công.
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
-[TRẠNG THÁI DỰ ÁN — 2026-10-12]
-- ✅ Hoàn thành: Giai đoạn 1–10 (RBAC 3 vai trò, E2E mượn/trả, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot với Resilience Architecture, Voice Search AI, và Đăng nhập ủy quyền OAuth 2.0 Google & Facebook).
-- 🔄 Tiếp theo: Giai đoạn 11 — Deploy theo giáo trình thầy (nginx + PM2, on-premise/VPS).
-- 📌 Kế hoạch tính năng phụ (chỉ làm khi rảnh/cần UI): Nhắc hẹn trả sách dạng In-App UI (icon chuông + badge số sách sắp hết hạn trên Header), KHÔNG cần làm Web Push phức tạp.
+[TRẠNG THÁI DỰ ÁN — 2026-10-22]
+- ✅ Hoàn thành: Giai đoạn 1–10 (RBAC 3 vai trò, E2E mượn/trả, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot với Resilience Architecture, Voice Search AI, Đăng nhập ủy quyền OAuth 2.0 Google & Facebook, Chuông thông báo In-App Notification Bell, Action Dropdown theo trạng thái phiếu mượn, và Chuẩn hóa mã nguồn Zero Emoji).
+- 🔄 Tiếp theo: Giai đoạn 11 — Deploy theo giáo trình thầy (nginx + PM2, on-premise/VPS) và Chuẩn bị bảo vệ đồ án.
 - 📋 Việc còn lại trước deploy: Thêm unique index cho các Mã (xem checkpoint.md mục 2026-10-12).
 
 [KIẾN TRÚC DEPLOY — NGINX + PM2]
@@ -531,24 +530,30 @@ sudo systemctl reload nginx
 
 ---
 
-## 📌 TÍNH NĂNG DỰ KIẾN (CHƯA LÀM NGAY): Nhắc Hẹn Trả Sách Dạng Giao Diện (In-App UI Notification)
+## ✅ TÍNH NĂNG ĐÃ HOÀN THÀNH (2026-10-22): Nhắc Hẹn Trả Sách Dạng Giao Diện (In-App UI Notification) & Contextual Action Dropdown
 
-> **Ghi chú định hướng:** Khi người dùng có nhu cầu bổ sung giao diện thông báo, chỉ triển khai ở mức **In-App UI** (gọn nhẹ, không làm Web Push Service Worker phức tạp). Hiện tại **chưa cần làm liền**, lưu lại đặc tả dưới đây để dùng khi cần.
+> **Trạng thái:** Đã triển khai và kiểm chứng 100% trên môi trường thực tế.
 
-### 1. Ý tưởng thiết kế
-- Tận dụng trực tiếp API lịch sử mượn sách có sẵn của độc giả (`GET /api/user/muon/lich-su`), không cần can thiệp Database backend.
-- Trên thanh điều hướng `AppHeader.vue`: Thêm một nút biểu tượng **Cái chuông (`fas fa-bell`)** kèm huy hiệu số lượng (Badge đỏ).
+### 1. Hệ thống Chuông Thông báo (In-App Notification Bell)
+- **Cơ chế triển khai**: Tận dụng trực tiếp dữ liệu từ `MuonSachService.getHistory()` thông qua hàm `getNotifications()`, không tốn tài nguyên gọi backend riêng.
+- **Tiêu chí phát hiện**:
+  1. 🔴 **Quá hạn**: Trạng thái `đang mượn` hoặc `quá hạn` có `ngayHenTra < hôm nay`.
+  2. 🟡 **Sắp hết hạn**: `0 <= (ngayHenTra - hôm nay) <= 2 ngày`.
+- **Giao diện (`frontend/user-web/src/components/AppHeader.vue`)**:
+  - Nút chuông icon FontAwesome (`fas fa-bell`) kèm huy hiệu Badge đỏ đếm tổng số lượng sách cần chú ý.
+  - Hiệu ứng rung chuông `@keyframes bellShake` tự động khi có thông báo mới.
+  - Panel Dropdown hiển thị danh sách sách cần trả (ảnh thumbnail, tên sách, chip cảnh báo số ngày quá hạn / sắp hết hạn).
+  - Tự động thăm dò (polling) cập nhật mỗi 5 phút một lần, tự dọn dẹp timer khi unmount.
+  - Nút chuyển hướng nhanh đến `/lich-su` để độc giả thực hiện thao tác trả sách.
 
-### 2. Chi tiết hiển thị (Dropdown Thông báo)
-- **Huy hiệu số lượng (Badge)**: Bằng tổng số phiếu mượn thỏa mãn một trong hai điều kiện:
-  1. 🔴 **Quá hạn**: `NgayHenTra < hôm nay` (và trạng thái là `DangMuon` hoặc `QuaHan`).
-  2. 🟡 **Sắp hết hạn**: `0 <= (NgayHenTra - hôm nay) <= 2 ngày`.
-- **Nội dung bên trong Dropdown**:
-  - Tiêu đề: "Thông báo mượn trả sách".
-  - Danh sách từng sách cần lưu ý:
-    - Thumbnail ảnh bìa sách nhỏ + Tên sách.
-    - Cảnh báo trạng thái: "Đã quá hạn X ngày" (màu đỏ) hoặc "Hết hạn vào ngày mai/kia" (màu cam).
-    - Nút thao tác nhanh: Click vào để chuyển thẳng đến trang `/lich-su` để bấm "Xin trả sách" hoặc gia hạn.
-  - Nếu không có sách nào sắp hết hạn: Hiển thị trạng thái trống thân thiện ("Bạn không có sách nào sắp đến hạn trả").
+### 2. Tái cấu trúc UX Thao tác Mượn Sách (Contextual Action Dropdowns)
+- **Admin Web (`frontend/admin-web/src/views/MuonSachManagement.vue`)**:
+  - Chuyển toàn bộ cụm nút bấm icon thao tác sang `<select>` dropdown ngữ cảnh theo trạng thái phiếu + nút bấm thực thi.
+  - Options chỉ hiển thị hành động hợp lệ: `chờ duyệt` (Duyệt phiếu, Từ chối), `đã duyệt` (Giao sách, Xác nhận trả), `đang mượn`/`quá hạn`/`đang chờ trả` (Xác nhận trả).
+- **User Web (`frontend/user-web/src/views/BorrowHistory.vue`)**:
+  - Bảng lịch sử mượn trang bị dropdown: `chờ duyệt` (Sửa số lượng, Hủy yêu cầu), `đang mượn`/`quá hạn`/`đã duyệt` (Hẹn trả sách), `đang chờ trả` (Badge Đang chờ).
+
+### 3. Chuẩn hóa Mã nguồn (Zero Emoji in Code)
+- Loại bỏ 100% các emoji hardcoded trong option label, câu thông báo lỗi, log và giao diện trên toàn bộ hệ thống (Admin, User, Backend), đảm bảo chất lượng code sạch, chuyên nghiệp phục vụ đánh giá luận văn.
 
 

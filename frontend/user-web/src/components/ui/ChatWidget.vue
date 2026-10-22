@@ -206,10 +206,10 @@ export default {
         let canRetry = false;
         
         if (status === 429 || status === 503) {
-          errorContent = "⏳ Hệ thống AI đang quá tải. Tự động thử lại sau 30 giây...";
+          errorContent = "Hệ thống AI đang quá tải. Tự động thử lại sau 30 giây...";
           canRetry = true;
         } else if (!navigator.onLine) {
-          errorContent = "📡 Không có kết nối mạng. Vui lòng kiểm tra và thử lại.";
+          errorContent = "Không có kết nối mạng. Vui lòng kiểm tra và thử lại.";
           canRetry = true;
         }
         

@@ -39,6 +39,115 @@
         <!-- USER ACTIONS + Hamburger -->
         <div class="d-flex align-items-center gap-2">
 
+          <!-- NOTIFICATION BELL -->
+          <div v-if="currentUser" class="notif-wrapper" ref="notifWrapperRef">
+            <button
+              id="notif-bell-btn"
+              class="btn btn-light rounded-circle d-flex align-items-center justify-content-center position-relative notif-bell-btn"
+              style="width:38px;height:38px;"
+              :class="{ 'notif-has-alert': notifCount > 0 }"
+              title="Thông báo mượn trả"
+              @click.stop="toggleNotifDropdown"
+              :aria-expanded="notifDropdownOpen"
+            >
+              <i class="fas fa-bell" :class="notifCount > 0 ? 'text-warning' : 'text-secondary'"></i>
+              <span
+                v-if="notifCount > 0"
+                class="notif-badge position-absolute"
+              >
+                {{ notifCount > 9 ? '9+' : notifCount }}
+              </span>
+            </button>
+
+            <!-- Notification dropdown panel -->
+            <transition name="notif-drop">
+              <div v-if="notifDropdownOpen" class="notif-dropdown shadow-lg" id="notif-dropdown-panel">
+                <!-- Header -->
+                <div class="notif-header d-flex align-items-center justify-content-between px-3 py-2">
+                  <span class="fw-bold text-dark" style="font-size:0.92rem;">
+                    <i class="fas fa-bell me-2 text-warning"></i>Thông báo mượn trả
+                  </span>
+                  <span v-if="notifCount > 0" class="badge rounded-pill" style="background:#ef4444;font-size:0.7rem;">{{ notifCount }}</span>
+                </div>
+                <div class="notif-divider"></div>
+
+                <!-- Loading -->
+                <div v-if="notifLoading" class="notif-empty py-4 text-center">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                  <p class="mb-0 mt-2 text-muted" style="font-size:0.82rem;">Đang tải...</p>
+                </div>
+
+                <!-- Empty state -->
+                <div v-else-if="notifications.length === 0" class="notif-empty py-4 text-center px-3">
+                  <div class="notif-empty-icon mb-2">
+                    <i class="fas fa-check-circle text-success" style="font-size:2rem;"></i>
+                  </div>
+                  <p class="mb-0 fw-semibold text-dark" style="font-size:0.875rem;">Tất cả ổn!</p>
+                  <p class="mb-0 text-muted" style="font-size:0.78rem;">Bạn không có sách nào sắp đến hạn trả.</p>
+                </div>
+
+                <!-- Notification list -->
+                <ul v-else class="notif-list mb-0 ps-0">
+                  <li
+                    v-for="item in notifications"
+                    :key="item._id"
+                    class="notif-item d-flex align-items-start gap-3"
+                    @click="goToHistory"
+                    role="button"
+                    :title="item.trangThai === 'quá hạn' || item.daysLeft < 0 ? 'Bấm để xem và xin trả sách' : 'Bấm để xem lịch sử'"
+                  >
+                    <!-- Book thumbnail -->
+                    <div class="notif-thumb flex-shrink-0">
+                      <img
+                        v-if="item.sachInfo && item.sachInfo.HinhAnh"
+                        :src="item.sachInfo.HinhAnh"
+                        :alt="item.sachInfo.TenSach"
+                        class="notif-thumb-img"
+                        @error="e => e.target.style.display='none'"
+                      />
+                      <div v-else class="notif-thumb-placeholder">
+                        <i class="fas fa-book text-white"></i>
+                      </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="min-w-0 flex-grow-1">
+                      <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem;">
+                        {{ item.sachInfo ? item.sachInfo.TenSach : 'Sách đã mượn' }}
+                      </p>
+                      <p class="mb-1 text-muted" style="font-size:0.75rem;">
+                        Số lượng: {{ item.soLuong || 1 }} quyển
+                      </p>
+                      <!-- Alert label -->
+                      <span
+                        v-if="item.alertType === 'overdue'"
+                        class="notif-chip chip-overdue"
+                      >
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        Quá hạn {{ item.daysLeft < 0 ? Math.abs(item.daysLeft) + ' ngày' : '' }}
+                      </span>
+                      <span
+                        v-else-if="item.alertType === 'soon'"
+                        class="notif-chip chip-soon"
+                      >
+                        <i class="fas fa-clock me-1"></i>
+                        {{ item.daysLeft === 0 ? 'Hết hạn hôm nay' : 'Hết hạn sau ' + item.daysLeft + ' ngày' }}
+                      </span>
+                    </div>
+                  </li>
+                </ul>
+
+                <!-- Footer -->
+                <div class="notif-divider"></div>
+                <div class="text-center py-2">
+                  <button class="btn btn-sm btn-link text-primary fw-semibold text-decoration-none" style="font-size:0.8rem;" @click="goToHistory">
+                    <i class="fas fa-history me-1"></i>Xem toàn bộ lịch sử mượn
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
+
           <!-- Heart icon — only on medium screens (wishlist shortcut) -->
           <router-link
             v-if="currentUser"
@@ -196,6 +305,7 @@
 import AuthService from '@/services/auth.service'
 import YeuThichService from '@/services/yeuthich.service'
 import CartService from '@/services/cart.service'
+import MuonSachService from '@/services/muonsach.service'
 import eventBus from '@/services/eventBus'
 
 export default {
@@ -207,9 +317,17 @@ export default {
       cartCount: 0,
       mobileMenuOpen: false,
       userDropdownOpen: false,
+      // Notification bell
+      notifications: [],
+      notifDropdownOpen: false,
+      notifLoading: false,
+      _notifTimer: null,
     }
   },
   computed: {
+    notifCount() {
+      return this.notifications.length
+    },
     displayName() {
       const user = this.currentUser || {}
       return user.Ten || user.HoLot || user.Email || 'Độc giả'
@@ -223,8 +341,10 @@ export default {
       this.currentUser = AuthService.getCurrentUser()
       if (this.currentUser) {
         this.fetchWishlistCount()
+        this.fetchNotifications()
       } else {
         this.wishlistCount = 0
+        this.notifications = []
       }
     },
     async fetchWishlistCount() {
@@ -235,6 +355,29 @@ export default {
         this.wishlistCount = 0
       }
     },
+    async fetchNotifications() {
+      if (!this.currentUser) return
+      this.notifLoading = true
+      try {
+        this.notifications = await MuonSachService.getNotifications()
+      } catch (_) {
+        this.notifications = []
+      } finally {
+        this.notifLoading = false
+      }
+    },
+    toggleNotifDropdown() {
+      this.notifDropdownOpen = !this.notifDropdownOpen
+      if (this.notifDropdownOpen) {
+        this.userDropdownOpen = false
+        // Refresh data mỗi lần mở
+        this.fetchNotifications()
+      }
+    },
+    goToHistory() {
+      this.notifDropdownOpen = false
+      this.$router.push('/lich-su')
+    },
     fetchCartCount() {
       this.cartCount = CartService.getCart().length
     },
@@ -242,8 +385,10 @@ export default {
       AuthService.logout()
       this.currentUser = null
       this.wishlistCount = 0
+      this.notifications = []
       this.mobileMenuOpen = false
       this.userDropdownOpen = false
+      this.notifDropdownOpen = false
       this.$router.push('/login')
     },
     closeDropdown(e) {
@@ -253,15 +398,24 @@ export default {
           this.userDropdownOpen = false
         }
       }
+      if (this.notifDropdownOpen) {
+        const wrapper = this.$refs.notifWrapperRef
+        if (wrapper && !wrapper.contains(e.target)) {
+          this.notifDropdownOpen = false
+        }
+      }
     }
   },
   created() {
     this.updateUser()
     this.fetchCartCount()
     eventBus.on('auth-change', this.updateUser)
-    // Refresh wishlist count khi thay đổi
     eventBus.on('wishlist-change', this.fetchWishlistCount)
     window.addEventListener('cart-updated', this.fetchCartCount)
+    // Auto-refresh thông báo mỗi 5 phút
+    this._notifTimer = setInterval(() => {
+      if (this.currentUser) this.fetchNotifications()
+    }, 5 * 60 * 1000)
   },
   mounted() {
     document.addEventListener('click', this.closeDropdown)
@@ -271,13 +425,14 @@ export default {
     eventBus.off('auth-change', this.updateUser)
     eventBus.off('wishlist-change', this.fetchWishlistCount)
     window.removeEventListener('cart-updated', this.fetchCartCount)
+    if (this._notifTimer) clearInterval(this._notifTimer)
   }
 }
 </script>
 
 <style scoped>
 .app-header {
-  z-index: 1030;
+  z-index: 1031;
   min-height: 64px;
 }
 
@@ -430,5 +585,154 @@ export default {
 .slide-down-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* ============================================
+   NOTIFICATION BELL
+   ============================================ */
+.notif-wrapper {
+  position: relative;
+}
+
+/* Rung nhẹ khi có alert */
+.notif-bell-btn.notif-has-alert {
+  animation: bellShake 0.5s ease 0.3s 2;
+}
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-12deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-8deg); }
+  80% { transform: rotate(6deg); }
+}
+
+.notif-badge {
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.52rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #fff;
+  line-height: 1;
+  animation: popIn 0.3s ease;
+}
+@keyframes popIn {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* Dropdown panel */
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 330px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.07);
+  z-index: 9999;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.notif-header {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-bottom: none;
+}
+
+.notif-divider {
+  height: 1px;
+  background: #f0f0f0;
+}
+
+.notif-empty {
+  padding: 20px;
+}
+
+/* List */
+.notif-list {
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.notif-list::-webkit-scrollbar { width: 4px; }
+.notif-list::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+
+.notif-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f5f5f5;
+}
+.notif-item:last-child {
+  border-bottom: none;
+}
+.notif-item:hover {
+  background: #fafafa;
+}
+
+/* Thumbnail */
+.notif-thumb {
+  width: 42px;
+  height: 52px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.notif-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.notif-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  font-size: 1rem;
+}
+
+/* Chips */
+.notif-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  line-height: 1.4;
+}
+.chip-overdue {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.chip-soon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* Dropdown transition */
+.notif-drop-enter-active,
+.notif-drop-leave-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.notif-drop-enter-from,
+.notif-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
 }
 </style>

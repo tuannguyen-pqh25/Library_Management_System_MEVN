@@ -26,7 +26,7 @@ async function seedData() {
     for (const nxb of nxbs) {
       await nxbCollection.insertOne(nxb);
     }
-    console.log("✅ Đã bơm dữ liệu Nhà xuất bản (NXB) thành công!");
+    console.log("Da bom du lieu Nha xuat ban (NXB) thanh cong!");
 
     // Bơm dữ liệu Sách
     const sachs = [
@@ -55,7 +55,7 @@ async function seedData() {
     for (const sach of sachs) {
       await sachCollection.insertOne(sach);
     }
-    console.log("✅ Đã bơm dữ liệu Sách thành công!");
+    console.log("Da bom du lieu Sach thanh cong!");
 
   } catch (error) {
     console.error("Lỗi khi bơm dữ liệu:", error);

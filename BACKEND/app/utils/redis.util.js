@@ -22,7 +22,7 @@ class RedisUtil {
 
             await this.client.connect();
         } catch (error) {
-            console.log("⚠️ Không tìm thấy Redis server (port 6379). Hệ thống tự động chuyển sang chế độ fallback (bỏ qua Cache, hoạt động bình thường).");
+            console.log("Khong tim thay Redis server (port 6379). He thong tu dong chuyen sang che do fallback (bo qua Cache, hoat dong binh thuong).");
             this.client = null;
         }
     }

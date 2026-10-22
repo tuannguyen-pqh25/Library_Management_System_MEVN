@@ -431,3 +431,70 @@ feat(auth): implement OAuth 2.0 Google and Facebook authentication for user web
 - Document OAuth 2.0 flow and environment configurations in checkpoint and report
 ```
 
+## Cập nhật 2026-10-22 — Hoàn thành Hệ thống Thông báo (Notification Bell), Tái cấu trúc UX Action Dropdown và Chuẩn hóa Toàn diện Mã nguồn
+
+### 1. Tổng quan công việc hoàn thành
+Trong phiên làm việc này, hệ thống đã được nâng cấp 3 hạng mục trọng điểm nhằm tối ưu hóa trải nghiệm người dùng (UX) và chuẩn hóa chất lượng mã nguồn đạt chuẩn học thuật trước khi bảo vệ:
+1. **In-App Notification Bell (`user-web`)**: Hệ thống chuông thông báo trên thanh điều hướng cho độc giả, tự động phát hiện sách quá hạn và sắp đến hạn trả mà không tạo thêm gánh nặng cho cơ sở dữ liệu.
+2. **Refactor Action Dropdown (`admin-web` & `user-web`)**: Thay thế cụm nút bấm icon rời rạc bằng dropdown select theo ngữ cảnh trạng thái phiếu mượn, đi kèm nút kích hoạt đồng bộ.
+3. **Chuẩn hóa & Làm sạch Mã nguồn (Zero Emoji in Code)**: Rà soát và loại bỏ 100% các biểu tượng cảm xúc (emoji) trong mã nguồn, option dropdown, câu thông báo và log hệ thống, đảm bảo phong cách lập trình trang nhã, tương thích đa nền tảng và tránh lỗi hiển thị/encoding khi chấm thi.
+
+### 2. Chi tiết kỹ thuật triển khai
+
+#### A. In-App Notification Bell trên User Web
+- **Service (`frontend/user-web/src/services/muonsach.service.js`)**:
+  - Bổ sung hàm `getNotifications()`: Tận dụng trực tiếp dữ liệu từ `getHistory()` (không cần tạo thêm endpoint backend mới, giảm tải DB).
+  - Logic phân loại cảnh báo:
+    - `alertType: 'overdue'`: Trạng thái `đang mượn` hoặc `quá hạn` có ngày hẹn trả đã qua so với ngày hiện tại (`daysRemaining < 0`).
+    - `alertType: 'soon'`: Sách sắp hết hạn trong khoảng 0 đến 2 ngày (`0 <= daysRemaining <= 2`).
+    - Sử dụng chuẩn `record.ngayHenTra` (hoặc fallback `record.ngayTra`) để tính toán chính xác số ngày.
+- **Header Component (`frontend/user-web/src/components/AppHeader.vue`)**:
+  - Bổ sung nút Icon Chuông (`fas fa-bell`) kèm Badge số lượng nổi bật.
+  - Hiệu ứng rung chuông sinh động (`@keyframes bellShake`) kích hoạt tự động khi phát hiện có sách cần xử lý.
+  - Panel Dropdown thông báo:
+    - Header phong cách Gradient sang trọng, hiển thị tổng số thông báo cần lưu ý.
+    - Danh sách phiếu mượn kèm ảnh bìa sách thu nhỏ (thumbnail), tiêu đề sách và chip trạng thái màu sắc trực quan (Đỏ: Quá hạn X ngày; Vàng cam: Hạn trả hôm nay / Còn X ngày).
+    - Footer chuyển hướng nhanh độc giả đến trang Lịch sử mượn (`/lich-su`).
+    - Trạng thái trống (Empty State) thân thiện khi không có sách đến hạn.
+  - Tự động thăm dò dữ liệu (Auto-polling) mỗi 5 phút một lần, tự dọn dẹp bộ đếm thời gian khi component unmount (`clearInterval`).
+  - Hỗ trợ đóng mở linh hoạt: Click vào icon chuông để mở, click ra ngoài (`clickOutside`) tự động đóng panel.
+
+#### B. Tái cấu trúc UX/UI Thao tác Mượn Sách (Contextual Action Dropdown)
+- **Admin Web (`frontend/admin-web/src/views/MuonSachManagement.vue`)**:
+  - Thay thế cụm nút bấm tròn nhỏ rời rạc (khó bấm, khó hiểu nghĩa icon) thành `<select>` dropdown động kết hợp nút bấm thực thi (`.action-exec-btn`).
+  - Hàm `getActionOptions(trangThai)` chỉ trả về các hành động hợp lệ theo nghiệp vụ:
+    - `chờ duyệt` → `Duyệt phiếu`, `Từ chối`
+    - `đã duyệt` → `Giao sách`, `Xác nhận trả`
+    - `đang mượn` / `quá hạn` / `đang chờ trả` → `Xác nhận trả`
+    - `đã trả` / `từ chối` → Không hiển thị thao tác (hiển thị ký tự `—`)
+  - Màu sắc nút bấm tự động biến đổi trực quan theo thao tác được chọn (`getExecBtnClass`).
+  - Tự động reset giá trị dropdown sau khi thực thi hành động để tránh người dùng thao tác nhầm lẫn.
+- **User Web (`frontend/user-web/src/views/BorrowHistory.vue`)**:
+  - Tương tự Admin, bảng lịch sử mượn sách của Độc giả được trang bị hệ thống `<select>` thao tác:
+    - `chờ duyệt` → `Sửa số lượng`, `Hủy yêu cầu`
+    - `đã duyệt` / `đang mượn` / `quá hạn` → `Hẹn trả sách`
+    - `đang chờ trả` → Hiển thị Badge "Đang chờ" trạng thái tĩnh.
+  - Phân tách rõ ràng giữa các luồng mở modal (`Xin trả sách`, `Sửa số lượng`) và xác nhận hủy yêu cầu.
+
+#### C. Chuẩn hóa & Làm sạch Mã nguồn (Zero Emoji in Code)
+- Loại bỏ toàn bộ emoji trong nhãn option dropdown của `getActionOptions()` và `getUserActionOptions()`.
+- Rà soát và loại bỏ ký tự emoji trong:
+  - `frontend/admin-web/src/views/DocGiaManagement.vue` (trạng thái tài khoản: `Bị khóa` / `Bình thường`).
+  - `frontend/admin-web/src/services/export.service.js` (ghi chú Excel: `QUÁ HẠN`).
+  - `frontend/user-web/src/components/ui/ChatWidget.vue` (thông báo lỗi kết nối và quá tải AI).
+  - `frontend/user-web/src/views/BookDetail.vue` (thay ký tự unicode sao bằng icon FontAwesome `<i class="fas fa-star"></i>`).
+  - Backend `chatbot.route.js`, `chatbot.service.js`, `redis.util.js`, `seedData.js`.
+- Kết quả quét kiểm tra tự động: **0 emoji trong toàn bộ mã nguồn**. Cả 2 dự án frontend đều build thành công 100% (`npm run build`).
+
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(ui): implement in-app notification bell and contextual action dropdowns
+
+- Add getNotifications method to muonsach.service.js to detect overdue and expiring borrows
+- Integrate interactive notification bell with badge counter and bellShake animation into AppHeader.vue
+- Refactor borrow management action buttons to contextual select dropdowns in MuonSachManagement.vue and BorrowHistory.vue
+- Eliminate hardcoded emoji icons across all views, services, and backend logs for production code cleanliness
+- Update project documentation and academic report in Cores directory
+```
+
+
