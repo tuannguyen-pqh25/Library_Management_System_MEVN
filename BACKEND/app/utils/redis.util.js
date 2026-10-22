@@ -7,17 +7,22 @@ class RedisUtil {
 
     async connect(url) {
         try {
-            this.client = createClient({ url });
+            this.client = createClient({
+                url,
+                socket: {
+                    connectTimeout: 1500,
+                    reconnectStrategy: false,
+                },
+            });
 
             this.client.on("error", (err) => {
-                console.log("Redis Client Error:", err.message);
                 this.client = null; // Vô hiệu hóa cache nếu lỗi
             });
             this.client.on("connect", () => console.log("Redis connected successfully."));
 
             await this.client.connect();
         } catch (error) {
-            console.log("⚠️ Không thể kết nối Redis. Hệ thống sẽ tự động vô hiệu hóa tính năng Caching.");
+            console.log("⚠️ Không tìm thấy Redis server (port 6379). Hệ thống tự động chuyển sang chế độ fallback (bỏ qua Cache, hoạt động bình thường).");
             this.client = null;
         }
     }

@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+const config = require("../../config");
 const SachService = require("../../services/sach.service");
 const MongoDB = require("../../utils/mongodb.util");
 const ApiError = require("../../api-error");
@@ -134,29 +137,71 @@ exports.deleteAll = async (_req, res, next) => {
     }
 };
 
-// 7. Upload ảnh lên Cloudinary
+// 7. Upload ảnh (Hỗ trợ Cloudinary và Local Server Fallback)
 exports.uploadImage = async (req, res, next) => {
     try {
         if (!req.body?.imageUrl) {
             return next(new ApiError(400, "URL ảnh không được để trống"));
         }
 
-        const result = await uploadImageFromBase64(req.body.imageUrl);
-
-        if (result.success) {
-            return res.send({
-                message: "Upload ảnh thành công",
-                data: {
-                    url: result.url,
-                    publicId: result.publicId,
+        // 1. Thử upload lên Cloudinary nếu có cấu hình trong .env
+        if (config.cloudinary?.cloudName && config.cloudinary?.apiKey && config.cloudinary?.apiSecret) {
+            try {
+                const result = await uploadImageFromBase64(req.body.imageUrl);
+                if (result.success) {
+                    return res.send({
+                        message: "Upload ảnh lên Cloudinary thành công",
+                        data: {
+                            url: result.url,
+                            publicId: result.publicId,
+                        }
+                    });
                 }
-            });
-        } else {
-            return next(new ApiError(500, result.message));
+            } catch (cloudErr) {
+                console.warn("Upload Cloudinary không thành công, tự động chuyển sang lưu trữ local:", cloudErr.message);
+            }
         }
+
+        // 2. Chế độ Fallback: Tự động lưu ảnh vào thư mục public/uploads
+        const base64Data = req.body.imageUrl;
+        const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+
+        let ext = "jpg";
+        let imageBuffer;
+        if (matches && matches.length === 3) {
+            const mimeType = matches[1].toLowerCase();
+            if (mimeType.includes("png")) ext = "png";
+            else if (mimeType.includes("webp")) ext = "webp";
+            else if (mimeType.includes("gif")) ext = "gif";
+            else if (mimeType.includes("svg")) ext = "svg";
+            imageBuffer = Buffer.from(matches[2], "base64");
+        } else {
+            imageBuffer = Buffer.from(base64Data, "base64");
+        }
+
+        const uploadDir = path.join(__dirname, "../../../public/uploads");
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+        const filePath = path.join(uploadDir, fileName);
+
+        await fs.promises.writeFile(filePath, imageBuffer);
+
+        const localUrl = `http://localhost:${config.app.port || 3000}/uploads/${fileName}`;
+
+        return res.send({
+            message: "Upload ảnh lên máy chủ thành công",
+            data: {
+                url: localUrl,
+                publicId: fileName,
+            }
+        });
     } catch (error) {
+        console.error("Lỗi khi upload ảnh:", error);
         return next(
-            new ApiError(500, "Lỗi khi upload ảnh")
+            new ApiError(500, `Lỗi khi upload ảnh: ${error.message}`)
         );
     }
 };
