@@ -487,14 +487,31 @@ Trong phiên làm việc này, hệ thống đã được nâng cấp 3 hạng m
 - Kết quả quét kiểm tra tự động: **0 emoji trong toàn bộ mã nguồn**. Cả 2 dự án frontend đều build thành công 100% (`npm run build`).
 
 ### 3. Git Commit Message chuẩn (Conventional Commits)
-```git
-feat(ui): implement in-app notification bell and contextual action dropdowns
+#### D. Thiết lập Toàn diện Unique Indexes & Query Indexes cho MongoDB
+- **Mục tiêu**: Đảm bảo toàn vẹn dữ liệu nghiệp vụ, ngăn chặn hoàn toàn việc tạo trùng Mã (MaSach, MaDocGia, MSNV, MaNXB, Email), và tối ưu hóa tối đa tốc độ truy vấn mượn/trả và tìm kiếm sách.
+- **Thực thi**:
+  - Tạo tiện ích `BACKEND/app/utils/indexes.util.js` quản lý tập trung 17 definitions:
+    - `SACH`: `uniq_MaSach` (Unique), `idx_TenSach`, `idx_TheLoai`, `idx_MaNXB`.
+    - `DOCGIA`: `uniq_MaDocGia` (Unique), `uniq_Email` (Unique, Sparse), `idx_oauth` (Sparse).
+    - `NHANVIEN`: `uniq_MSNV` (Unique), `uniq_EMAIL` (Unique, Sparse).
+    - `NHAXUATBAN`: `uniq_MaNXB` (Unique), `uniq_TenNXB` (Unique).
+    - `THEODOIMUONSACH`: `idx_muon_docgia_trangthai`, `idx_muon_masach`, `idx_muon_trangthai`, `idx_muon_ngayhentra`.
+    - `DANHGIA` & `CHAT_HISTORY`: `idx_danhgia_sach_docgia`, `idx_chat_docgia_time`.
+  - Tạo script CLI độc lập: `BACKEND/createIndexes.js` (gọi qua `npm run db:indexes`).
+  - Tự động gọi `ensureIndexes()` trong `server.js` khi máy chủ khởi động (có bọc try-catch an toàn).
+  - Kết quả kiểm chứng thực tế: 17 indexes đã được tạo và kích hoạt thành công 100%.
 
-- Add getNotifications method to muonsach.service.js to detect overdue and expiring borrows
-- Integrate interactive notification bell with badge counter and bellShake animation into AppHeader.vue
-- Refactor borrow management action buttons to contextual select dropdowns in MuonSachManagement.vue and BorrowHistory.vue
-- Eliminate hardcoded emoji icons across all views, services, and backend logs for production code cleanliness
-- Update project documentation and academic report in Cores directory
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(db): establish unique and query indexes for all MongoDB collections
+
+- Implement centralized index definitions and ensureIndexes utility in indexes.util.js
+- Add standalone createIndexes.js migration script and npm run db:indexes command
+- Create unique indexes for MaSach, MaDocGia, MSNV, MaNXB, and Email
+- Add compound indexes for borrow queries, status filtering, and chat history
+- Integrate graceful index assertion into backend server startup in server.js
+- Update project checkpoint and roadmap documents in Cores directory
 ```
+
 
 

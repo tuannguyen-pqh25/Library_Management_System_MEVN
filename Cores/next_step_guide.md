@@ -39,9 +39,8 @@
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
 [TRẠNG THÁI DỰ ÁN — 2026-10-22]
-- ✅ Hoàn thành: Giai đoạn 1–10 (RBAC 3 vai trò, E2E mượn/trả, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot với Resilience Architecture, Voice Search AI, Đăng nhập ủy quyền OAuth 2.0 Google & Facebook, Chuông thông báo In-App Notification Bell, Action Dropdown theo trạng thái phiếu mượn, và Chuẩn hóa mã nguồn Zero Emoji).
-- 🔄 Tiếp theo: Giai đoạn 11 — Deploy theo giáo trình thầy (nginx + PM2, on-premise/VPS) và Chuẩn bị bảo vệ đồ án.
-- 📋 Việc còn lại trước deploy: Thêm unique index cho các Mã (xem checkpoint.md mục 2026-10-12).
+- ✅ Hoàn thành: Giai đoạn 1–10 (RBAC 3 vai trò, E2E mượn/trả, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google/Facebook, In-App Notification Bell, Action Dropdowns, Chuẩn hóa Zero Emoji, và Unique Indexes CSDL MongoDB).
+- 🔄 Tiếp theo: Giai đoạn 11 — Deploy theo giáo trình thầy (nginx + PM2, on-premise/VPS) và Chuẩn bị kịch bản bảo vệ đồ án.
 
 [KIẾN TRÚC DEPLOY — NGINX + PM2]
 Internet → NGINX (port 80) → proxy /api/* → Node.js qua PM2 (port 3000)

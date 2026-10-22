@@ -2,11 +2,19 @@ const app = require("./app");
 const config = require("./app/config");
 const MongoDB = require("./app/utils/mongodb.util");
 const Redis = require("./app/utils/redis.util");
+const { ensureIndexes } = require("./app/utils/indexes.util");
 
 async function startServer() {
     try {
         // Kết nối CSDL
-        await MongoDB.connect(config.db.uri);
+        const client = await MongoDB.connect(config.db.uri);
+
+        // Đảm bảo các Indexes cần thiết luôn được khởi tạo
+        try {
+            await ensureIndexes(client);
+        } catch (indexErr) {
+            console.warn("Canh bao tao index:", indexErr.message);
+        }
 
         // Kết nối Redis
         await Redis.connect(config.redis.url);
