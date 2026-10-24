@@ -94,9 +94,14 @@ Bài toán đặt ra là phải số hóa toàn bộ quy trình này. Độc gi�
 
 2. Yêu cầu bài toán
 2.1. Yêu cầu chức năng
-- Quản lý quy trình mượn - trả chặt chẽ: Phiếu mượn phải đi qua các trạng thái logic: "Chờ duyệt" -> "Đang mượn" -> "Đang chờ trả" -> "Đã trả". Hoặc có thể bị "Từ chối" ở bước đầu, và có thể rơi vào trạng thái "Quá hạn" nếu người dùng không trả đúng hạn.
+- Quản lý quy trình mượn - trả chặt chẽ: Phiếu mượn phải đi qua các trạng thái logic: "Chờ duyệt" -> "Đang mượn" -> "Chờ gia hạn" -> "Đang chờ trả" -> "Đã trả". Hoặc có thể bị "Từ chối" ở bước đầu, và có thể rơi vào trạng thái "Quá hạn" nếu người dùng không trả đúng hạn.
 - Cơ chế chống Overbooking (Vượt quá số lượng): Khi độc giả tạo phiếu mượn ở trạng thái "Chờ duyệt", số lượng sách trong kho chưa bị trừ để đảm bảo tính tự do. Tuy nhiên, khi thủ thư nhấn "Duyệt", hệ thống phải lập tức đối chiếu số lượng tồn kho. Nếu số sách trong kho không đủ so với yêu cầu, hệ thống phải chặn lại và báo lỗi, buộc thủ thư phải từ chối phiếu đó.
 - Ràng buộc hạn mức mượn: Mỗi tài khoản độc giả chỉ được phép mượn tổng cộng tối đa 10 quyển sách (bao gồm tất cả các phiếu chưa trả). Nếu vượt quá hạn mức, hệ thống không cho phép tạo thêm yêu cầu mượn mới.
+- Nghiệp vụ Gia hạn mượn sách có kiểm soát (Book Renewal Workflow): Độc giả đang mượn sách có quyền xin gia hạn thêm thời gian đọc sách với các quy tắc kiểm soát nghiêm ngặt:
+  + Ràng buộc thời gian: Bắt buộc phải gửi yêu cầu gia hạn trước ngày hết hạn ít nhất 3 ngày (Hạn trả - Ngày hiện tại >= 3 ngày). Nếu còn dưới 3 ngày hoặc đã quá hạn, hệ thống kiên quyết từ chối để chống tình trạng chây ì và buộc độc giả phải đem sách trả đúng hạn.
+  + Giới hạn số lần: Mỗi cuốn sách chỉ được phép xin gia hạn tối đa 2 lần. Độc giả có thể lựa chọn thời gian xin thêm: +7 ngày (1 tuần) hoặc +14 ngày (2 tuần) kèm lý do giải trình.
+  + Phê duyệt bởi Thủ thư: Yêu cầu gia hạn chuyển sang trạng thái "Chờ gia hạn" và phải được Thủ thư thẩm định chấp thuận hoặc từ chối (kèm lý do). Khi được duyệt, hạn trả mới sẽ tự động cập nhật và gửi thông báo trực tiếp đến Độc giả.
+- Hiển thị Tên Nhà Xuất Bản trực quan: Loại bỏ hoàn toàn sự bất tiện trong trải nghiệm người dùng (UX) khi chỉ hiển thị các mã số kỹ thuật (như "NXB01"). Hệ thống backend tự động ánh xạ (lookup) để luôn luôn hiển thị đầy đủ Tên Nhà Xuất Bản trên cả giao diện xem chi tiết sách của Độc giả lẫn màn hình quản lý sách của Thủ thư.
 
 2.2. Yêu cầu phi chức năng
 - Về bảo mật: Giao diện quản trị (Admin Web) và giao diện độc giả (User Web) phải được tách biệt thành 2 dự án Frontend khác nhau để ngăn chặn nguy cơ lộ lọt đường dẫn quản trị. Cơ chế xác thực sử dụng JSON Web Token (JWT) có phân rõ Audience (quyền hạn người dùng).
@@ -292,19 +297,51 @@ Tích hợp công nghệ Trí tuệ nhân tạo thế hệ mới (Gemini 3.8 Fla
 2.8. Chuẩn hóa Mã Nguồn và Tính Nhất Quán Giao Diện (Code Cleanliness & Professional Standards)
 Toàn bộ hệ thống giao diện và mã nguồn đã được rà soát và chuẩn hóa theo các tiêu chuẩn kỹ thuật nghiêm ngặt: loại bỏ triệt để các ký tự emoji tự do khỏi các nhãn thao tác, thông báo hệ thống và log máy chủ, thay thế bằng FontAwesome SVG icons và câu từ tiếng Việt chuyên nghiệp, đảm bảo tính thẩm mỹ, nhất quán và không phát sinh lỗi mã hóa ký tự (encoding) khi triển khai thực tế trên các môi trường máy chủ khác nhau.
 
-CHƯƠNG V: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+2.9. Hệ thống Quản lý Trạng thái Đã đọc Thông báo Bền vững (Deterministic Notification ID & Read State Persistence)
+Trong quá trình thử nghiệm thực tế, hệ thống phát sinh lỗi bất cập: độc giả đã xem thông báo và số trên huy hiệu (Badge) đã được trừ về 0, nhưng khi tải lại trang (F5 / Refresh) thì số lượng thông báo lại nhảy trở lại.
+- Nguyên nhân kỹ thuật: Do danh sách thông báo được tính toán động (dynamic computed) từ lịch sử mượn sách, mã định danh `notifId` trước đây sử dụng hàm `new Date().toISOString()` khi bản ghi thiếu trường `updatedAt`. Mỗi lần F5, hàm này sinh ra một timestamp mới hoàn toàn khác, khiến ID thông báo mới không thể khớp với danh sách đã lưu trong `localStorage`.
+- Giải pháp kiến trúc:
+  + Chuẩn hóa Deterministic Notification ID: Chuyển đổi toàn bộ `notifId` thành chuỗi định danh bất biến theo sự kiện nghiệp vụ: `${item._id}_approved`, `${item._id}_ext_approved_${giaHanCount}`, `${item._id}_ext_rejected_${giaHanCount}`, `${item._id}_rejected`, `${item._id}_overdue_${item.ngayTra}`, `${item._id}_soon_${item.ngayTra}`. Mã này giữ nguyên 100% qua mọi lần F5.
+  + Kiểm tra tiền tố đa tầng (`isNotifRead`): Hỗ trợ kiểm tra trực tiếp và kiểm tra tiền tố `${item._id}_${item.alertType}` đảm bảo tương thích ngược tuyệt đối với các ID cũ có chứa timestamp mà trình duyệt đã lưu trước đó.
+  + Trải nghiệm người dùng: Bổ sung nút "Đã đọc" (Mark all as read) tại tiêu đề dropdown giúp xóa badge về 0 tức thì; tự động đánh dấu đã đọc khi nhấp vào xem chi tiết hoặc chuyển đến trang Lịch sử; làm mờ nhẹ các thông báo đã đọc và ẩn chấm xanh chưa đọc; hiển thị Live Toast thông báo nổi khi yêu cầu gia hạn sách được phê duyệt.
+
+CHƯƠNG V: TRIỂN KHAI VÀ VẬN HÀNH HỆ THỐNG (DEPLOYMENT VỚI NGINX & PM2)
+1. Kiến trúc Triển khai Production (On-Premise / VPS)
+Để đưa ứng dụng từ môi trường phát triển (Development) sang môi trường vận hành thực tế (Production), hệ thống đã được triển khai theo mô hình Reverse Proxy chuẩn mực kết hợp Process Manager theo đúng định hướng của học phần:
+- Tách biệt cổng truy cập theo vai trò: Cổng dành cho Độc giả (User Web) hoạt động tại cổng mặc định HTTP 80; Cổng dành cho Quản trị viên (Admin Web) hoạt động độc lập tại cổng 8080 để tăng cường mức độ bảo mật.
+- Reverse Proxy tập trung: Máy chủ Web NGINX đóng vai trò tiếp nhận mọi yêu cầu (requests) gửi đến từ mạng ngoài, phân loại và điều phối chính xác: các yêu cầu tài nguyên giao diện được phục vụ trực tiếp từ các thư mục tĩnh đã đóng gói (dist/), trong khi các yêu cầu dữ liệu (/api/*) và tài nguyên tải lên (/uploads/*) được chuyển tiếp an toàn đến máy chủ dịch vụ Backend Node.js tại cổng nội bộ 3000.
+
+2. Cấu hình Máy chủ Web NGINX
+Toàn bộ quy tắc điều phối của NGINX được thiết lập chặt chẽ trong tệp cấu hình nginx.conf:
+- Phục vụ Ứng dụng Trang Đơn (Single Page Application - SPA): Cả hai cổng 80 và 8080 đều được trang bị chỉ thị `try_files $uri $uri/ /index.html;`, giải quyết triệt để vấn đề mất liên kết (lỗi HTTP 404) khi người dùng làm mới trang (F5) hoặc truy cập trực tiếp vào các định tuyến HTML5 History Mode của Vue Router (như /sach, /lich-su, /admin/muonsach).
+- Tối ưu hóa Truyền tải Dữ liệu (Gzip Compression): Kích hoạt nén Gzip mức độ 5 cho toàn bộ các định dạng văn bản, stylesheet, mã kịch bản JavaScript và dữ liệu JSON, giúp giảm thiểu đến 65% dung lượng truyền tải qua mạng và rút ngắn thời gian hiển thị giao diện ban đầu.
+- Quản lý Bộ đệm Trình duyệt (Browser Caching): Thiết lập tiêu đề Cache-Control `max-age=31536000, immutable` cho các gói tài nguyên tĩnh (assets) có mã hash phiên bản, đồng thời áp dụng `no-cache` đối với tệp index.html để đảm bảo người dùng luôn nhận được phiên bản ứng dụng mới nhất ngay khi hệ thống có cập nhật.
+- Bảo đảm Ổn định cho Tác vụ Trí tuệ Nhân tạo: Thiết lập thời gian chờ chuyển tiếp (proxy_read_timeout) lên 60 giây, đảm bảo các phiên hội thoại phức tạp của Trợ lý Ảo Gemini AI không bị ngắt kết nối đột ngột trong những thời điểm mạng tải cao.
+
+3. Quản lý Tiến trình Máy chủ với PM2 (Process Manager)
+Ứng dụng Backend Node.js được đóng gói và giám sát vận hành thông qua công cụ quản lý tiến trình chuyên nghiệp PM2 với tệp định hình ecosystem.config.js:
+- Duy trì Vận hành Liên tục (High Availability): Cơ chế tự động giám sát và khởi động lại ứng dụng (autorestart) ngay lập tức khi phát hiện ngoại lệ ngoài ý muốn, đảm bảo dịch vụ Backend luôn sẵn sàng 24/7 mà không cần can thiệp thủ công.
+- Kiểm soát Tài nguyên Hệ thống: Thiết lập giới hạn bộ nhớ (max_memory_restart: 500M) nhằm phòng ngừa hiện tượng rò rỉ bộ nhớ (memory leak), tự động dọn dẹp và khởi tạo lại tiến trình một cách an toàn.
+
+4. Đồng bộ Biến Môi trường Đóng gói (Production Build)
+Để loại bỏ sự phụ thuộc vào cấu hình Proxy phát triển trong Vite (vite.config.js), hệ thống đã được trang bị các tệp biến môi trường đóng gói .env.production:
+- Đồng bộ biến VITE_API_BASE_URL=/api tại cả hai giao diện, cho phép ứng dụng tự động nhận diện domain/origin hiện tại của máy chủ NGINX mà không bị hardcode địa chỉ localhost, bảo đảm khả năng triển khai linh hoạt trên mọi dải IP cục bộ hoặc tên miền thực tế.
+
+CHƯƠNG VI: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
 1. Kết quả đạt được
 - Hoàn thành đầy đủ các yêu cầu cốt lõi của môn học (Đăng ký/đăng nhập, nghiệp vụ mượn sách, CRUD Sách, quản trị mượn/trả).
 - Tách biệt hoàn toàn hai nền tảng Frontend (Admin Web và User Web) nhưng giao tiếp qua chung 1 Backend API, đảm bảo an toàn bảo mật.
 - Ứng dụng mô hình RBAC cho phép phân quyền chi tiết 3 lớp tài khoản Nhân viên.
 - Giải quyết bài toán quá hạn bằng cơ chế Lazy-check (Cập nhật khi fetch data) và chống tình trạng Overbooking (hết sách nhưng vẫn cho mượn) thành công.
-- Giao diện người dùng tương tác cao, hiện đại với Toast, Skeleton Loader, và Biểu đồ Chart.js.
+- Hoàn thiện trọn vẹn quy trình Gia hạn mượn sách (Book Renewal) với ràng buộc nghiêm ngặt: yêu cầu gia hạn trước ít nhất 3 ngày, tối đa 2 lần, và được Thủ thư thẩm định phê duyệt có thông báo phản hồi.
+- Tối ưu hóa trải nghiệm tra cứu với việc tự động hiển thị đầy đủ Tên Nhà Xuất Bản thay cho các mã số kỹ thuật khó nhớ.
+- Giao diện người dùng tương tác cao, hiện đại với Toast, Skeleton Loader, và Biểu đồ Chart.js (kèm số lượng thực và tỷ lệ % phân bổ trực quan).
 - Cấu hình phục vụ file tĩnh và script Seeding tự động hàng loạt dữ liệu phong phú (100+ quyển sách thực tế).
 - Đột phá về mặt công nghệ: Tích hợp thành công Trợ lý Ảo Gemini AI (Function Calling, Resilience Architecture) đem lại trải nghiệm tra cứu thông minh thế hệ mới.
 - Nâng tầm trải nghiệm người dùng: Tích hợp thành công công nghệ nhận diện giọng nói (Web Speech API) cho phép Độc giả tìm kiếm sách rảnh tay nhanh chóng và trực quan.
 - Hiện đại hóa cơ chế xác thực: Tích hợp hoàn chỉnh đăng nhập ủy quyền OAuth 2.0 (Google & Facebook) với thư viện Passport.js, liên kết tài khoản tự động và cấp phát JWT nội bộ chuẩn hóa cho Độc giả.
 - Tối ưu hóa hệ thống hiệu suất cao: Triển khai thành công Redis Caching trên nền tảng Windows, giải quyết triệt để tình trạng nghẽn cổ chai (bottleneck) khi truy xuất hàng nghìn quyển sách và tải Dashboard Thống kê phức tạp, với cơ chế Cache Invalidation thông minh để đảm bảo tính nhất quán dữ liệu.
-- Hoàn thiện tính năng Thông báo trực quan trong ứng dụng (In-App Notification Bell) giúp độc giả chủ động nắm bắt lịch hẹn trả sách, kết hợp tái cấu trúc Dropdown thao tác ngữ cảnh cho cả Admin và Độc giả, nâng tầm trải nghiệm người dùng (UX) đạt chuẩn sản phẩm thực tế.
+- Hoàn thiện tính năng Thông báo trực quan trong ứng dụng (In-App Notification Bell) với cơ chế lưu trữ trạng thái đã đọc bền vững (Deterministic Notification ID), giúp badge đếm không bao giờ bị nhảy lại khi F5 refresh trang.
 - Triển khai ứng dụng lên môi trường production theo đúng yêu cầu giáo trình: sử dụng nginx làm Reverse Proxy phân luồng request (file tĩnh Vue.js và API Node.js) và PM2 làm Process Manager đảm bảo Node.js luôn hoạt động ổn định, tự động khởi động lại khi có sự cố.
 
 2. Hạn chế

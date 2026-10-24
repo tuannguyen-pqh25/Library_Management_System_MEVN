@@ -156,6 +156,46 @@ exports.confirmReturn = async (req, res, next) => {
 };
 
 /**
+ * PUT /api/admin/muonsach/:id/approve-extend
+ * Approve extension request → status "đang mượn", extend ngayTra.
+ */
+exports.approveExtension = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const staffId = req.user?._id || req.user?.sub;
+        if (!staffId) {
+            return next(new ApiError(401, "Cannot identify the processing staff"));
+        }
+
+        const result = await muonSachService.approveExtension(req.params.id, staffId);
+        await Redis.del("admin:dashboard:stats");
+        return res.status(200).json({ message: "Đã duyệt yêu cầu gia hạn sách thành công", data: result });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Không thể duyệt yêu cầu gia hạn"));
+    }
+};
+
+/**
+ * PUT /api/admin/muonsach/:id/reject-extend
+ * Reject extension request → status "đang mượn", mark rejected.
+ */
+exports.rejectExtension = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const staffId = req.user?._id || req.user?.sub;
+        if (!staffId) {
+            return next(new ApiError(401, "Cannot identify the processing staff"));
+        }
+
+        const result = await muonSachService.rejectExtension(req.params.id, staffId, req.body?.reason);
+        await Redis.del("admin:dashboard:stats");
+        return res.status(200).json({ message: "Đã từ chối yêu cầu gia hạn", data: result });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Không thể từ chối yêu cầu gia hạn"));
+    }
+};
+
+/**
  * DELETE /api/admin/muonsach/:id
  * Delete a borrow record (Admin only).
  */

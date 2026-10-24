@@ -2,7 +2,7 @@
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
-> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-09-30):** Giai đoạn 1–6 đã hoàn thành (RBAC ba vai trò, E2E flow mượn trả). Đã xác nhận code qua các bài test và commit an toàn vào nhánh main. **Giai đoạn tiếp theo là Giai đoạn 7 (Quản lý độc giả, xử lý vi phạm).** Đọc phần “Cập nhật 2026-09-30 — Hoàn tất Giai đoạn 6” cuối file trước khi làm tiếp. Không khởi tạo lại dự án.
+> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-23):** Toàn bộ 11 giai đoạn đã hoàn thành 100% (Tính năng nghiệp vụ, Redis Caching, Gemini AI Chatbot, Voice Search, OAuth2 Google/Facebook, In-App Notification Bell, 17 Unique Indexes MongoDB, Deploy NGINX + PM2). Đã fix triệt để lỗi batch script start.bat/stop.bat. **Trọng tâm phiên tiếp theo là: Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide báo cáo, và Bộ câu hỏi phản biện của Giảng viên.** Không triển khai thêm tính năng nghiệp vụ mới.
 
 ## 1. Tiến độ hiện tại
 
@@ -521,6 +521,106 @@ feat(system): add in-app notifications, contextual dropdowns, and database uniqu
 - Update project documentation, academic report, and multi-machine sync guide in Cores directory
 ```
 
+## Cập nhật 2026-10-23 — Hoàn tất Giai đoạn 11: Triển khai Hệ thống (Deploy NGINX + PM2) & Sửa lỗi Batch Script
 
+### 1. Khắc phục sự cố Batch Scripts (`start.bat` & `stop.bat`)
+- **Nguyên nhân gốc rễ:**
+  1. File `.bat` bị Git tự động chuẩn hóa sang Unix LF (`\n`). Windows `cmd.exe` chỉ chấp nhận chuẩn CRLF (`\r\n`). Khi đọc tiếng Việt UTF-8 có dấu kết hợp dấu ngoặc và LF, cmd bị gãy cú pháp sinh các lỗi: `'ỢN'`, `'động'`, `'IS'`, `'6379]' is not recognized...`
+  2. Dòng kiểm tra Redis trong `start.bat` chứa dấu ngoặc `(Backend sẽ dùng Graceful Fallback).` nằm trong khối `if (...) else (...)`. Dấu ngoặc đóng `)` bị hiểu nhầm là đóng sớm khối `else`, làm cho dấu chấm `.` tiếp theo sinh lỗi cú pháp (`. was unexpected at this time.`).
+- **Xử lý:**
+  - Viết lại khối logic kiểm tra Redis sạch sẽ, dùng `where redis-server >nul 2>&1` và `if not errorlevel 1`.
+  - Chuẩn hóa toàn bộ xuống dòng về `CRLF` và bổ sung quy tắc vào `.gitattributes` (`*.bat text eol=crlf`).
+  - Đã kiểm tra `start.bat` và `stop.bat` chạy ổn định 100%.
 
+### 2. Triển khai Cấu hình NGINX & PM2 (Giai đoạn 11)
+- **Frontend Environment**:
+  - Tạo `frontend/user-web/.env.production` với `VITE_API_BASE_URL=/api`.
+  - Tạo `frontend/admin-web/.env.production` với `VITE_API_BASE_URL=/api/admin` và `VITE_USER_WEB_URL=/`.
+  - Cập nhật dynamic base URL trong `http-common.js`, `LoginUser.vue` (OAuth redirects) và `Login.vue` (Cổng độc giả).
+  - Đã chạy kiểm thử `npm run build` thành công 100% cho cả 2 frontend (`dist/` đã sẵn sàng).
+- **Cấu hình PM2 (`BACKEND/ecosystem.config.js`)**:
+  - Quản lý tiến trình Backend `library-backend` với auto-restart, max memory 500M, `PORT=3000`.
+- **Cấu hình NGINX (`nginx.conf`)**:
+  - Cổng 80: Phục vụ `user-web/dist`, hỗ trợ Vue Router HTML5 history mode (`try_files`), reverse proxy `/api/` và `/uploads/` về Node.js (Port 3000).
+  - Cổng 8080: Phục vụ `admin-web/dist`, reverse proxy `/api/` và `/uploads/` về Port 3000.
+  - Tích hợp Gzip compression và cấu hình Cache tối ưu cho static assets.
 
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(deploy): configure NGINX reverse proxy, PM2 ecosystem, and fix batch scripts
+
+- Provide production-grade nginx.conf for port 80 (user-web) and port 8080 (admin-web)
+- Create ecosystem.config.js for PM2 process management of Node.js backend
+- Add .env.production with VITE_API_BASE_URL to both user-web and admin-web
+- Make API and OAuth endpoints dynamic across frontend services and views
+- Fix syntax and line-ending (CRLF) errors in start.bat and stop.bat
+- Enforce CRLF normalization for batch files in .gitattributes
+- Document Phase 11 deployment and batch script fixes in checkpoint and report
+```
+
+## Cập nhật 2026-10-24 — Nâng Cấp Nghiệp Vụ: Hiển Thị Tên NXB, Gia Hạn Mượn Sách (Quy Tắc 3 Ngày) & Fix Triệt Để Badge Thông Báo
+
+### 1. Hiển Thị Tên Nhà Xuất Bản (Thay vì chỉ hiển thị Mã NXB)
+- **Vấn đề UX:** Người dùng và thủ thư khi xem chi tiết sách chỉ thấy `Mã NXB: NXB01`, muốn biết nhà xuất bản nào phải chuyển qua tab Nhà xuất bản để tra cứu.
+- **Giải pháp Backend (`sach.service.js`):**
+  - Tự động thực hiện lookup / mapping với collection `NHAXUATBAN` trong các hàm `find()` và `findById()` để bổ sung trường `TenNXB` trực tiếp vào payload sách trả về.
+- **Giải pháp Frontend:**
+  - `StaffSachManagement.vue`: Modal chi tiết sách hiển thị nhãn chính **`Nhà Xuất Bản: [Tên NXB]`** kèm mã phụ nhỏ `(Mã: NXB01)`. Bổ sung hàm helper `getPublisherName(item.MaNXB)` dự phòng.
+  - `BookDetail.vue`: Hiển thị rõ ràng tên NXB (`book.TenNXB || book.MaNXB`) trên giao diện độc giả.
+
+### 2. Nghiệp Vụ Gia Hạn Mượn Sách (Book Extension / Renewal)
+- **Quy tắc nghiệp vụ chặt chẽ:**
+  1. Chỉ được gia hạn khi sách đang ở trạng thái `"đang mượn"` và **chưa quá hạn**.
+  2. **Bắt buộc phải gia hạn trước hạn trả ít nhất 3 ngày** (`ngayTra - today >= 3`). Nếu còn dưới 3 ngày hoặc đã quá hạn, hệ thống sẽ từ chối và yêu cầu độc giả mang sách đến thư viện trả đúng hạn.
+  3. Mỗi cuốn sách chỉ được phép gia hạn tối đa **2 lần**.
+  4. Yêu cầu gia hạn phải được **thủ thư xem xét và phê duyệt** (`trangThai: "chờ gia hạn"`).
+- **Backend (`muonsach.service.js`, controller & routes):**
+  - Bổ sung trạng thái `"chờ gia hạn"` vào danh sách trạng thái hợp lệ, luồng chuyển đổi trạng thái (`allowedTransitions`), và các truy vấn kiểm tra hạn mức.
+  - Method `requestExtension(phieuMuonId, docGiaId, payload)`: Kiểm tra điều kiện 3 ngày, tính hạn trả mới dự kiến (+7 hoặc +14 ngày), chuyển trạng thái phiếu sang `"chờ gia hạn"`.
+  - Method `approveExtension(phieuMuonId, staffId)`: Cập nhật `ngayTra = ngayTraMoi`, tăng `giaHanCount`, chuyển trạng thái về `"đang mượn"`, ghi nhận `yeuCauGiaHan.trangThai = "đã duyệt"`.
+  - Method `rejectExtension(phieuMuonId, staffId, lyDoTuChoi)`: Giữ nguyên `ngayTra`, lưu lý do từ chối, chuyển trạng thái về `"đang mượn"`.
+  - API User: `POST /api/user/muon-sach/:id/gia-han`.
+  - API Admin: `PUT /api/admin/muon-sach/:id/approve-extend`, `PUT /api/admin/muon-sach/:id/reject-extend`.
+- **Frontend Độc Giả (`BorrowHistory.vue` & `muonsach.service.js`):**
+  - Kiểm tra điều kiện `canExtend(record)` (đang mượn, còn $\ge 3$ ngày, gia hạn $< 2$ lần).
+  - Tích hợp lựa chọn "Xin gia hạn" vào dropdown thao tác.
+  - Xây dựng Modal xin gia hạn (`#extendModal`): Chọn nhanh +7 ngày (1 tuần) hoặc +14 ngày (2 tuần), hiển thị hạn trả dự kiến mới và nhập lý do gia hạn (tùy chọn).
+  - Hiển thị badge trạng thái `"Chờ duyệt gia hạn"` và số lần đã gia hạn trên bảng lịch sử mượn.
+- **Frontend Quản Lý Thư Viện (`MuonSachManagement.vue`):**
+  - Bổ sung bộ lọc `"Chờ gia hạn"` và badge đếm số lượng phiếu chờ gia hạn.
+  - Tích hợp 2 thao tác trong dropdown: **"Duyệt gia hạn"** và **"Từ chối gia hạn"** (kèm modal nhập lý do từ chối).
+  - Hiển thị thông tin chi tiết gia hạn trong modal chi tiết phiếu mượn (số ngày xin thêm, hạn cũ, hạn mới, lý do).
+
+### 3. Sửa Lỗi Badge Thông Báo Không Trừ / Bị Hiện Lại Khi Refresh Trang (F5)
+- **Nguyên nhân gốc rễ:**
+  - `notifId` trước đây được ghép thêm `notifTime` từ `new Date().toISOString()` khi bản ghi trong MongoDB thiếu trường `updatedAt`.
+  - Khi người dùng F5 / reload trang, hàm `getNotifications()` chạy lại và `new Date().toISOString()` sinh ra một timestamp mới hoàn toàn khác. Do ID không trùng với ID đã lưu trong `localStorage`, hệ thống coi đó là thông báo mới và badge lại nhảy số trở lại.
+- **Giải pháp triệt để:**
+  1. **Deterministic Notification ID:** Chuẩn hóa `notifId` thành mã định danh bất biến, không chứa timestamp biến đổi:
+     - Duyệt mượn: `${item._id}_approved`
+     - Duyệt gia hạn: `${item._id}_ext_approved_${giaHanCount}`
+     - Từ chối gia hạn: `${item._id}_ext_rejected_${giaHanCount}`
+     - Từ chối mượn: `${item._id}_rejected`
+     - Sách quá hạn: `${item._id}_overdue_${item.ngayTra}`
+     - Sắp đến hạn trả: `${item._id}_soon_${item.ngayTra}`
+  2. **Hàm `isNotifRead(item)` thông minh trong `AppHeader.vue`:**
+     - Kiểm tra trực tiếp `readNotifIds.includes(item.notifId)`.
+     - Hỗ trợ kiểm tra tiền tố `${item._id}_${item.alertType}` để tự động tương thích với các ID cũ có chứa timestamp mà trình duyệt đã lưu trước đó.
+  3. **Tương tác Đọc Thông Báo:**
+     - Nút "Đã đọc" (mark all as read) tại header của dropdown thông báo giúp xóa badge về 0 tức thì.
+     - Khi bấm vào từng item hoặc bấm "Xem toàn bộ lịch sử", thông báo tự động được đánh dấu đã đọc.
+     - Trạng thái thông báo đã đọc được làm mờ nhẹ (`opacity: 0.6`) và ẩn chấm xanh chưa đọc.
+     - Bổ sung thông báo nổi (Live Toast) khi yêu cầu gia hạn sách được duyệt.
+
+### 4. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(borrow): add book renewal workflow, publisher name display, and fix notification badge persistence
+
+- Populate publisher name (TenNXB) in SachService and book detail views for better UX
+- Implement book extension workflow with 3-day lead time rule and librarian approval
+- Add backend routes and controller methods for requesting, approving, and rejecting extensions
+- Add renewal request modal with 7/14 days options and status tracking in BorrowHistory.vue
+- Support renewal approval and rejection actions with reason modals in MuonSachManagement.vue
+- Fix notification badge recurrence bug on page refresh by adopting deterministic notification IDs
+- Enhance AppHeader.vue with isNotifRead prefix matching, read state persistence, and mark-all-read
+```

@@ -13,6 +13,7 @@ router.route("/")
 
 router.get("/lich-su", muonsach.getHistory);
 router.post("/:id/request-return", muonsach.requestReturn);
+router.post("/:id/gia-han", muonsach.requestExtension);
 
 router.route("/:id")
     .put(muonsach.updatePending)

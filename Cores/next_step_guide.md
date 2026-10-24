@@ -6,7 +6,7 @@
 > **Stack cốt lõi:** MongoDB + Express.js + Vue 3 + Node.js (KHÔNG thay đổi).
 > **CSDL:** Giữ nguyên 100% tên bảng và tên thuộc tính đã thiết kế trong `Cores/Chienluoc.md`; đối chiếu mã nguồn khi tài liệu lịch sử khác hiện trạng.
 > **Frontend:** Vue 3 (Composition API) là chính, Bootstrap 5 là phụ trợ layout.
-> **Trạng thái hiện tại (2026-10-12):** Dự án HOÀN THÀNH 100% tất cả 10 giai đoạn. Bước tiếp theo là Giai đoạn 11 (Deploy) theo giáo trình thầy: nginx + PM2 (on-premise/VPS). Phần roadmap lịch sử bên dưới KHÔNG phải danh sách việc phải làm lại. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
+> **Trạng thái hiện tại (2026-10-24):** Dự án HOÀN THÀNH 100% tất cả 11 giai đoạn (Bao gồm Deploy NGINX + PM2 và sửa lỗi batch scripts) + Hoàn thiện toàn diện Nghiệp vụ Gia hạn mượn sách (Quy tắc 3 ngày & Thủ thư duyệt), Hiển thị Tên NXB thay cho Mã, và sửa lỗi Badge thông báo F5/Refresh. Bước tiếp theo là Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide báo cáo và Bộ câu hỏi phản biện của Giảng viên. Phần roadmap lịch sử bên dưới KHÔNG phải danh sách việc phải làm lại. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
 
 ---
 
@@ -15,7 +15,7 @@
 > **Hướng dẫn cho bạn:** Bất cứ khi nào bạn mở một phiên chat mới với AI (Claude, ChatGPT, Gemini, v.v.), hãy copy nội dung trong khối code bên dưới và gửi cho AI. Điều này giúp AI ngay lập tức nắm bắt toàn bộ ngữ cảnh, nguyên tắc code và không làm sai lệch kiến trúc.
 
 ```text
-Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449) — đã HOÀN THÀNH 100% tính năng, đang ở giai đoạn Deploy & Chuẩn bị bảo vệ.
+Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449) — đã HOÀN THÀNH 100% tính năng, nghiệp vụ mượn/gia hạn/trả và cấu hình Deploy (NGINX + PM2), đang ở giai đoạn Chuẩn bị bảo vệ đồ án.
 
 [YÊU CẦU CỐT LÕI - TUYỆT ĐỐI KHÔNG ĐƯỢC VI PHẠM]
 1. Tech stack: MongoDB (native driver, KHÔNG Mongoose), Express.js, Vue 3 (Composition API), Node.js.
@@ -24,35 +24,36 @@
    - Các field mở rộng (SoTrang, MoTa, NgonNgu, TheLoai, HinhAnh, TacGia) KHÔNG có trong CSDL thầy → KHÔNG đặt là required trong Yup.
 4. Giao diện: Vue 3 core logic + Bootstrap 5 layout. TUYỆT ĐỐI KHÔNG DÙNG TAILWIND.
 5. Hạn mức mượn: 10 quyển tổng cộng/độc giả. Phiếu chờ duyệt chưa trừ kho; trừ kho lúc Admin duyệt.
+6. Nghiệp vụ Gia hạn: Sách phải ở trạng thái "đang mượn", chưa quá hạn, gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, mỗi lần +7 hoặc +14 ngày) và phải được Thủ thư duyệt ("chờ gia hạn" -> "đang mượn").
 
 [CẢNH BÁO LỖI ĐÃ GẶP - ĐỌC TRƯỚC KHI CODE]
 - app.js route order: Route prefix rộng (có middleware) PHẢI mount SAU route cụ thể. Sai thứ tự → 401.
 - VeeValidate: Dùng :key="formKey" + :initial-values="formData" + formKey++ khi mở modal. Field tùy chọn → .nullable().
 - Bootstrap JS/Modal: Phải import `bootstrap.bundle.min.js` trong `main.js`. Không dùng đồng thời data-bs-dismiss và @click trên cùng nút.
 - camelCase nhất quán: Controller và Vue component PHẢI dùng camelCase (ngayMuon, trangThai), không dùng VIẾT HOA.
-- PORT: BACKEND chạy port 3000. Hai frontend http-common.js gọi localhost:3000. Xác nhận trước khi test.
-- Chatbot Gemini: Dùng gemini-3.8-flash trở lên. Handle HTTP 503 bằng Exponential Backoff + Model Fallback Chain.
+- PORT: BACKEND chạy port 3000. Hai frontend http-common.js gọi localhost:3000 (DEV) hoặc /api qua NGINX (PROD).
+- Notification Deterministic IDs: notifId không được gắn timestamp động (new Date().toISOString()), phải dùng ID bất biến (vd: `${item._id}_approved`, `${item._id}_ext_approved_${count}`) để tránh badge hiện lại khi F5.
 
 [QUYẾT ĐỊNH KIẾN TRÚC ĐÃ THỐNG NHẤT — KHÔNG THAY ĐỔI]
 - _id (ObjectId): URL routing, aggregate $lookup, FK nội bộ. Nhanh nhất (clustered index ~0.1ms).
 - MaSach/MaDocGia/MSNV/MaNXB: Hiển thị UI, tìm kiếm nghiệp vụ, báo cáo. Cần unique index thủ công.
+- Tên NXB: Luôn được join/lookup hiển thị dưới dạng Tên NXB (TenNXB) thay vì chỉ để Mã NXB.
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
-[TRẠNG THÁI DỰ ÁN — 2026-10-22]
-- ✅ Hoàn thành: Giai đoạn 1–10 (RBAC 3 vai trò, E2E mượn/trả, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google/Facebook, In-App Notification Bell, Action Dropdowns, Chuẩn hóa Zero Emoji, và Unique Indexes CSDL MongoDB).
-- 🔄 Tiếp theo: Giai đoạn 11 — Deploy theo giáo trình thầy (nginx + PM2, on-premise/VPS) và Chuẩn bị kịch bản bảo vệ đồ án.
+[TRẠNG THÁI DỰ ÁN — 2026-10-24]
+- ✅ Hoàn thành: Giai đoạn 1–11 (RBAC 3 vai trò, E2E mượn/trả/gia hạn 3 ngày, Tên NXB, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google/Facebook, In-App Notification Bell kèm Read Tracking, Action Dropdowns, Chuẩn hóa Zero Emoji, 17 Unique Indexes MongoDB, Cấu hình NGINX + PM2, Sửa lỗi triệt để start.bat/stop.bat).
+- 🔄 Tiếp theo: Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide thuyết trình, và Bộ câu hỏi phản biện của Giảng viên.
 
-[KIẾN TRÚC DEPLOY — NGINX + PM2]
-Internet → NGINX (port 80) → proxy /api/* → Node.js qua PM2 (port 3000)
-                           → serve /* → Vue dist/ (static files)
-Admin web: NGINX (port 8080) → serve admin-web/dist/
-Proxy trong vite.config.js CHỈ dùng lúc DEV, KHÔNG dùng khi production.
-Sau khi deploy: VITE_API_BASE_URL=/api trong .env.production của cả 2 frontend.
+[KIẾN TRÚC DEPLOY — NGINX + PM2 ĐÃ CẤU HÌNH]
+Internet → NGINX (port 80) → proxy /api/* & /uploads/* → Node.js qua PM2 (port 3000)
+                           → serve /* → Vue dist/ (user-web)
+Admin web: NGINX (port 8080) → serve admin-web/dist/ & proxy /api/* + /uploads/*
+File cấu hình đã có sẵn tại: nginx.conf và BACKEND/ecosystem.config.js.
 
 [HÀNH ĐỘNG ĐẦU TIÊN CỦA BẠN]
-1. Đọc Cores/checkpoint.md để biết trạng thái chi tiết + kế hoạch deploy đầy đủ.
-2. Hỏi người dùng muốn làm gì trong phiên này: deploy nginx/PM2, fix bug, chuẩn bị bảo vệ, hay thắc mắc kỹ thuật.
-3. KHÔNG tự ý triển khai thêm tính năng nghiệp vụ mới. Chỉ hỗ trợ deploy, bảo trì, review, giải đáp.
+1. Đọc Cores/checkpoint.md để biết trạng thái mới nhất.
+2. Hỗ trợ người dùng chuẩn bị bảo vệ đồ án: xây dựng kịch bản demo tính năng, luyện tập trả lời câu hỏi phản biện, làm slide/báo cáo, hoặc giải đáp kỹ thuật.
+3. KHÔNG tự ý triển khai thêm tính năng nghiệp vụ mới.
 ```
 
 ---

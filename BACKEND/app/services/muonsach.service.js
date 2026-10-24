@@ -71,17 +71,28 @@ class MuonSachService {
             throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không thể mượn ${soLuong} quyển`);
         }
 
-        // --- 3.75. KIỂM TRA HẠNMỨC TỔNG CỘNG ĐỦC GIẢ (MAX 10 QUYỂN) ---
+        // Cập nhật trạng thái quá hạn trước khi kiểm tra
+        await this._checkAndUpdateOverdue();
+
+        // --- 3.75. KIỂM TRA HẠN MỨC TỔNG CỘNG ĐỘC GIẢ (MAX 10 QUYỂN) ---
         const docGiaMuonSach = await this.MuonSach.find({
             docGiaId: docGiaId,
-            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "quá hạn"] }
         }).toArray();
 
-        // Tính tổng số quyển đang mượn
+        // 1. Kiểm tra sách quá hạn: Độc giả có sách quá hạn chưa trả sẽ không được mượn thêm
+        const overdueRecords = docGiaMuonSach.filter(record => record.trangThai === "quá hạn");
+        const overdueCount = overdueRecords.reduce((sum, record) => sum + (record.soLuong || 1), 0);
+        if (overdueCount > 0) {
+            throw new Error(`Bạn đang có ${overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn thêm sách mới!`);
+        }
+
+        // 2. Tính tổng số quyển đang giữ hoặc chờ duyệt (gồm chờ duyệt, đã duyệt, đang mượn, đang chờ trả)
         const currentBorrowCount = docGiaMuonSach.reduce((sum, record) => sum + (record.soLuong || 1), 0);
 
         if (currentBorrowCount + soLuong > 10) {
-            throw new Error(`Bạn đã mượn ${currentBorrowCount} quyển. Không thể vượt quá hạn mức 10 quyển`);
+            const remaining = Math.max(0, 10 - currentBorrowCount);
+            throw new Error(`Bạn đang giữ / chờ duyệt ${currentBorrowCount} quyển. Hạn mức tối đa là 10 quyển (bạn chỉ có thể mượn thêm tối đa ${remaining} quyển).`);
         }
 
 
@@ -112,7 +123,7 @@ class MuonSachService {
             const today = new Date().toISOString();
             await this.MuonSach.updateMany(
                 {
-                    trangThai: { $in: ["đang mượn", "đã duyệt"] },
+                    trangThai: { $in: ["đang mượn", "đã duyệt", "chờ gia hạn"] },
                     ngayTra: { $lt: today }
                 },
                 {
@@ -276,6 +287,8 @@ class MuonSachService {
                         out.TenSach = sach.TenSach || out.TenSach;
                         out.TacGia = sach.TacGia || out.TacGia;
                         out.NamXuatBan = sach.NamXuatBan || out.NamXuatBan;
+                        out.HinhAnh = sach.HinhAnh || null;
+                        out.MaSach = sach.MaSach || '';
 
                         // Populate NXB name - find by MaNXB (code) or _id
                         out.nxbName = 'N/A'; // Default value
@@ -324,7 +337,8 @@ class MuonSachService {
         const allowedTransitions = {
             "chờ duyệt": ["đã duyệt", "từ chối"],
             "đã duyệt": ["đang mượn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"],
-            "đang mượn": ["đang chờ trả", "đã trả", "từ chối", "quá hạn"],
+            "đang mượn": ["đang chờ trả", "đã trả", "từ chối", "quá hạn", "chờ gia hạn"],
+            "chờ gia hạn": ["đang mượn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"],
             "quá hạn": ["đang chờ trả", "đã trả"],
             "đang chờ trả": ["đã trả", "từ chối"],
         };
@@ -354,7 +368,7 @@ class MuonSachService {
         // C. Cập nhật phiếu mượn
         const filter = { _id: phieuMuonId, trangThai: oldTrangThai };
         const updateData = {};
-        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"];
+        const validStates = ["chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"];
 
         if (newTrangThai && validStates.includes(newTrangThai)) {
             updateData.trangThai = newTrangThai;
@@ -364,8 +378,8 @@ class MuonSachService {
             throw new Error("Trạng thái cập nhật không hợp lệ");
         }
 
-        // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả sách từ độc giả hoặc cập nhật daXacNhanNopPhat
-        if (newTrangThai === "đang chờ trả" || (!newTrangThai && payload.daXacNhanNopPhat !== undefined)) {
+        // Chỉ yêu cầu nhanVienId khi không phải yêu cầu trả/gia hạn sách từ độc giả hoặc cập nhật daXacNhanNopPhat
+        if (newTrangThai === "đang chờ trả" || newTrangThai === "chờ gia hạn" || (!newTrangThai && payload.daXacNhanNopPhat !== undefined)) {
             // Độc giả yêu cầu trả hoặc cập nhật nộp phạt - không cần nhanVienId
             // Giữ nhanVienId cũ nếu có
             if (payload.nhanVienId) {
@@ -488,7 +502,7 @@ class MuonSachService {
         
         const docGiaMuonSach = await this.MuonSach.find({
             docGiaId: record.docGiaId,
-            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn"] }
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "quá hạn"] }
         }).toArray();
         
         const currentCount = docGiaMuonSach.reduce((sum, r) => sum + (r._id.toString() === id.toString() ? 0 : (r.soLuong || 1)), 0);
@@ -517,6 +531,142 @@ class MuonSachService {
         }
         
         return await this.MuonSach.findOneAndDelete({ _id: phieuMuonId });
+    }
+
+    // 9. Yêu cầu gia hạn mượn sách (Dành cho Độc giả)
+    async requestExtension(phieuMuonId, docGiaId, payload) {
+        const id = ObjectId.isValid(phieuMuonId) ? new ObjectId(phieuMuonId) : null;
+        if (!id) throw new Error("ID phiếu mượn không hợp lệ");
+
+        await this._checkAndUpdateOverdue();
+
+        const record = await this.MuonSach.findOne({ _id: id });
+        if (!record) throw new Error("Không tìm thấy phiếu mượn");
+
+        if (record.docGiaId.toString() !== docGiaId.toString()) {
+            throw new Error("Bạn không có quyền gia hạn phiếu mượn này");
+        }
+
+        if (record.trangThai === "chờ gia hạn") {
+            throw new Error("Phiếu mượn này đã có yêu cầu gia hạn đang chờ thủ thư duyệt!");
+        }
+
+        if (record.trangThai !== "đang mượn") {
+            throw new Error(`Chỉ có thể gia hạn khi sách đang ở trạng thái "đang mượn" (hiện tại: ${record.trangThai})`);
+        }
+
+        if ((record.giaHanCount || 0) >= 2) {
+            throw new Error("Phiếu mượn này đã đạt giới hạn gia hạn tối đa (2 lần)!");
+        }
+
+        // Quy tắc: Phải gia hạn trước 3 ngày kể từ ngày hết hạn trả (ngayTra)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const returnDate = new Date(record.ngayTra);
+        returnDate.setHours(0, 0, 0, 0);
+
+        const diffTime = returnDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 3) {
+            throw new Error(`Yêu cầu gia hạn phải được thực hiện trước ngày hết hạn ít nhất 3 ngày (hiện tại còn ${diffDays > 0 ? diffDays : 0} ngày)!`);
+        }
+
+        const soNgayGiaHan = Number(payload.soNgayGiaHan) || 7;
+        if (soNgayGiaHan <= 0 || soNgayGiaHan > 14) {
+            throw new Error("Số ngày gia hạn không hợp lệ (từ 1 đến 14 ngày)");
+        }
+
+        const newReturnDate = new Date(record.ngayTra);
+        newReturnDate.setDate(newReturnDate.getDate() + soNgayGiaHan);
+        const ngayTraMoi = newReturnDate.toISOString().split('T')[0];
+
+        const yeuCauGiaHan = {
+            ngayYeuCau: new Date().toISOString(),
+            soNgayGiaHan: soNgayGiaHan,
+            ngayTraMoi: ngayTraMoi,
+            lyDo: payload.lyDo || "Cần thêm thời gian đọc sách",
+            trangThai: "chờ duyệt"
+        };
+
+        const result = await this.MuonSach.findOneAndUpdate(
+            { _id: id, trangThai: "đang mượn" },
+            {
+                $set: {
+                    trangThai: "chờ gia hạn",
+                    yeuCauGiaHan: yeuCauGiaHan,
+                    updatedAt: new Date().toISOString()
+                }
+            },
+            { returnDocument: "after" }
+        );
+
+        if (!result) throw new Error("Không thể gửi yêu cầu gia hạn lúc này");
+        return result;
+    }
+
+    // 10. Duyệt gia hạn sách (Dành cho Thủ thư / Admin)
+    async approveExtension(phieuMuonId, staffId) {
+        const id = ObjectId.isValid(phieuMuonId) ? new ObjectId(phieuMuonId) : null;
+        if (!id) throw new Error("ID phiếu mượn không hợp lệ");
+
+        const record = await this.MuonSach.findOne({ _id: id });
+        if (!record) throw new Error("Không tìm thấy phiếu mượn");
+
+        if (record.trangThai !== "chờ gia hạn" || !record.yeuCauGiaHan) {
+            throw new Error("Phiếu mượn không có yêu cầu gia hạn chờ duyệt");
+        }
+
+        const ngayTraMoi = record.yeuCauGiaHan.ngayTraMoi;
+        const result = await this.MuonSach.findOneAndUpdate(
+            { _id: id, trangThai: "chờ gia hạn" },
+            {
+                $set: {
+                    trangThai: "đang mượn",
+                    ngayTra: ngayTraMoi,
+                    giaHanCount: (record.giaHanCount || 0) + 1,
+                    "yeuCauGiaHan.trangThai": "đã duyệt",
+                    "yeuCauGiaHan.ngayDuyet": new Date().toISOString(),
+                    "yeuCauGiaHan.nhanVienId": ObjectId.isValid(staffId) ? new ObjectId(staffId) : staffId,
+                    updatedAt: new Date().toISOString()
+                }
+            },
+            { returnDocument: "after" }
+        );
+
+        if (!result) throw new Error("Phiếu mượn đã được cập nhật trước đó");
+        return result;
+    }
+
+    // 11. Từ chối gia hạn sách (Dành cho Thủ thư / Admin)
+    async rejectExtension(phieuMuonId, staffId, reason) {
+        const id = ObjectId.isValid(phieuMuonId) ? new ObjectId(phieuMuonId) : null;
+        if (!id) throw new Error("ID phiếu mượn không hợp lệ");
+
+        const record = await this.MuonSach.findOne({ _id: id });
+        if (!record) throw new Error("Không tìm thấy phiếu mượn");
+
+        if (record.trangThai !== "chờ gia hạn" || !record.yeuCauGiaHan) {
+            throw new Error("Phiếu mượn không có yêu cầu gia hạn chờ duyệt");
+        }
+
+        const result = await this.MuonSach.findOneAndUpdate(
+            { _id: id, trangThai: "chờ gia hạn" },
+            {
+                $set: {
+                    trangThai: "đang mượn",
+                    "yeuCauGiaHan.trangThai": "từ chối",
+                    "yeuCauGiaHan.lyDoTuChoi": reason || "Thư viện không đồng ý gia hạn sách này",
+                    "yeuCauGiaHan.ngayDuyet": new Date().toISOString(),
+                    "yeuCauGiaHan.nhanVienId": ObjectId.isValid(staffId) ? new ObjectId(staffId) : staffId,
+                    updatedAt: new Date().toISOString()
+                }
+            },
+            { returnDocument: "after" }
+        );
+
+        if (!result) throw new Error("Phiếu mượn đã được cập nhật trước đó");
+        return result;
     }
 }
 

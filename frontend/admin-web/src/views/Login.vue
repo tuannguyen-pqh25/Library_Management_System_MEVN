@@ -97,7 +97,7 @@
           </form>
 
           <div class="mt-4 pt-4 border-top text-center">
-            <a href="http://localhost:5173" class="text-decoration-none small fw-semibold font-body text-muted-custom">
+            <a :href="userWebUrl" class="text-decoration-none small fw-semibold font-body text-muted-custom">
               &larr; Quay lại Cổng độc giả
             </a>
           </div>
@@ -119,6 +119,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 
 const router = useRouter()
+const userWebUrl = import.meta.env.VITE_USER_WEB_URL || 'http://localhost:5173'
 
 const form = reactive({
   identifier: '',

@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const apiBase = import.meta.env.VITE_API_BASE_URL;
+const baseURL = apiBase ? (apiBase.endsWith("/admin") ? apiBase : `${apiBase}/admin`) : "http://localhost:3000/api/admin";
+
 const http = axios.create({
-  baseURL: "http://localhost:3000/api/admin",
+  baseURL,
   headers: { "Content-Type": "application/json" },
 });
 

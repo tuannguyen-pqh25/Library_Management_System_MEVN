@@ -36,6 +36,16 @@ class MuonSachService {
     return http.put(`/muonsach/${id}/confirm-return`);
   }
 
+  /** Approve extension request → status "đang mượn", extends ngayTra */
+  approveExtension(id) {
+    return http.put(`/muonsach/${id}/approve-extend`);
+  }
+
+  /** Reject extension request → status "đang mượn", keep ngayTra */
+  rejectExtension(id, reason = "") {
+    return http.put(`/muonsach/${id}/reject-extend`, { reason });
+  }
+
   /** Delete a borrow record (Admin only) */
   delete(id) {
     return http.delete(`/muonsach/${id}`);

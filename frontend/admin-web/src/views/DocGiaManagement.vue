@@ -475,6 +475,7 @@
                   <tr>
                     <th class="small fw-semibold text-uppercase py-3">STT</th>
                     <th class="small fw-semibold text-uppercase py-3">Sách</th>
+                    <th class="small fw-semibold text-uppercase py-3 text-center">Số lượng</th>
                     <th class="small fw-semibold text-uppercase py-3">Ngày mượn</th>
                     <th class="small fw-semibold text-uppercase py-3">Ngày hẹn trả</th>
                     <th class="small fw-semibold text-uppercase py-3">Ngày trả</th>
@@ -498,10 +499,16 @@
                         </div>
                         <div>
                           <div class="fw-medium text-dark small">{{ record.sach?.TenSach || record.MaSach || '—' }}</div>
-                          <small class="text-muted font-monospace">{{ record.sach?.MaSach || '' }}</small>
+                          <div class="d-flex align-items-center gap-2 mt-1">
+                            <small class="text-muted font-monospace">{{ record.sach?.MaSach || '' }}</small>
+                            <span class="badge bg-light text-secondary border" style="font-size:0.7rem;">
+                              {{ record.soLuong || 1 }} quyển
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
+                    <td class="text-center fw-bold text-primary">{{ record.soLuong || 1 }}</td>
                     <td class="small">{{ formatDate(record.ngayMuon) }}</td>
                     <td class="small">{{ formatDate(record.ngayTra) }}</td>
                     <td class="small">{{ formatDate(record.ngayTraThucTe) }}</td>

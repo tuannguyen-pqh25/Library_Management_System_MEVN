@@ -15,6 +15,9 @@
           <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2 fw-semibold border border-warning-subtle">
             <i class="fas fa-hourglass-half me-1"></i> Chờ duyệt: {{ countStatus('chờ duyệt') }}
           </span>
+          <span class="badge rounded-pill bg-info-subtle text-info-emphasis px-3 py-2 fw-semibold border border-info-subtle">
+            <i class="fas fa-calendar-plus me-1"></i> Chờ gia hạn: {{ countStatus('chờ gia hạn') }}
+          </span>
           <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis px-3 py-2 fw-semibold border border-primary-subtle">
             <i class="fas fa-book-reader me-1"></i> Đang mượn: {{ countStatus('đã duyệt') + countStatus('đang mượn') }}
           </span>
@@ -36,6 +39,7 @@
               <select class="form-select shadow-none ps-5 rounded-3 bg-light border-0 custom-height" v-model="filterStatus" @change="onStatusChange">
                 <option value="">Tất cả trạng thái</option>
                 <option value="chờ duyệt">Chờ duyệt</option>
+                <option value="chờ gia hạn">Chờ gia hạn</option>
                 <option value="đã duyệt">Đã duyệt</option>
                 <option value="đang mượn">Đang mượn</option>
                 <option value="đang chờ trả">Đang chờ trả</option>
@@ -317,6 +321,14 @@
                     <small class="text-muted text-uppercase fw-bold d-block" style="font-size:0.7rem;">Nhân viên xử lý</small>
                     <span class="fw-semibold">{{ selectedRecord.TenNhanVien }}</span>
                   </div>
+                  <div class="col-12" v-if="selectedRecord.yeuCauGiaHan">
+                    <div class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+                      <div class="fw-bold mb-1"><i class="fas fa-calendar-plus me-1 text-primary"></i>Yêu cầu gia hạn sách:</div>
+                      <div>Xin gia hạn thêm: <strong>{{ selectedRecord.yeuCauGiaHan.soNgayGiaHan }} ngày</strong> (Hạn mới: <strong>{{ formatDate(selectedRecord.yeuCauGiaHan.ngayTraMoi) }}</strong>).</div>
+                      <div v-if="selectedRecord.yeuCauGiaHan.lyDo" class="text-muted mt-1">Lý do: <em>"{{ selectedRecord.yeuCauGiaHan.lyDo }}"</em></div>
+                      <div class="mt-1">Trạng thái yêu cầu: <span class="badge bg-primary">{{ selectedRecord.yeuCauGiaHan.trangThai }}</span></div>
+                    </div>
+                  </div>
                   <div class="col-12" v-if="selectedRecord.lyDoTuChoi">
                     <small class="text-muted text-uppercase fw-bold d-block" style="font-size:0.7rem;">Lý do từ chối</small>
                     <span class="text-danger">{{ selectedRecord.lyDoTuChoi }}</span>
@@ -345,6 +357,21 @@
               @click="openRejectModal(selectedRecord, true)"
             >
               <i class="fas fa-times me-2"></i>Từ chối
+            </button>
+            <button
+              v-if="selectedRecord.trangThai === 'chờ gia hạn'"
+              class="btn btn-success rounded-pill px-4 fw-bold"
+              :disabled="processingId === selectedRecord._id"
+              @click="handleAction(selectedRecord, 'approve-extend', true)"
+            >
+              <i class="fas fa-check me-2"></i>Duyệt gia hạn
+            </button>
+            <button
+              v-if="selectedRecord.trangThai === 'chờ gia hạn'"
+              class="btn btn-outline-danger rounded-pill px-4 fw-bold"
+              @click="openRejectModal(selectedRecord, true, true)"
+            >
+              <i class="fas fa-times me-2"></i>Từ chối gia hạn
             </button>
             <button
               v-if="selectedRecord.trangThai === 'đã duyệt'"
@@ -458,6 +485,7 @@ const selectedRecord = ref(null)
 const rejectTarget = ref(null)
 const rejectReason = ref('')
 const fromDetailModal = ref(false)
+const isRejectingExtension = ref(false)
 
 // Toast
 const toastMessage = ref('')
@@ -471,6 +499,11 @@ const getActionOptions = (trangThai) => {
       return [
         { value: 'approve', label: 'Duyệt phiếu' },
         { value: 'reject',  label: 'Từ chối' },
+      ]
+    case 'chờ gia hạn':
+      return [
+        { value: 'approve-extend', label: 'Duyệt gia hạn' },
+        { value: 'reject-extend',  label: 'Từ chối gia hạn' },
       ]
     case 'đã duyệt':
       return [
@@ -493,8 +526,8 @@ const getActionOptions = (trangThai) => {
 
 /** Màu nút Thực hiện theo action đang chọn */
 const getExecBtnClass = (action) => {
-  if (action === 'approve')        return 'btn-success text-white'
-  if (action === 'reject')         return 'btn-danger text-white'
+  if (action === 'approve' || action === 'approve-extend') return 'btn-success text-white'
+  if (action === 'reject' || action === 'reject-extend')   return 'btn-danger text-white'
   if (action === 'handover')       return 'btn-primary text-white'
   if (action === 'confirm-return') return 'btn-warning text-dark'
   return 'btn-secondary'
@@ -553,6 +586,8 @@ const executeAction = (record) => {
   if (!action) return
   if (action === 'reject') {
     openRejectModal(record)
+  } else if (action === 'reject-extend') {
+    openRejectModal(record, false, true)
   } else {
     handleAction(record, action)
   }
@@ -560,10 +595,11 @@ const executeAction = (record) => {
   actionSelected.value[record._id] = ''
 }
 
-const openRejectModal = (record, fromDetail = false) => {
+const openRejectModal = (record, fromDetail = false, isExtension = false) => {
   rejectTarget.value = record
   rejectReason.value = ''
   fromDetailModal.value = fromDetail
+  isRejectingExtension.value = isExtension
   if (fromDetail) {
     detailModalInst?.hide()
   }
@@ -574,6 +610,7 @@ const handleAction = async (record, action, fromDetail = false) => {
   let actionLabel = 'Duyệt'
   if (action === 'confirm-return') actionLabel = 'Xác nhận trả'
   if (action === 'handover') actionLabel = 'Giao'
+  if (action === 'approve-extend') actionLabel = 'Duyệt gia hạn'
 
   if (!confirm(`${actionLabel} sách "${record.TenSach}" cho "${record.TenDocGia}"?`)) return
 
@@ -582,6 +619,9 @@ const handleAction = async (record, action, fromDetail = false) => {
     if (action === 'approve') {
       await MuonSachService.approve(record._id)
       showToast('Duyệt phiếu mượn thành công!', 'success')
+    } else if (action === 'approve-extend') {
+      await MuonSachService.approveExtension(record._id)
+      showToast('Đã duyệt gia hạn mượn sách thành công!', 'success')
     } else if (action === 'handover') {
       await MuonSachService.handover(record._id)
       showToast('Đã giao sách cho độc giả!', 'success')
@@ -603,8 +643,13 @@ const submitReject = async () => {
   if (!rejectTarget.value) return
   processingId.value = rejectTarget.value._id
   try {
-    await MuonSachService.reject(rejectTarget.value._id, rejectReason.value)
-    showToast('Từ chối phiếu mượn thành công!', 'success')
+    if (isRejectingExtension.value) {
+      await MuonSachService.rejectExtension(rejectTarget.value._id, rejectReason.value)
+      showToast('Đã từ chối gia hạn sách!', 'success')
+    } else {
+      await MuonSachService.reject(rejectTarget.value._id, rejectReason.value)
+      showToast('Từ chối phiếu mượn thành công!', 'success')
+    }
     rejectModalInst?.hide()
     await fetchRecords(filterStatus.value)
   } catch (error) {
@@ -613,6 +658,7 @@ const submitReject = async () => {
   } finally {
     processingId.value = null
     rejectTarget.value = null
+    isRejectingExtension.value = false
   }
 }
 
@@ -654,6 +700,7 @@ const truncate = (str, max = 40) => {
 const statusBadgeClass = (status) => {
   const map = {
     'chờ duyệt': 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+    'chờ gia hạn': 'bg-info-subtle text-info-emphasis border border-info-subtle',
     'đã duyệt': 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
     'đang mượn': 'bg-info-subtle text-info-emphasis border border-info-subtle',
     'đang chờ trả': 'bg-orange-subtle text-warning-emphasis border border-warning-subtle',
@@ -667,6 +714,7 @@ const statusBadgeClass = (status) => {
 const statusIcon = (status) => {
   const map = {
     'chờ duyệt': 'fa-hourglass-half',
+    'chờ gia hạn': 'fa-calendar-plus text-info',
     'đã duyệt': 'fa-check-circle',
     'đang mượn': 'fa-book-reader',
     'đang chờ trả': 'fa-clock',

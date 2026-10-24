@@ -83,6 +83,27 @@
               </div>
             </div>
 
+            <!-- User Quota Info -->
+            <div v-if="userBorrowStats.loaded" class="rounded-3 p-3 mb-3 border bg-light small">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-secondary"><i class="fas fa-layer-group me-1 text-primary"></i>Đang giữ / chờ duyệt:</span>
+                <strong>{{ userBorrowStats.totalHolding }}/10 quyển</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-secondary">Hạn mức còn lại:</span>
+                <strong :class="userBorrowStats.remainingQuota >= totalBooks && userBorrowStats.overdueCount === 0 ? 'text-success' : 'text-danger'">
+                  {{ userBorrowStats.remainingQuota }} quyển
+                </strong>
+              </div>
+            </div>
+
+            <div v-if="userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 small mb-3 rounded-3">
+              <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!
+            </div>
+            <div v-else-if="userBorrowStats.loaded && userBorrowStats.totalHolding + totalBooks > 10" class="alert alert-warning py-2 small mb-3 rounded-3">
+              <i class="fas fa-exclamation-circle me-1"></i> Tổng số sách mượn ({{ userBorrowStats.totalHolding }} + {{ totalBooks }}) vượt quá hạn mức 10 quyển. Vui lòng giảm số lượng.
+            </div>
+
             <button 
               class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow hover-scale d-flex align-items-center justify-content-center"
               @click="submitBorrow"
@@ -117,7 +138,34 @@ const borrowDate = ref('')
 const returnDate = ref('')
 const isSubmitting = ref(false)
 
+const userBorrowStats = ref({
+  totalHolding: 0,
+  overdueCount: 0,
+  remainingQuota: 10,
+  loaded: false
+})
+
 const todayDate = computed(() => new Date().toISOString().split('T')[0])
+
+const fetchBorrowStats = async () => {
+  try {
+    const historyRes = await MuonSachService.getHistory()
+    const records = historyRes.data || []
+    const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
+    const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
+    const totalHolding = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    const remainingQuota = Math.max(0, 10 - totalHolding)
+    userBorrowStats.value = {
+      totalHolding,
+      overdueCount,
+      remainingQuota,
+      loaded: true
+    }
+  } catch (error) {
+    console.error("Lỗi kiểm tra lịch sử", error)
+  }
+}
 
 onMounted(() => {
   cartItems.value = CartService.getCart()
@@ -129,6 +177,8 @@ onMounted(() => {
   const nextWeek = new Date()
   nextWeek.setDate(today.getDate() + 7)
   returnDate.value = nextWeek.toISOString().split('T')[0]
+
+  fetchBorrowStats()
 })
 
 // Check if return date is valid relative to borrow date
@@ -154,7 +204,12 @@ const hasOutOfStock = computed(() => {
 })
 
 const canSubmit = computed(() => {
-  return cartItems.value.length > 0 && isValidDates.value && !hasOutOfStock.value
+  if (cartItems.value.length === 0 || !isValidDates.value || hasOutOfStock.value) return false
+  if (userBorrowStats.value.loaded) {
+    if (userBorrowStats.value.overdueCount > 0) return false
+    if (userBorrowStats.value.totalHolding + totalBooks.value > 10) return false
+  }
+  return true
 })
 
 const updateQty = (item, change) => {
@@ -193,11 +248,20 @@ const submitBorrow = async () => {
 
   try {
     const historyRes = await MuonSachService.getHistory()
-    const activeRecords = historyRes.data.filter(r => ['chờ duyệt', 'đã duyệt', 'đang mượn'].includes(r.trangThai))
+    const records = historyRes.data || []
+    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    if (overdueCount > 0) {
+      alert(`Bạn đang có ${overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn sách mới!`)
+      isSubmitting.value = false
+      return
+    }
+    const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
+    const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
     const activeCount = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
     
     if (activeCount + totalBooks.value > 10) {
-      alert(`Bạn hiện đang mượn/chờ duyệt ${activeCount} quyển. Không thể mượn thêm ${totalBooks.value} quyển vì sẽ vượt quá hạn mức tối đa 10 quyển!`)
+      const remaining = Math.max(0, 10 - activeCount)
+      alert(`Bạn hiện đang giữ / chờ duyệt ${activeCount} quyển. Hạn mức tối đa là 10 quyển (bạn chỉ có thể mượn thêm tối đa ${remaining} quyển)!`)
       isSubmitting.value = false
       return
     }

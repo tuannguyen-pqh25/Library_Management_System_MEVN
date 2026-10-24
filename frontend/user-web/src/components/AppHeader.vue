@@ -45,15 +45,16 @@
               id="notif-bell-btn"
               class="btn btn-light rounded-circle d-flex align-items-center justify-content-center position-relative notif-bell-btn"
               style="width:38px;height:38px;"
-              :class="{ 'notif-has-alert': notifCount > 0 }"
+              :class="{ 'notif-has-alert': notifCount > 0, 'notif-has-approved': hasApproved }"
               title="Thông báo mượn trả"
               @click.stop="toggleNotifDropdown"
               :aria-expanded="notifDropdownOpen"
             >
-              <i class="fas fa-bell" :class="notifCount > 0 ? 'text-warning' : 'text-secondary'"></i>
+              <i class="fas fa-bell" :class="hasApproved ? 'text-success' : (notifCount > 0 ? 'text-warning' : 'text-secondary')"></i>
               <span
                 v-if="notifCount > 0"
                 class="notif-badge position-absolute"
+                :class="hasApproved ? 'bg-success' : 'bg-danger'"
               >
                 {{ notifCount > 9 ? '9+' : notifCount }}
               </span>
@@ -65,9 +66,21 @@
                 <!-- Header -->
                 <div class="notif-header d-flex align-items-center justify-content-between px-3 py-2">
                   <span class="fw-bold text-dark" style="font-size:0.92rem;">
-                    <i class="fas fa-bell me-2 text-warning"></i>Thông báo mượn trả
+                    <i class="fas fa-bell me-2" :class="hasApproved ? 'text-success' : (notifCount > 0 ? 'text-warning' : 'text-secondary')"></i>Thông báo
                   </span>
-                  <span v-if="notifCount > 0" class="badge rounded-pill" style="background:#ef4444;font-size:0.7rem;">{{ notifCount }}</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <button
+                      v-if="notifCount > 0"
+                      class="btn btn-link btn-sm text-decoration-none p-0 text-muted hover-primary"
+                      style="font-size:0.72rem;"
+                      title="Đánh dấu tất cả là đã đọc"
+                      @click.stop="markAllAsRead"
+                    >
+                      <i class="fas fa-check-double me-1"></i>Đã đọc
+                    </button>
+                    <span v-if="hasApproved" class="badge rounded-pill bg-success" style="font-size:0.68rem;">Có tin mới</span>
+                    <span v-if="notifCount > 0" class="badge rounded-pill" :class="hasApproved ? 'bg-success' : 'bg-danger'" style="font-size:0.7rem;">{{ notifCount }}</span>
+                  </div>
                 </div>
                 <div class="notif-divider"></div>
 
@@ -83,25 +96,36 @@
                     <i class="fas fa-check-circle text-success" style="font-size:2rem;"></i>
                   </div>
                   <p class="mb-0 fw-semibold text-dark" style="font-size:0.875rem;">Tất cả ổn!</p>
-                  <p class="mb-0 text-muted" style="font-size:0.78rem;">Bạn không có sách nào sắp đến hạn trả.</p>
+                  <p class="mb-0 text-muted" style="font-size:0.78rem;">Bạn không có sách nào sắp đến hạn trả hoặc cần xử lý.</p>
                 </div>
 
                 <!-- Notification list -->
                 <ul v-else class="notif-list mb-0 ps-0">
                   <li
                     v-for="item in notifications"
-                    :key="item._id"
-                    class="notif-item d-flex align-items-start gap-3"
-                    @click="goToHistory"
+                    :key="item.notifId || item._id"
+                    class="notif-item d-flex align-items-start gap-3 position-relative"
+                    :class="{
+                      'notif-item-approved': item.alertType === 'approved' || item.alertType === 'extension_approved',
+                      'notif-item-read': isNotifRead(item)
+                    }"
+                    @click="handleNotifClick(item)"
                     role="button"
-                    :title="item.trangThai === 'quá hạn' || item.daysLeft < 0 ? 'Bấm để xem và xin trả sách' : 'Bấm để xem lịch sử'"
+                    :title="getNotifTooltip(item)"
                   >
+                    <!-- Unread dot -->
+                    <span
+                      v-if="!isNotifRead(item)"
+                      class="unread-dot position-absolute top-50 start-0 translate-middle-y bg-primary rounded-circle"
+                      title="Chưa đọc"
+                    ></span>
+
                     <!-- Book thumbnail -->
                     <div class="notif-thumb flex-shrink-0">
                       <img
-                        v-if="item.sachInfo && item.sachInfo.HinhAnh"
-                        :src="item.sachInfo.HinhAnh"
-                        :alt="item.sachInfo.TenSach"
+                        v-if="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
+                        :src="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
+                        :alt="item.TenSach"
                         class="notif-thumb-img"
                         @error="e => e.target.style.display='none'"
                       />
@@ -112,27 +136,82 @@
 
                     <!-- Info -->
                     <div class="min-w-0 flex-grow-1">
-                      <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem;">
-                        {{ item.sachInfo ? item.sachInfo.TenSach : 'Sách đã mượn' }}
-                      </p>
+                      <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+                        <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.TenSach">
+                          {{ item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn' }}
+                        </p>
+                        <!-- Chip / Badge -->
+                        <span
+                          v-if="item.alertType === 'approved'"
+                          class="notif-chip chip-approved flex-shrink-0"
+                        >
+                          <i class="fas fa-check me-1"></i>Đã duyệt
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'extension_approved'"
+                          class="notif-chip chip-approved flex-shrink-0"
+                        >
+                          <i class="fas fa-calendar-check me-1"></i>Duyệt gia hạn
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'extension_rejected'"
+                          class="notif-chip chip-rejected flex-shrink-0"
+                        >
+                          <i class="fas fa-calendar-times me-1"></i>Từ chối gia hạn
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'rejected'"
+                          class="notif-chip chip-rejected flex-shrink-0"
+                        >
+                          <i class="fas fa-times me-1"></i>Từ chối
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'overdue'"
+                          class="notif-chip chip-overdue flex-shrink-0"
+                        >
+                          <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'soon'"
+                          class="notif-chip chip-soon flex-shrink-0"
+                        >
+                          <i class="fas fa-clock me-1"></i>Sắp hết hạn
+                        </span>
+                      </div>
+
                       <p class="mb-1 text-muted" style="font-size:0.75rem;">
-                        Số lượng: {{ item.soLuong || 1 }} quyển
+                        Số lượng: <strong>{{ item.soLuong || 1 }}</strong> quyển
                       </p>
-                      <!-- Alert label -->
-                      <span
-                        v-if="item.alertType === 'overdue'"
-                        class="notif-chip chip-overdue"
-                      >
+
+                      <!-- Specific Message -->
+                      <p v-if="item.alertType === 'approved'" class="mb-0 text-success fw-medium d-flex align-items-center gap-1" style="font-size:0.74rem; line-height: 1.3;">
+                        <i class="fas fa-store"></i>
+                        <span>Thủ thư đã duyệt! Hãy đến nhận sách.</span>
+                      </p>
+                      <p v-else-if="item.alertType === 'extension_approved'" class="mb-0 text-success fw-medium d-flex align-items-center gap-1" style="font-size:0.74rem; line-height: 1.3;">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>{{ item.message || 'Thủ thư đã duyệt gia hạn mượn sách!' }}</span>
+                      </p>
+                      <p v-else-if="item.alertType === 'extension_rejected'" class="mb-0 text-danger fw-medium d-flex align-items-center gap-1" style="font-size:0.74rem; line-height: 1.3;">
+                        <i class="fas fa-calendar-times"></i>
+                        <span>{{ item.message || 'Yêu cầu gia hạn đã bị từ chối.' }}</span>
+                      </p>
+                      <p v-else-if="item.alertType === 'rejected'" class="mb-0 text-danger" style="font-size:0.74rem; line-height: 1.3;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span>{{ item.lyDoTuChoi ? 'Lý do: ' + item.lyDoTuChoi : 'Yêu cầu mượn không được duyệt.' }}</span>
+                      </p>
+                      <p v-else-if="item.alertType === 'overdue'" class="mb-0 text-danger fw-medium" style="font-size:0.74rem;">
                         <i class="fas fa-exclamation-circle me-1"></i>
                         Quá hạn {{ item.daysLeft < 0 ? Math.abs(item.daysLeft) + ' ngày' : '' }}
-                      </span>
-                      <span
-                        v-else-if="item.alertType === 'soon'"
-                        class="notif-chip chip-soon"
-                      >
-                        <i class="fas fa-clock me-1"></i>
+                      </p>
+                      <p v-else-if="item.alertType === 'soon'" class="mb-0 text-warning-emphasis" style="font-size:0.74rem;">
+                        <i class="fas fa-hourglass-half me-1"></i>
                         {{ item.daysLeft === 0 ? 'Hết hạn hôm nay' : 'Hết hạn sau ' + item.daysLeft + ' ngày' }}
-                      </span>
+                      </p>
+
+                      <div class="d-flex align-items-center justify-content-between mt-1 text-muted" style="font-size:0.7rem;">
+                        <span><i class="far fa-calendar-alt me-1"></i>Hạn trả: {{ formatDate(item.ngayTra) }}</span>
+                      </div>
                     </div>
                   </li>
                 </ul>
@@ -297,6 +376,41 @@
           </template>
         </nav>
       </transition>
+      <!-- Floating Notification Toast for newly approved request -->
+      <transition name="toast-slide">
+        <div
+          v-if="approvedToast"
+          class="live-approved-toast shadow-lg rounded-4 p-3 d-flex align-items-center gap-3"
+        >
+          <div class="toast-avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="toast-body-text flex-grow-1 min-w-0">
+            <div class="fw-bold text-dark d-flex align-items-center gap-1" style="font-size:0.86rem;">
+              <span>{{ approvedToast.alertType === 'extension_approved' ? 'Yêu cầu gia hạn đã được duyệt!' : 'Yêu cầu mượn đã được duyệt!' }}</span>
+            </div>
+            <div class="text-muted text-truncate" style="font-size:0.78rem;">
+              Sách: <strong>{{ approvedToast.TenSach || 'Sách mượn' }}</strong>
+            </div>
+            <small class="text-success d-block" style="font-size:0.72rem;">
+              {{ approvedToast.alertType === 'extension_approved' ? 'Hạn trả mới đã được cập nhật thành công.' : 'Vui lòng đến thư viện để nhận sách.' }}
+            </small>
+          </div>
+          <button
+            class="btn btn-sm btn-success rounded-pill px-3 py-1 flex-shrink-0"
+            style="font-size:0.75rem;"
+            @click="handleNotifClick(approvedToast)"
+          >
+            Xem
+          </button>
+          <button
+            type="button"
+            class="btn-close btn-close-sm flex-shrink-0"
+            style="font-size:0.65rem;"
+            @click="approvedToast = null"
+          ></button>
+        </div>
+      </transition>
     </div>
   </header>
 </template>
@@ -319,14 +433,26 @@ export default {
       userDropdownOpen: false,
       // Notification bell
       notifications: [],
+      readNotifIds: [],
       notifDropdownOpen: false,
       notifLoading: false,
       _notifTimer: null,
+      _focusHandler: null,
+      approvedToast: null,
+      _toastTimer: null,
+      _knownApprovedIds: new Set(),
+      _hasFetchedBefore: false,
     }
   },
   computed: {
+    unreadNotifications() {
+      return this.notifications.filter(n => !this.isNotifRead(n))
+    },
     notifCount() {
-      return this.notifications.length
+      return this.unreadNotifications.length
+    },
+    hasApproved() {
+      return this.unreadNotifications.some(n => n.alertType === 'approved' || n.alertType === 'extension_approved')
     },
     displayName() {
       const user = this.currentUser || {}
@@ -337,14 +463,64 @@ export default {
     }
   },
   methods: {
+    getNotifStorageKey() {
+      const user = this.currentUser || {}
+      const id = user._id || user.MaDocGia || user.Email || 'default_user'
+      return `read_notifs_${id}`
+    },
+    loadReadNotifs() {
+      const key = this.getNotifStorageKey()
+      try {
+        const raw = localStorage.getItem(key)
+        this.readNotifIds = raw ? JSON.parse(raw) : []
+      } catch (_) {
+        this.readNotifIds = []
+      }
+    },
+    saveReadNotifs() {
+      const key = this.getNotifStorageKey()
+      try {
+        const trimmed = this.readNotifIds.slice(-200)
+        localStorage.setItem(key, JSON.stringify(trimmed))
+      } catch (_) {}
+    },
+    isNotifRead(item) {
+      if (!item) return false
+      const id = item.notifId || item._id
+      if (this.readNotifIds.includes(id)) return true
+      const prefix = `${item._id}_${item.alertType}`
+      return this.readNotifIds.some(rId => rId === id || rId === item._id || rId.startsWith(prefix))
+    },
+    markAsRead(item) {
+      if (!item) return
+      const id = item.notifId || item._id
+      if (!this.isNotifRead(item)) {
+        this.readNotifIds = [...this.readNotifIds, id]
+        this.saveReadNotifs()
+      }
+    },
+    markAllAsRead() {
+      const allIds = this.notifications.map(n => n.notifId || n._id).filter(Boolean)
+      this.readNotifIds = Array.from(new Set([...this.readNotifIds, ...allIds]))
+      this.saveReadNotifs()
+    },
+    handleNotifClick(item) {
+      this.markAsRead(item)
+      this.goToHistory()
+    },
     updateUser() {
       this.currentUser = AuthService.getCurrentUser()
       if (this.currentUser) {
+        this.loadReadNotifs()
         this.fetchWishlistCount()
         this.fetchNotifications()
       } else {
         this.wishlistCount = 0
         this.notifications = []
+        this.readNotifIds = []
+        this.approvedToast = null
+        this._hasFetchedBefore = false
+        this._knownApprovedIds.clear()
       }
     },
     async fetchWishlistCount() {
@@ -359,12 +535,43 @@ export default {
       if (!this.currentUser) return
       this.notifLoading = true
       try {
-        this.notifications = await MuonSachService.getNotifications()
+        const notifs = await MuonSachService.getNotifications()
+
+        // Phát hiện xem có yêu cầu nào mới được duyệt không
+        const currentApproved = notifs.filter(n => n.alertType === 'approved' || n.alertType === 'extension_approved')
+        if (this._hasFetchedBefore) {
+          const newlyApproved = currentApproved.find(n => !this._knownApprovedIds.has(String(n.notifId || n._id)))
+          if (newlyApproved) {
+            this.showApprovedToast(newlyApproved)
+          }
+        }
+        this._hasFetchedBefore = true
+        this._knownApprovedIds = new Set(currentApproved.map(n => String(n.notifId || n._id)))
+
+        this.notifications = notifs
       } catch (_) {
         this.notifications = []
       } finally {
         this.notifLoading = false
       }
+    },
+    showApprovedToast(item) {
+      this.approvedToast = item
+      if (this._toastTimer) clearTimeout(this._toastTimer)
+      this._toastTimer = setTimeout(() => {
+        this.approvedToast = null
+      }, 7000)
+    },
+    getNotifTooltip(item) {
+      if (item.alertType === 'approved') return 'Bấm để xem lịch sử và chuẩn bị nhận sách'
+      if (item.alertType === 'extension_approved') return 'Bấm để xem hạn trả mới'
+      if (item.alertType === 'overdue' || item.daysLeft < 0) return 'Bấm để xem và xin trả sách'
+      return 'Bấm để xem lịch sử mượn'
+    },
+    formatDate(value) {
+      if (!value) return '—'
+      const date = new Date(value)
+      return isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN')
     },
     toggleNotifDropdown() {
       this.notifDropdownOpen = !this.notifDropdownOpen
@@ -376,6 +583,7 @@ export default {
     },
     goToHistory() {
       this.notifDropdownOpen = false
+      this.approvedToast = null
       this.$router.push('/lich-su')
     },
     fetchCartCount() {
@@ -386,9 +594,11 @@ export default {
       this.currentUser = null
       this.wishlistCount = 0
       this.notifications = []
+      this.readNotifIds = []
       this.mobileMenuOpen = false
       this.userDropdownOpen = false
       this.notifDropdownOpen = false
+      this.approvedToast = null
       this.$router.push('/login')
     },
     closeDropdown(e) {
@@ -412,10 +622,17 @@ export default {
     eventBus.on('auth-change', this.updateUser)
     eventBus.on('wishlist-change', this.fetchWishlistCount)
     window.addEventListener('cart-updated', this.fetchCartCount)
-    // Auto-refresh thông báo mỗi 5 phút
+
+    // Auto-refresh thông báo mỗi 20 giây để đồng bộ ngay khi thủ thư duyệt
     this._notifTimer = setInterval(() => {
       if (this.currentUser) this.fetchNotifications()
-    }, 5 * 60 * 1000)
+    }, 20 * 1000)
+
+    // Tự động refresh khi người dùng quay lại tab trình duyệt
+    this._focusHandler = () => {
+      if (this.currentUser) this.fetchNotifications()
+    }
+    window.addEventListener('focus', this._focusHandler)
   },
   mounted() {
     document.addEventListener('click', this.closeDropdown)
@@ -426,6 +643,8 @@ export default {
     eventBus.off('wishlist-change', this.fetchWishlistCount)
     window.removeEventListener('cart-updated', this.fetchCartCount)
     if (this._notifTimer) clearInterval(this._notifTimer)
+    if (this._toastTimer) clearTimeout(this._toastTimer)
+    if (this._focusHandler) window.removeEventListener('focus', this._focusHandler)
   }
 }
 </script>
@@ -679,6 +898,19 @@ export default {
   background: #fafafa;
 }
 
+.notif-item-read {
+  opacity: 0.6;
+}
+.notif-item-read:hover {
+  opacity: 0.95;
+}
+
+.unread-dot {
+  width: 7px;
+  height: 7px;
+  left: 4px;
+}
+
 /* Thumbnail */
 .notif-thumb {
   width: 42px;
@@ -716,6 +948,16 @@ export default {
   border-radius: 20px;
   line-height: 1.4;
 }
+.chip-approved {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.chip-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
 .chip-overdue {
   background: #fee2e2;
   color: #dc2626;
@@ -723,6 +965,48 @@ export default {
 .chip-soon {
   background: #fef3c7;
   color: #d97706;
+}
+
+.notif-item-approved {
+  background: #f0fdf4;
+}
+.notif-item-approved:hover {
+  background: #dcfce7 !important;
+}
+
+/* Bell button pulse when approved */
+.notif-has-approved {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+/* Floating Live Toast */
+.live-approved-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border: 1px solid #86efac;
+  z-index: 99999;
+  box-shadow: 0 10px 30px rgba(22, 163, 74, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.toast-avatar {
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+}
+.toast-slide-enter-active,
+.toast-slide-leave-active {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast-slide-enter-from {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+}
+.toast-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
 }
 
 /* Dropdown transition */

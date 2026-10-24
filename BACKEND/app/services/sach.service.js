@@ -3,6 +3,7 @@ const { uploadImageFromUrl, deleteImage } = require("../utils/cloudinary.util");
 
 class SachService {
     constructor(client) {
+        this.client = client;
         this.Sach = client.db().collection("SACH");
     }
 
@@ -75,14 +76,28 @@ class SachService {
         // C. Chèn sách mới vào CSDL
         const result = await this.Sach.insertOne(sachData);
 
-        const newDocument = await this.Sach.findOne({ _id: result.insertedId });
+        const newDocument = await this.findById(result.insertedId);
         return newDocument;
     }
 
     // 2. Tìm tất cả sách
     async find(filter) {
         const cursor = await this.Sach.find(filter);
-        return await cursor.toArray();
+        const books = await cursor.toArray();
+        try {
+            const nxbs = await this.client.db().collection("NHAXUATBAN").find({}).toArray();
+            const nxbMap = new Map();
+            nxbs.forEach(n => {
+                if (n.MaNXB) nxbMap.set(n.MaNXB, n.TenNXB);
+                if (n._id) nxbMap.set(n._id.toString(), n.TenNXB);
+            });
+            return books.map(book => ({
+                ...book,
+                TenNXB: nxbMap.get(book.MaNXB) || nxbMap.get(book.MaNXB?.toString()) || book.MaNXB || '—'
+            }));
+        } catch (_) {
+            return books;
+        }
     }
 
     // 3. Tìm sách bằng Tên
@@ -94,9 +109,25 @@ class SachService {
 
     // 4. Tìm sách bằng ID
     async findById(id) {
-        return await this.Sach.findOne({
+        const book = await this.Sach.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         });
+        if (!book) return null;
+        try {
+            let nxb = null;
+            if (book.MaNXB) {
+                nxb = await this.client.db().collection("NHAXUATBAN").findOne({ MaNXB: book.MaNXB });
+                if (!nxb && ObjectId.isValid(book.MaNXB)) {
+                    nxb = await this.client.db().collection("NHAXUATBAN").findOne({ _id: new ObjectId(book.MaNXB) });
+                }
+            }
+            return {
+                ...book,
+                TenNXB: nxb ? nxb.TenNXB : (book.MaNXB || '—')
+            };
+        } catch (_) {
+            return book;
+        }
     }
 
     // 5. Cập nhật sách

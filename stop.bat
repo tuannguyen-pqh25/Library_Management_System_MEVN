@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 title [CT449] Dừng Hệ thống Quản Lý Mượn Sách
 
@@ -28,5 +28,5 @@ echo ======================================================================
 echo   HỆ THỐNG ĐÃ ĐƯỢC TẮT TOÀN BỘ VÀ GIẢI PHÓNG TÀI NGUYÊN!
 echo ======================================================================
 echo.
-timeout /t 3 >nul
+timeout /t 3 /nobreak >nul 2>&1 || ping 127.0.0.1 -n 4 >nul
 exit

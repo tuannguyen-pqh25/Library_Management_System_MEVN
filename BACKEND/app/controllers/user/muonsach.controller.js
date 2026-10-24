@@ -93,3 +93,17 @@ exports.deletePending = async (req, res, next) => {
         return next(new ApiError(400, error.message || "Không thể hủy phiếu mượn"));
     }
 };
+
+exports.requestExtension = async (req, res, next) => {
+    try {
+        const muonSachService = new MuonSachService(MongoDB.client);
+        const result = await muonSachService.requestExtension(req.params.id, req.user._id, req.body);
+        await Redis.del("admin:dashboard:stats");
+        return res.status(200).json({
+            message: "Yêu cầu gia hạn sách đã được gửi tới thủ thư để xét duyệt",
+            data: result
+        });
+    } catch (error) {
+        return next(new ApiError(400, error.message || "Không thể yêu cầu gia hạn sách"));
+    }
+};

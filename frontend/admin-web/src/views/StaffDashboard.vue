@@ -123,16 +123,38 @@
           <!-- Doughnut Chart: Trạng thái phiếu mượn -->
           <div class="col-12 col-lg-4">
             <div class="chart-card h-100">
-              <div class="chart-card-header">
+              <div class="chart-card-header d-flex justify-content-between align-items-center">
                 <div>
                   <h6 class="chart-title mb-0">
                     <i class="fas fa-chart-pie me-2 text-success"></i>Phân Bổ Trạng Thái
                   </h6>
                   <p class="chart-subtitle mb-0">Tổng phiếu mượn theo trạng thái</p>
                 </div>
+                <span class="badge bg-light text-dark border">
+                  {{ totalPhieuMuon }} phiếu
+                </span>
               </div>
-              <div class="chart-body d-flex align-items-center justify-content-center" style="height: 260px;">
-                <canvas ref="doughnutChartRef" style="max-width: 220px; max-height: 220px;"></canvas>
+              <div class="chart-body d-flex flex-column align-items-center justify-content-center py-2">
+                <div class="doughnut-canvas-wrapper position-relative d-flex justify-content-center align-items-center">
+                  <canvas ref="doughnutChartRef" style="max-width: 200px; max-height: 200px;"></canvas>
+                </div>
+
+                <!-- Chú thích chi tiết số lượng & % -->
+                <div v-if="activeStatusList.length > 0" class="doughnut-legend-grid mt-3 w-100">
+                  <div
+                    v-for="item in activeStatusList"
+                    :key="item.key"
+                    class="doughnut-legend-pill"
+                  >
+                    <span class="status-dot" :style="{ background: item.color }"></span>
+                    <span class="legend-name">{{ item.label }}:</span>
+                    <span class="legend-val" :style="{ color: item.color }">{{ item.count }}</span>
+                    <span class="legend-pct text-muted">({{ item.percentage }}%)</span>
+                  </div>
+                </div>
+                <div v-else class="text-muted small mt-3">
+                  Chưa có dữ liệu phiếu mượn
+                </div>
               </div>
             </div>
           </div>
@@ -178,9 +200,14 @@
                     <div class="d-flex align-items-center gap-2 mb-1">
                       <span class="status-dot" :style="{ background: item.color }"></span>
                       <span class="status-name">{{ item.label }}</span>
-                      <span class="ms-auto status-count fw-bold" :style="{ color: item.color }">
-                        {{ item.count }}
-                      </span>
+                      <div class="ms-auto text-end">
+                        <span class="status-count fw-bold" :style="{ color: item.color }">
+                          {{ item.count }}
+                        </span>
+                        <span class="status-pct text-muted ms-1" style="font-size: 0.78rem;">
+                          ({{ totalPhieuMuon > 0 ? ((item.count / totalPhieuMuon) * 100).toFixed(1).replace(/\.0$/, '') : 0 }}%)
+                        </span>
+                      </div>
                     </div>
                     <div class="progress" style="height: 6px; border-radius: 99px;">
                       <div
@@ -241,6 +268,7 @@ import {
   Tooltip, Legend, Filler,
   DoughnutController, LineController, BarController
 } from 'chart.js'
+import ChartDataLabels from 'chartjs-plugin-datalabels'
 import DashboardService from '@/services/dashboard.service'
 
 // Register Chart.js components
@@ -250,6 +278,9 @@ Chart.register(
   Tooltip, Legend, Filler,
   DoughnutController, LineController, BarController
 )
+
+// Tắt datalabels mặc định cho các biểu đồ khác (Line, Bar)
+Chart.defaults.set('plugins.datalabels', { display: false })
 
 // Refs
 const lineChartRef = ref(null)
@@ -287,6 +318,16 @@ const statusDetailList = computed(() => {
 const totalPhieuMuon = computed(() =>
   statusDetailList.value.reduce((sum, s) => sum + s.count, 0)
 )
+
+const activeStatusList = computed(() => {
+  const total = totalPhieuMuon.value
+  return statusDetailList.value
+    .filter(s => s.count > 0)
+    .map(s => ({
+      ...s,
+      percentage: total > 0 ? ((s.count / total) * 100).toFixed(1).replace(/\.0$/, '') : '0'
+    }))
+})
 
 // ========== Chart helpers ==========
 function destroyCharts() {
@@ -366,9 +407,11 @@ function buildDoughnutChart() {
   if (!doughnutChartRef.value) return
   const ctx = doughnutChartRef.value.getContext('2d')
 
-  const labels = statusDetailList.value.filter(s => s.count > 0).map(s => s.label)
-  const data   = statusDetailList.value.filter(s => s.count > 0).map(s => s.count)
-  const colors = statusDetailList.value.filter(s => s.count > 0).map(s => s.color)
+  const items = statusDetailList.value.filter(s => s.count > 0)
+  const labels = items.map(s => s.label)
+  const data   = items.map(s => s.count)
+  const colors = items.map(s => s.color)
+  const total  = data.reduce((a, b) => a + b, 0)
 
   doughnutChart = new Chart(ctx, {
     type: 'doughnut',
@@ -379,18 +422,73 @@ function buildDoughnutChart() {
         backgroundColor: colors,
         borderWidth: 2,
         borderColor: '#fff',
-        hoverOffset: 8,
+        hoverOffset: 6,
       }],
     },
+    plugins: [
+      ChartDataLabels,
+      {
+        id: 'doughnutCenterText',
+        beforeDraw(chart) {
+          const { ctx: chartCtx, chartArea } = chart
+          if (!chartArea) return
+          const centerX = (chartArea.left + chartArea.right) / 2
+          const centerY = (chartArea.top + chartArea.bottom) / 2
+
+          chartCtx.save()
+          chartCtx.textAlign = 'center'
+          chartCtx.textBaseline = 'middle'
+
+          chartCtx.font = '500 11px system-ui, -apple-system, sans-serif'
+          chartCtx.fillStyle = '#6b7280'
+          chartCtx.fillText('Tổng phiếu', centerX, centerY - 10)
+
+          chartCtx.font = 'bold 18px system-ui, -apple-system, sans-serif'
+          chartCtx.fillStyle = '#111827'
+          chartCtx.fillText(`${total}`, centerX, centerY + 10)
+
+          chartCtx.restore()
+        }
+      }
+    ],
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      cutout: '68%',
+      cutout: '62%',
       plugins: {
         legend: { display: false },
+        datalabels: {
+          display: (context) => {
+            const val = context.dataset.data[context.dataIndex]
+            if (!val || total === 0) return false
+            const share = (val / total) * 100
+            return share >= 5
+          },
+          color: '#ffffff',
+          font: {
+            weight: 'bold',
+            size: 11,
+          },
+          textAlign: 'center',
+          formatter: (value) => {
+            if (!total || value === 0) return ''
+            const pct = ((value / total) * 100).toFixed(1).replace(/\.0$/, '')
+            const share = (value / total) * 100
+            if (share < 8) {
+              return `${pct}%`
+            }
+            return `${value}\n(${pct}%)`
+          },
+          textShadowBlur: 4,
+          textShadowColor: 'rgba(0, 0, 0, 0.45)',
+        },
         tooltip: {
           callbacks: {
-            label: ctx => ` ${ctx.label}: ${ctx.raw} phiếu`
+            label: ctx => {
+              const val = ctx.raw || 0
+              const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace(/\.0$/, '') : 0
+              return ` ${ctx.label}: ${val} phiếu (${pct}%)`
+            }
           }
         },
       },
@@ -552,6 +650,38 @@ onBeforeUnmount(destroyCharts)
 .chart-body {
   flex: 1;
   position: relative;
+}
+
+/* ---- Doughnut Legend ---- */
+.doughnut-canvas-wrapper {
+  width: 100%;
+}
+.doughnut-legend-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.doughnut-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+  background: #f8fafc;
+  border-radius: 99px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+.doughnut-legend-pill .legend-name {
+  color: #4b5563;
+}
+.doughnut-legend-pill .legend-val {
+  font-weight: 700;
+}
+.doughnut-legend-pill .legend-pct {
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 /* ---- Status Detail List ---- */

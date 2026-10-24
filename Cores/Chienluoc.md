@@ -34,18 +34,23 @@ Dự án xây dựng **hệ thống quản lý mượn sách trực tuyến** g�
 
 Nguyên tắc xuyên suốt: **giữ nguyên 100% tên bảng và tên thuộc tính đã cho** trong lược đồ `QuanLyMuonSach`; mọi mở rộng đều là **bảng mới** hoặc **thuộc tính bổ sung** (không sửa/xóa thuộc tính gốc), được đánh dấu rõ ràng là "phần mở rộng — có thể triển khai sau".
 
-## 0.1. Trạng thái thực tế mới nhất (2026-10-22)
+## 0.1. Trạng thái thực tế mới nhất (2026-10-24)
 
-Tính đến thời điểm hiện tại, toàn bộ các giai đoạn phát triển đã hoàn thành 100%:
+Tính đến thời điểm hiện tại, toàn bộ 11 giai đoạn phát triển đã hoàn thành 100%:
 
-- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google/Facebook), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao, và Trợ lý ảo Gemini AI Chatbot (Resilience Architecture) kết hợp Voice Search Web Speech API.
-- **Tối ưu hóa UI/UX & Chuẩn hóa mã nguồn (2026-10-22):**
-  - **In-App Notification Bell:** Tích hợp chuông thông báo trực quan trên thanh điều hướng của `user-web`, tự động cảnh báo sách quá hạn và sách sắp đến hạn trả trong vòng 2 ngày (polling 5 phút/lần).
-  - **Contextual Action Dropdowns:** Chuyển đổi cột thao tác của bảng Mượn sách ở cả Admin (`MuonSachManagement.vue`) và User (`BorrowHistory.vue`) sang dạng Dropdown động theo trạng thái phiếu, nâng cao trải nghiệm người dùng và triệt tiêu sai sót thao tác.
-  - **Code Cleanliness:** Rà soát và loại bỏ 100% ký tự emoji trong mã nguồn, option dropdown, log và thông báo hệ thống, đảm bảo phong cách lập trình chuẩn mực, trang nhã.
-- **Kế hoạch tiếp theo:** Triển khai môi trường Production theo giáo trình thầy (nginx Reverse Proxy + PM2) và chuẩn bị hồ sơ bảo vệ đồ án.
+- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google/Facebook), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao, và Trợ lý ảo Gemini AI Chatbot (Resilience Architecture) kết hợp Voice Search Web Speech API. Tích hợp Chuông thông báo In-App Notification Bell, Action Dropdowns ngữ cảnh và 17 Unique/Compound Indexes MongoDB.
+- **Hoàn thiện Nghiệp vụ Nâng cao (2026-10-24):**
+  - **Quy trình Gia hạn Mượn Sách (Book Renewal):** Độc giả có thể xin gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, +7 hoặc +14 ngày kèm lý do). Trạng thái chuyển sang "Chờ gia hạn" và phải được Thủ thư thẩm định phê duyệt hoặc từ chối có lý do.
+  - **Trải nghiệm Tra cứu NXB:** Tự động lookup/mapping để hiển thị trực quan Tên Nhà Xuất Bản (`TenNXB`) thay cho mã số kỹ thuật trên mọi màn hình chi tiết.
+  - **Khắc phục Triệt để Badge Thông báo:** Áp dụng Deterministic Notification ID và bộ lọc tiền tố `isNotifRead` tại `localStorage` độc giả, giải quyết dứt điểm lỗi thông báo đã đọc bị nhảy số trở lại khi F5 refresh trang.
+- **Giai đoạn 11 (Deploy & DevOps):** Hoàn tất toàn bộ cấu hình máy chủ Production theo giáo trình:
+  - Máy chủ Web NGINX (Port 80 cho User Web, Port 8080 cho Admin Web, Reverse Proxy `/api/` và `/uploads/` về Node.js Port 3000, hỗ trợ Vue Router HTML5 History Mode và Gzip).
+  - Quản lý tiến trình Backend Node.js qua PM2 (`ecosystem.config.js`).
+  - Đóng gói Production (`.env.production`, `npm run build` thành công xuất sắc cho cả 2 Frontend).
+  - Sửa triệt để lỗi cú pháp và chuẩn hóa CRLF cho các file scripts `start.bat` / `stop.bat`.
+- **Kế hoạch tiếp theo:** Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide thuyết trình và Bộ câu hỏi phản biện của Giảng viên.
 
-> Lưu ý cho các phiên làm việc tiếp theo: Toàn bộ tính năng đã hoàn chỉnh 100%. Không tự ý thêm tính năng nghiệp vụ mới. Chỉ tập trung hỗ trợ deploy, review bảo mật, tinh chỉnh nhỏ và chuẩn bị báo cáo bảo vệ.
+> Lưu ý cho các phiên làm việc tiếp theo: Toàn bộ tính năng và cấu hình triển khai đã hoàn tất 100%. Không tự ý thêm tính năng nghiệp vụ mới. Chỉ tập trung hỗ trợ chuẩn bị bảo vệ đồ án và giải đáp kỹ thuật.
 
 ---
 

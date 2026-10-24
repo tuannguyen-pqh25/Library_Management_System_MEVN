@@ -33,10 +33,32 @@
                 <td class="ps-4 fw-medium text-muted-custom" style="font-size: 0.9rem;">{{ index + 1 }}</td>
                 <td class="fw-bold text-dark py-3">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="book-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
+                    <img
+                      v-if="record.HinhAnh"
+                      :src="record.HinhAnh"
+                      :alt="record.TenSach"
+                      class="rounded shadow-sm flex-shrink-0"
+                      style="width:36px;height:48px;object-fit:cover;"
+                      @error="(e) => { e.target.style.display='none' }"
+                    />
+                    <div v-else class="book-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
                       <i class="fas fa-book"></i>
                     </div>
-                    <span class="line-clamp-1" style="max-width: 250px; font-size: 0.95rem;" :title="record.TenSach || 'Sách'">{{ record.TenSach || 'Sách' }}</span>
+                    <div>
+                      <span class="line-clamp-1" style="max-width: 250px; font-size: 0.95rem;" :title="record.TenSach || 'Sách'">{{ record.TenSach || 'Sách' }}</span>
+                      <small v-if="record.trangThai === 'đã duyệt'" class="text-success d-block fw-medium mt-1" style="font-size:0.75rem;">
+                        <i class="fas fa-check-circle me-1"></i>Đã được duyệt — Vui lòng đến nhận sách
+                      </small>
+                      <small v-else-if="record.trangThai === 'chờ gia hạn'" class="text-info d-block fw-medium mt-1" style="font-size:0.75rem;">
+                        <i class="fas fa-hourglass-half me-1"></i>Đang chờ thư viện duyệt gia hạn (+{{ record.yeuCauGiaHan?.soNgayGiaHan || 7 }} ngày)
+                      </small>
+                      <small v-else-if="record.giaHanCount > 0 && record.trangThai === 'đang mượn'" class="text-primary d-block fw-normal mt-1" style="font-size:0.72rem;">
+                        <i class="fas fa-redo me-1"></i>Đã gia hạn {{ record.giaHanCount }} lần
+                      </small>
+                      <small v-else-if="record.trangThai === 'từ chối' && record.lyDoTuChoi" class="text-danger d-block fw-normal mt-1" style="font-size:0.72rem;">
+                        <i class="fas fa-info-circle me-1"></i>{{ record.lyDoTuChoi }}
+                      </small>
+                    </div>
                   </div>
                 </td>
                 <td class="fw-bold text-center text-primary" style="font-size: 0.95rem;">{{ record.soLuong || 1 }}</td>
@@ -50,7 +72,7 @@
                 </td>
                 <td class="text-center pe-4" style="min-width:170px;">
                   <div class="d-flex align-items-center gap-1 justify-content-center">
-                    <template v-if="getUserActionOptions(record.trangThai).length > 0">
+                    <template v-if="getUserActionOptions(record).length > 0">
                       <select
                         class="form-select form-select-sm action-select"
                         v-model="actionSelected[record._id]"
@@ -58,7 +80,7 @@
                       >
                         <option value="" disabled>--- Chọn ---</option>
                         <option
-                          v-for="opt in getUserActionOptions(record.trangThai)"
+                          v-for="opt in getUserActionOptions(record)"
                           :key="opt.value"
                           :value="opt.value"
                         >{{ opt.label }}</option>
@@ -72,12 +94,19 @@
                         <i class="fas" :class="isProcessing === record._id ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
                       </button>
                     </template>
+                    <!-- Đang chờ gia hạn — hiển thị badge -->
+                    <span
+                      v-else-if="record.trangThai === 'chờ gia hạn'"
+                      class="badge bg-info bg-opacity-10 text-info fw-semibold rounded-pill px-3 py-2"
+                    >
+                      <i class="fas fa-history me-1"></i> Chờ duyệt gia hạn
+                    </span>
                     <!-- Đang chờ trả — chỉ hiển thị badge -->
                     <span
                       v-else-if="record.trangThai === 'đang chờ trả'"
                       class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-3 py-2"
                     >
-                      <i class="fas fa-hourglass-half me-1"></i> Đang chờ
+                      <i class="fas fa-hourglass-half me-1"></i> Đang chờ trả
                     </span>
                     <!-- Đã trả / Từ chối — không cần thao tác -->
                     <span v-else class="text-muted" style="font-size:0.75rem;">—</span>
@@ -172,6 +201,86 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Xin Gia Hạn Sách -->
+    <div class="modal fade" id="extendModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header bg-info text-white py-3 px-4 border-0">
+            <h5 class="modal-title fw-bold"><i class="fas fa-calendar-plus me-2"></i>Xin gia hạn mượn sách</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-3">
+              <i class="fas fa-book-reader text-info fa-2x"></i>
+              <div>
+                <h6 class="fw-bold text-dark mb-1">{{ extendTarget?.TenSach }}</h6>
+                <div class="small text-muted">
+                  Hạn trả hiện tại: <strong class="text-danger">{{ formatDate(extendTarget?.ngayTra) }}</strong>
+                  <span class="ms-2 badge bg-secondary-subtle text-secondary">
+                    Còn {{ getDaysUntilDue(extendTarget?.ngayTra) }} ngày
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small rounded-3 mb-3">
+              <i class="fas fa-info-circle me-1"></i>
+              Quy định: Chỉ được gia hạn trước ngày hết hạn ít nhất <strong>3 ngày</strong> (tối đa 2 lần). Sau khi gửi, thủ thư thư viện sẽ xem xét và phê duyệt.
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Thời gian xin gia hạn <span class="text-danger">*</span></label>
+              <div class="d-flex gap-3">
+                <div
+                  class="flex-fill p-3 border rounded-3 text-center cursor-pointer transition-all"
+                  :class="extendDays === 7 ? 'border-info bg-info bg-opacity-10 text-info fw-bold shadow-sm' : 'bg-light text-dark'"
+                  @click="extendDays = 7"
+                  role="button"
+                >
+                  <div class="fs-5 mb-0">+ 7 ngày</div>
+                  <small class="text-muted">1 tuần</small>
+                </div>
+                <div
+                  class="flex-fill p-3 border rounded-3 text-center cursor-pointer transition-all"
+                  :class="extendDays === 14 ? 'border-info bg-info bg-opacity-10 text-info fw-bold shadow-sm' : 'bg-light text-dark'"
+                  @click="extendDays = 14"
+                  role="button"
+                >
+                  <div class="fs-5 mb-0">+ 14 ngày</div>
+                  <small class="text-muted">2 tuần</small>
+                </div>
+              </div>
+              <div class="mt-2 text-end text-muted small">
+                Hạn trả dự kiến mới: <strong class="text-primary">{{ calcNewDueDate(extendTarget?.ngayTra, extendDays) }}</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Lý do xin gia hạn <span class="text-muted fw-normal">(tùy chọn)</span></label>
+              <textarea
+                class="form-control rounded-3"
+                rows="2"
+                placeholder="VD: Cần thêm thời gian làm tiểu luận, nghiên cứu tài liệu..."
+                v-model="extendReason"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-top pt-3">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+            <button
+              type="button"
+              class="btn btn-info text-white rounded-pill px-4 fw-bold shadow-sm"
+              :disabled="isProcessing === extendTarget?._id"
+              @click="submitExtendRequest"
+            >
+              <i class="fas" :class="isProcessing === extendTarget?._id ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+              Gửi yêu cầu gia hạn
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script setup>
@@ -185,13 +294,18 @@ const loading = ref(true)
 const isProcessing = ref(null)
 const actionSelected = ref({}) // Map: recordId → selected action
 
-
 let returnModalInst = null
 let editModalInst = null
+let extendModalInst = null
+
 const returnTarget = ref(null)
 const returnDate = ref('')
 const editTarget = ref(null)
 const editQuantity = ref(1)
+
+const extendTarget = ref(null)
+const extendDays = ref(7)
+const extendReason = ref('')
 
 const todayDate = computed(() => {
   return new Date().toISOString().split('T')[0]
@@ -214,6 +328,32 @@ const formatDate = (value) => {
   return isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN')
 }
 
+// Tính số ngày còn lại đến hạn trả
+const getDaysUntilDue = (ngayTra) => {
+  if (!ngayTra) return 0
+  const hanTra = new Date(ngayTra)
+  const today = new Date()
+  const hanTraMidnight = new Date(hanTra.getFullYear(), hanTra.getMonth(), hanTra.getDate())
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  return Math.round((hanTraMidnight - todayMidnight) / (1000 * 60 * 60 * 24))
+}
+
+// Tính hạn trả mới dự kiến
+const calcNewDueDate = (currentDueDate, days) => {
+  if (!currentDueDate) return '—'
+  const date = new Date(currentDueDate)
+  date.setDate(date.getDate() + Number(days))
+  return date.toLocaleDateString('vi-VN')
+}
+
+// Kiểm tra điều kiện gia hạn (phải gia hạn trước 3 ngày, đang mượn, tối đa 2 lần)
+const canExtend = (record) => {
+  if (!record || record.trangThai !== 'đang mượn') return false
+  if ((record.giaHanCount || 0) >= 2) return false
+  const diffDays = getDaysUntilDue(record.ngayTra)
+  return diffDays >= 3
+}
+
 // Chuyển đổi trạng thái sang hiển thị UI
 const formatStatus = (value) => {
   const text = String(value || '').toLowerCase()
@@ -221,6 +361,7 @@ const formatStatus = (value) => {
     'chờ duyệt': 'Chờ duyệt',
     'đã duyệt': 'Đã duyệt',
     'đang mượn': 'Đang mượn',
+    'chờ gia hạn': 'Chờ gia hạn',
     'đang chờ trả': 'Đang chờ trả',
     'đã trả': 'Đã trả',
     'từ chối': 'Từ chối',
@@ -271,6 +412,31 @@ const submitEditRequest = async () => {
   }
 }
 
+const openExtendModal = (record) => {
+  extendTarget.value = record
+  extendDays.value = 7
+  extendReason.value = ''
+  extendModalInst?.show()
+}
+
+const submitExtendRequest = async () => {
+  if (!extendTarget.value) return
+  isProcessing.value = extendTarget.value._id
+  try {
+    await MuonSachService.requestExtension(extendTarget.value._id, {
+      soNgayGiaHan: Number(extendDays.value),
+      lyDo: extendReason.value.trim()
+    })
+    alert('Đã gửi yêu cầu gia hạn sách thành công! Vui lòng chờ thủ thư phê duyệt.')
+    extendModalInst?.hide()
+    await fetchHistory()
+  } catch (error) {
+    alert(error.response?.data?.message || 'Không thể gửi yêu cầu gia hạn')
+  } finally {
+    isProcessing.value = null
+  }
+}
+
 const cancelRequest = async (record) => {
   if (!confirm(`Bạn có chắc chắn muốn hủy phiếu mượn cuốn sách "${record.TenSach}"?`)) return
   isProcessing.value = record._id
@@ -285,15 +451,22 @@ const cancelRequest = async (record) => {
 }
 
 // =================== ACTION DROPDOWN (USER) ===================
-const getUserActionOptions = (trangThai) => {
+const getUserActionOptions = (record) => {
+  const trangThai = record?.trangThai
   switch (trangThai) {
     case 'chờ duyệt':
       return [
         { value: 'edit',   label: 'Sửa số lượng' },
         { value: 'cancel', label: 'Hủy yêu cầu' },
       ]
+    case 'đang mượn': {
+      const opts = [{ value: 'return', label: 'Hẹn trả sách' }]
+      if (canExtend(record)) {
+        opts.push({ value: 'extend', label: 'Xin gia hạn' })
+      }
+      return opts
+    }
     case 'đã duyệt':
-    case 'đang mượn':
     case 'quá hạn':
       return [
         { value: 'return', label: 'Hẹn trả sách' },
@@ -307,6 +480,7 @@ const getUserExecBtnClass = (action) => {
   if (action === 'edit')   return 'btn-primary text-white'
   if (action === 'cancel') return 'btn-danger text-white'
   if (action === 'return') return 'btn-warning text-dark'
+  if (action === 'extend') return 'btn-info text-white'
   return 'btn-secondary'
 }
 
@@ -317,13 +491,15 @@ const executeUserAction = (record) => {
   if (action === 'return') openReturnModal(record)
   else if (action === 'edit') openEditModal(record)
   else if (action === 'cancel') cancelRequest(record)
+  else if (action === 'extend') openExtendModal(record)
 }
 
 const statusClass = (value) => {
   const text = String(value || '').toLowerCase()
   if (text === 'chờ duyệt') return 'bg-warning bg-opacity-10 text-warning-emphasis'
-  if (text === 'đã duyệt') return 'bg-info bg-opacity-10 text-info-emphasis'
+  if (text === 'đã duyệt') return 'bg-success bg-opacity-10 text-success border border-success-subtle'
   if (text === 'đang mượn') return 'bg-primary bg-opacity-10 text-primary'
+  if (text === 'chờ gia hạn') return 'bg-info bg-opacity-10 text-info border border-info-subtle'
   if (text === 'đang chờ trả') return 'bg-secondary bg-opacity-10 text-secondary'
   if (text === 'đã trả') return 'bg-success bg-opacity-10 text-success'
   if (text === 'từ chối' || text === 'mat') return 'bg-danger bg-opacity-10 text-danger'
@@ -336,6 +512,7 @@ const statusIcon = (value) => {
   if (text === 'chờ duyệt') return 'fa-clock'
   if (text === 'đã duyệt') return 'fa-check-circle'
   if (text === 'đang mượn') return 'fa-book-reader'
+  if (text === 'chờ gia hạn') return 'fa-clock'
   if (text === 'đang chờ trả') return 'fa-clock'
   if (text === 'đã trả') return 'fa-check-circle'
   if (text === 'từ chối') return 'fa-times-circle'
@@ -346,6 +523,7 @@ const statusIcon = (value) => {
 onMounted(() => {
   returnModalInst = new Modal(document.getElementById('returnModal'))
   editModalInst = new Modal(document.getElementById('editModal'))
+  extendModalInst = new Modal(document.getElementById('extendModal'))
   fetchHistory()
 })
 </script>

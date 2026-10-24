@@ -142,11 +142,13 @@ const handleLogin = async () => {
 }
 
 const loginWithGoogle = () => {
-  window.location.href = 'http://localhost:3000/api/user/auth/google'
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  window.location.href = `${apiBase}/user/auth/google`
 }
 
 const loginWithFacebook = () => {
-  window.location.href = 'http://localhost:3000/api/user/auth/facebook'
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  window.location.href = `${apiBase}/user/auth/facebook`
 }
 </script>
 

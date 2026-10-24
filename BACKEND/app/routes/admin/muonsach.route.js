@@ -26,6 +26,12 @@ router.put("/:id/handover", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsac
 // PUT /api/admin/muonsach/:id/confirm-return — Confirm book return → "đã trả"
 router.put("/:id/confirm-return", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.confirmReturn);
 
+// PUT /api/admin/muonsach/:id/approve-extend — Duyệt gia hạn
+router.put("/:id/approve-extend", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.approveExtension);
+
+// PUT /api/admin/muonsach/:id/reject-extend  — Từ chối gia hạn
+router.put("/:id/reject-extend", requireRole(["Admin", "NhanVienDuyetMuon"]), muonsach.rejectExtension);
+
 // DELETE /api/admin/muonsach/:id — Delete a borrow record (Admin only)
 router.delete("/:id", requireRole(["Admin"]), muonsach.delete);
 

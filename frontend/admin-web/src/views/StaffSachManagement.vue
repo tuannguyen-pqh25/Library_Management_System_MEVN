@@ -329,8 +329,9 @@
                                   <span class="fw-semibold text-dark">{{ selectedBook.MaSach }}</span>
                               </div>
                               <div class="col-sm-6">
-                                  <small class="text-muted text-uppercase fw-bold mb-1 d-block" style="font-size: 0.7rem;">Mã NXB</small>
-                                  <span class="fw-semibold text-dark">{{ selectedBook.MaNXB }}</span>
+                                  <small class="text-muted text-uppercase fw-bold mb-1 d-block" style="font-size: 0.7rem;">Nhà Xuất Bản</small>
+                                  <div class="fw-semibold text-dark">{{ getPublisherName(selectedBook.MaNXB) }}</div>
+                                  <small v-if="selectedBook.MaNXB" class="text-muted font-monospace" style="font-size: 0.72rem;">Mã: {{ selectedBook.MaNXB }}</small>
                               </div>
                               <div class="col-sm-6">
                                   <small class="text-muted text-uppercase fw-bold mb-1 d-block" style="font-size: 0.7rem;">Năm xuất bản</small>
@@ -497,6 +498,12 @@ const retrieveBooks = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const getPublisherName = (maNXB) => {
+  if (!maNXB) return 'Chưa xác định'
+  const pub = publishers.value.find(p => p.MaNXB === maNXB || p._id === maNXB)
+  return pub ? pub.TenNXB : (selectedBook.value?.TenNXB || maNXB)
 }
 
 const viewDetails = (book) => {

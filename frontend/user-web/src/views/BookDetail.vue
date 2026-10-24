@@ -58,8 +58,8 @@
                       <div class="fw-bold text-primary fs-5">{{ book.SoQuyen || 0 }}</div>
                     </div>
                     <div class="col-6 col-sm-3">
-                      <div class="text-muted-custom small mb-1">Ngôn ngữ</div>
-                      <div class="fw-semibold text-dark">{{ book.NgonNgu || 'Tiếng Việt' }}</div>
+                      <div class="text-muted-custom small mb-1">Nhà xuất bản</div>
+                      <div class="fw-semibold text-dark text-truncate" :title="book.TenNXB">{{ book.TenNXB || book.MaNXB || 'Không rõ' }}</div>
                     </div>
                     <div class="col-6 col-sm-3">
                       <div class="text-muted-custom small mb-1">Năm xuất bản</div>
@@ -82,20 +82,22 @@
                   <div class="d-flex gap-3 flex-wrap align-items-center mt-auto pt-4 border-top">
                     <!-- Qty picker -->
                     <div class="d-flex align-items-center border rounded-pill px-3 py-1 gap-2 bg-light">
-                      <button type="button" class="btn btn-sm p-0 border-0 text-muted" @click="soLuong = Math.max(1, soLuong - 1)">
+                      <button type="button" class="btn btn-sm p-0 border-0 text-muted" @click="soLuong = Math.max(1, soLuong - 1)" :disabled="soLuong <= 1 || maxBorrow <= 0">
                         <i class="fas fa-minus"></i>
                       </button>
                       <span class="fw-bold text-dark px-2" style="min-width:24px; text-align:center;">{{ soLuong }}</span>
-                      <button type="button" class="btn btn-sm p-0 border-0 text-muted" @click="soLuong = Math.min(maxBorrow, soLuong + 1)">
+                      <button type="button" class="btn btn-sm p-0 border-0 text-muted" @click="soLuong = Math.min(maxBorrow, soLuong + 1)" :disabled="soLuong >= maxBorrow || maxBorrow <= 0">
                         <i class="fas fa-plus"></i>
                       </button>
                     </div>
-                    <span class="text-muted-custom small">quyển (tối đa {{ maxBorrow }})</span>
+                    <span class="text-muted-custom small">
+                      quyển (tối đa {{ maxBorrow }})
+                    </span>
 
                     <button
                       class="btn btn-outline-primary px-4 py-2 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2"
                       @click="addToCart"
-                      :disabled="!book.SoQuyen || book.SoQuyen <= 0"
+                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
                     >
                       <i class="fas fa-cart-plus"></i> Thêm vào giỏ
                     </button>
@@ -103,7 +105,7 @@
                       variant="primary"
                       class="px-5 py-2 rounded-pill fw-bold shadow-sm"
                       @click="openBorrowModal"
-                      :disabled="!book.SoQuyen || book.SoQuyen <= 0"
+                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
                     >
                       <i class="fas fa-hand-holding-heart me-2"></i>
                       Mượn ngay
@@ -124,6 +126,19 @@
                     <router-link to="/sach" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold">
                       <i class="fas fa-arrow-left me-2"></i> Quay lại
                     </router-link>
+                  </div>
+
+                  <!-- Quota alert message on book detail -->
+                  <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                    <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
+                    <div>Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn thêm sách mới.</div>
+                  </div>
+                  <div v-else-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.remainingQuota === 0" class="alert alert-warning py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                    <i class="fas fa-info-circle flex-shrink-0"></i>
+                    <div>Bạn đã đạt hạn mức mượn tối đa <strong>10/10</strong> quyển sách (đang giữ / chờ duyệt 10 quyển). Vui lòng trả bớt sách trước khi mượn thêm.</div>
+                  </div>
+                  <div v-else-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.totalHolding > 0" class="text-muted small mt-2">
+                    <i class="fas fa-info-circle me-1 text-primary"></i>Bạn đang giữ/chờ duyệt <strong>{{ userBorrowStats.totalHolding }}/10</strong> quyển (còn được mượn thêm tối đa <strong>{{ userBorrowStats.remainingQuota }}</strong> quyển).
                   </div>
 
                   <div v-if="message" class="alert mt-4 mb-0 py-3 rounded-4 d-flex align-items-center gap-3" :class="messageType === 'success' ? 'alert-success border-success-subtle' : 'alert-danger border-danger-subtle'" role="alert">
@@ -374,13 +389,34 @@
           </div>
         </div>
 
+        <!-- Quota info inside modal -->
+        <div v-if="isLoggedIn && userBorrowStats.loaded" class="rounded-3 p-2 px-3 mb-3 bg-light border d-flex justify-content-between align-items-center small">
+          <span><i class="fas fa-layer-group me-1 text-primary"></i>Đang giữ / chờ duyệt: <strong>{{ userBorrowStats.totalHolding }}/10</strong> quyển</span>
+          <span :class="userBorrowStats.remainingQuota > 0 && userBorrowStats.overdueCount === 0 ? 'text-success fw-bold' : 'text-danger fw-bold'">
+            <span v-if="userBorrowStats.overdueCount > 0"><i class="fas fa-exclamation-triangle me-1"></i>Có {{ userBorrowStats.overdueCount }} quyển quá hạn</span>
+            <span v-else>Còn được mượn: {{ userBorrowStats.remainingQuota }} quyển</span>
+          </span>
+        </div>
+
+        <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 small mb-3 rounded-3">
+          <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!
+        </div>
+        <div v-else-if="isLoggedIn && userBorrowStats.loaded && soLuong > userBorrowStats.remainingQuota" class="alert alert-danger py-2 small mb-3 rounded-3">
+          <i class="fas fa-exclamation-circle me-1"></i> Bạn chỉ còn được mượn tối đa <strong>{{ userBorrowStats.remainingQuota }}</strong> quyển sách!
+        </div>
+
         <div v-if="modalError" class="alert alert-danger py-2 small mb-3 rounded-3">
           <i class="fas fa-exclamation-circle me-1"></i> {{ modalError }}
         </div>
 
         <div class="d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-outline-secondary rounded-pill px-4" @click="showModal = false">Huỷ</button>
-          <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" @click="confirmBorrow" :disabled="loading">
+          <button
+            type="button"
+            class="btn btn-primary rounded-pill px-4 fw-bold"
+            @click="confirmBorrow"
+            :disabled="loading || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0 || soLuong > userBorrowStats.remainingQuota))"
+          >
             <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
             <i v-else class="fas fa-paper-plane me-2"></i>
             {{ loading ? 'Đang gửi...' : 'Xác nhận mượn' }}
@@ -444,10 +480,49 @@ const conditions = [
 const showModal = ref(false)
 const modalError = ref('')
 
+// ---- User Borrow Quota Stats ----
+const userBorrowStats = ref({
+  totalHolding: 0,
+  overdueCount: 0,
+  remainingQuota: 10,
+  loaded: false
+})
+
 const maxBorrow = computed(() => {
   if (!book.value?.SoQuyen) return 1
+  if (isLoggedIn.value && userBorrowStats.value.loaded) {
+    if (userBorrowStats.value.overdueCount > 0) return 0
+    return Math.max(0, Math.min(book.value.SoQuyen, userBorrowStats.value.remainingQuota))
+  }
   return Math.min(10, book.value.SoQuyen)
 })
+
+const fetchUserBorrowQuota = async () => {
+  if (!isLoggedIn.value) return
+  try {
+    const res = await MuonSachService.getHistory()
+    const records = res.data || []
+    const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
+    const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
+    const totalHolding = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    const remainingQuota = Math.max(0, 10 - totalHolding)
+    userBorrowStats.value = {
+      totalHolding,
+      overdueCount,
+      remainingQuota,
+      loaded: true
+    }
+    // Adjust soLuong if needed
+    if (userBorrowStats.value.remainingQuota === 0 || overdueCount > 0) {
+      soLuong.value = 1
+    } else if (soLuong.value > userBorrowStats.value.remainingQuota) {
+      soLuong.value = Math.max(1, userBorrowStats.value.remainingQuota)
+    }
+  } catch (err) {
+    console.error('Error fetching user borrow stats:', err)
+  }
+}
 
 const todayStr = computed(() => new Date().toISOString().split('T')[0])
 const defaultReturnDate = computed(() => {
@@ -487,6 +562,16 @@ const fetchBook = async () => {
 // ---- Cart ----
 const addToCart = () => {
   if (!isLoggedIn.value) { router.push('/login'); return }
+  if (userBorrowStats.value.loaded && userBorrowStats.value.overdueCount > 0) {
+    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn. Vui lòng trả sách trước khi mượn thêm.`
+    messageType.value = 'danger'
+    return
+  }
+  if (userBorrowStats.value.loaded && userBorrowStats.value.remainingQuota <= 0) {
+    message.value = 'Bạn đã đạt giới hạn mượn 10 quyển sách. Không thể thêm vào giỏ.'
+    messageType.value = 'danger'
+    return
+  }
   if (CartService.addToCart(book.value)) {
     message.value = 'Đã thêm sách vào giỏ mượn!'
     messageType.value = 'success'
@@ -580,8 +665,22 @@ const deleteMyReview = async () => {
 }
 
 // ---- Borrow modal ----
-const openBorrowModal = () => {
+const openBorrowModal = async () => {
   if (!localStorage.getItem('token')) { router.push('/login'); return }
+  await fetchUserBorrowQuota()
+  if (userBorrowStats.value.overdueCount > 0) {
+    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!`
+    messageType.value = 'danger'
+    return
+  }
+  if (userBorrowStats.value.remainingQuota <= 0) {
+    message.value = 'Bạn đã đạt giới hạn mượn tối đa 10 quyển sách. Vui lòng trả bớt sách trước khi mượn thêm!'
+    messageType.value = 'danger'
+    return
+  }
+  if (soLuong.value > userBorrowStats.value.remainingQuota) {
+    soLuong.value = Math.max(1, userBorrowStats.value.remainingQuota)
+  }
   ngayMuon.value = todayStr.value
   ngayTra.value = defaultReturnDate.value
   modalError.value = ''
@@ -592,12 +691,21 @@ const confirmBorrow = async () => {
   modalError.value = ''
   if (!ngayMuon.value || !ngayTra.value) { modalError.value = 'Vui lòng chọn ngày mượn và ngày trả.'; return }
   if (new Date(ngayTra.value) <= new Date(ngayMuon.value)) { modalError.value = 'Ngày trả phải sau ngày mượn ít nhất 1 ngày.'; return }
+  if (userBorrowStats.value.overdueCount > 0) {
+    modalError.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách trước!`
+    return
+  }
+  if (soLuong.value > userBorrowStats.value.remainingQuota) {
+    modalError.value = `Bạn chỉ có thể mượn thêm tối đa ${userBorrowStats.value.remainingQuota} quyển sách.`
+    return
+  }
   loading.value = true
   try {
     await MuonSachService.create({ sachId: props.id, soLuong: soLuong.value, ngayMuon: ngayMuon.value, ngayTra: ngayTra.value })
     showModal.value = false
     message.value = `Yêu cầu mượn ${soLuong.value} quyển đã được gửi thành công. Vui lòng chờ thủ thư duyệt.`
     messageType.value = 'success'
+    await fetchUserBorrowQuota()
   } catch (err) {
     modalError.value = err?.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.'
   } finally {
@@ -610,6 +718,7 @@ onMounted(async () => {
   checkWishlist()
   loadReviews()
   loadMyReview()
+  fetchUserBorrowQuota()
 })
 </script>
 
