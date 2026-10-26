@@ -30,7 +30,7 @@ The system addresses the operational bottlenecks of traditional physical library
 
 ### Architecture Highlights
 - **Dual Decoupled Frontends**:
-  - `user-web` (Client portal, Port 5173 / Prod Port 80): Catalog browsing, voice search, Google/Facebook OAuth2, reservation booking, book extension, and notification center.
+  - `user-web` (Client portal, Port 5173 / Prod Port 80): Catalog browsing, voice search, Google OAuth 2.0, reservation booking, book extension, and notification center.
   - `admin-web` (Management portal, Port 5174 / Prod Port 8080): Complete administrative surface isolated from the public client bundle. Role-based dashboards, inventory lifecycle, loan approvals, reader moderation, and staff delegation.
 - **Unified RESTful API Gateway** (`BACKEND`, Port 3000):
   - Layered routing architecture with strict middleware enforcement (`/api/user/*` and `/api/admin/*`).
@@ -105,7 +105,7 @@ The system addresses the operational bottlenecks of traditional physical library
 - Web Speech API integration in the user search bar. Instant speech-to-text processing with dynamic visual pulse animation, automatically triggering debounced catalog queries.
 
 ### 🔐 8. Social OAuth 2.0 & Tiered RBAC Security
-- **OAuth 2.0 (Google & Facebook)**: Social login bridge linking external identity with internal `DOCGIA` records without passwords, auto-issuing scoped JWTs (`aud: "user"`). Includes a Mock OAuth provider for offline development and testing.
+- **OAuth 2.0 (Google)**: Social login bridge linking external identity with internal `DOCGIA` records without passwords, auto-issuing scoped JWTs (`aud: "user"`). Includes a Mock OAuth provider for offline development and testing.
 - **Three-Tier RBAC**:
   - `Admin`: Full permissions, staff delegation, reader suspension, audit reports.
   - `NhanVienQuanLySach`: Catalog inventory and publishing house management.
@@ -120,7 +120,7 @@ The system addresses the operational bottlenecks of traditional physical library
 | **Frontend Clients** | Vue 3 (Composition API, `<script setup>`), Vite 5, Vue Router 4, Pinia, Axios, Bootstrap 5.3, FontAwesome 6, Chart.js, VeeValidate 4 + Yup |
 | **Backend API** | Node.js (v20+), Express.js 4, Native MongoDB Driver (v6), Bcrypt.js, JsonWebToken, Passport.js, Morgan, Cors |
 | **Databases & Cache** | MongoDB (Document Store), Redis (In-Memory Key-Value Store) |
-| **AI & External APIs** | Google Gemini Generative AI SDK, Web Speech API (W3C Standard), Google OAuth 2.0, Meta Facebook Graph API |
+| **AI & External APIs** | Google Gemini Generative AI SDK, Web Speech API (W3C Standard), Google OAuth 2.0 |
 | **DevOps & Production** | NGINX (Reverse Proxy, Gzip, History Mode), PM2 (Process Supervisor) |
 
 ---
@@ -278,7 +278,7 @@ Dự án **Quản Lý Đăng Ký Mượn Trả Sách Trực Tuyến (Library Man
    - Tự động xoay vòng danh sách API Key dự phòng khi hết Quota (HTTP 429).
 8. **Khắc Phục Triệt Để Lỗi Nhảy Lại Badge Chuông Thông Báo (Deterministic ID)**:
    - Chuẩn hóa mã thông báo thành chuỗi bất biến không chứa timestamp biến đổi (`${item._id}_approved`), giải quyết dứt điểm lỗi F5 tải lại trang làm badge nhảy số lại.
-9. **Đăng Nhập Ủy Quyền Mạng Xã Hội OAuth 2.0 (Google & Facebook)**:
+9. **Đăng Nhập Ủy Quyền Mạng Xã Hội OAuth 2.0 (Google)**:
    - Tích hợp Passport.js, tự động ánh xạ email, tự sinh mã độc giả và cấp phát JWT nội bộ an toàn. Cung cấp chế độ Mock OAuth phục vụ việc kiểm thử phát triển offline.
 10. **Kiến Trúc Triển Khai Production NGINX + PM2**:
     - Phân tách cổng truy cập: User Web (Cổng 80), Admin Web (Cổng 8080).

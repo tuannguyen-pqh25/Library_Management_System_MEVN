@@ -47,8 +47,10 @@ MỤC LỤC
 CHƯƠNG I: TỔNG QUAN ĐỀ TÀI
 1. Đặt vấn đề và lý do chọn đề tài
 2. Mục tiêu nghiên cứu của đề tài
-3. Đối tượng và phạm vi ứng dụng
-4. Phương pháp tiếp cận và công nghệ sử dụng
+3. Đối tượng và phạm vi nghiên cứu
+4. Phương pháp nghiên cứu
+5. Các chức năng chính của hệ thống
+6. Bố cục của bài báo cáo
 
 CHƯƠNG II: ĐẶC TẢ YÊU CẦU HỆ THỐNG
 1. Mô tả bài toán nghiệp vụ thư viện thực tế
@@ -67,10 +69,19 @@ CHƯƠNG II: ĐẶC TẢ YÊU CẦU HỆ THỐNG
 
 CHƯƠNG III: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
 1. Phân tích chức năng và Sơ đồ Use Case
-   1.1. Danh sách các tác nhân hệ thống
-   1.2. Bảng đặc tả chi tiết các Use Case
-   1.3. Sơ đồ Use Case tổng quát
-   1.4. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML
+   1.1. Sơ đồ Use Case tổng quát
+        1.1.1. Đặc tả chức năng sơ đồ use case tổng quát
+        1.1.2. Hướng dẫn chi tiết cách vẽ Sơ đồ Use Case tổng quát trên StarUML (Kéo mũi tên từ đâu sang đâu)
+   1.2. Danh sách các tác nhân hệ thống (Actors)
+   1.3. Đặc tả chi tiết các Use Case nghiệp vụ cốt lõi
+        1.3.1. Đặc tả Use Case Đăng ký tài khoản (UC01)
+        1.3.2. Đặc tả Use Case Đăng nhập hệ thống (UC02)
+        1.3.3. Đặc tả Use Case Đăng ký mượn sách (UC07)
+        1.3.4. Đặc tả Use Case Kiểm duyệt phiếu mượn sách (UC15)
+        1.3.5. Đặc tả Use Case Xin gia hạn mượn sách (UC10)
+        1.3.6. Đặc tả Use Case Xác nhận trả sách và Xử lý quá hạn (UC17, UC18)
+   1.4. Sơ đồ Use Case tổng quát và cấu trúc các sơ đồ phân rã
+   1.5. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML trên máy tính
 2. Phân tích và Thiết kế Cơ sở dữ liệu
    2.1. Mô hình dữ liệu và Chiến lược Hybrid Identifier
    2.2. Sơ đồ Thực thể - Mối quan hệ (ERD)
@@ -139,8 +150,15 @@ Hình 18: Tốc độ phản hồi API đạt 1-2ms khi trúng Redis Cache trên
 DANH MỤC BẢNG
 ================================================================================
 
-Bảng 1: Danh sách các Tác nhân (Actors) trong hệ thống
-Bảng 2: Danh sách và mô tả các Use Case chính
+Bảng 1: Mô tả chức năng của sơ đồ use case tổng quát
+Bảng 1.1: Hướng dẫn chi tiết thao tác kéo nối các đường liên kết trong Sơ đồ Use Case
+Bảng 1.2: Danh sách các Tác nhân (Actors) trong hệ thống
+Bảng 2.1: Đặc tả chi tiết Use Case Đăng ký tài khoản
+Bảng 2.2: Đặc tả chi tiết Use Case Đăng nhập hệ thống
+Bảng 2.3: Đặc tả chi tiết Use Case Đăng ký mượn sách
+Bảng 2.4: Đặc tả chi tiết Use Case Kiểm duyệt phiếu mượn sách
+Bảng 2.5: Đặc tả chi tiết Use Case Xin gia hạn mượn sách
+Bảng 2.6: Đặc tả chi tiết Use Case Xác nhận trả sách và Xử lý quá hạn
 Bảng 3: Cấu trúc bộ sưu tập DOCGIA (Độc giả)
 Bảng 4: Cấu trúc bộ sưu tập NHANVIEN (Nhân viên)
 Bảng 5: Cấu trúc bộ sưu tập SACH (Sách)
@@ -163,28 +181,86 @@ Tuy nhiên, phương thức quản lý thư viện truyền thống bằng sổ 
 - Đối với thủ thư: Quy trình lập phiếu mượn tay, ghi sổ theo dõi, ký nhận trả sách diễn ra chậm chạp, dễ xảy ra sai sót số liệu. Công tác kiểm kê kho sách và thống kê độc giả mượn sách quá hạn gặp vô vàn khó khăn, đòi hỏi phải lật lại từng tập hồ sơ giấy tờ cồng kềnh.
 - Về công tác quản trị: Lãnh đạo thư viện không thể nắm bắt tức thời bức tranh tổng thể về tình hình luân chuyển sách, đầu sách nào đang được quan tâm nhiều nhất, hoặc tỷ lệ sách trễ hạn để đưa ra các quyết định bổ sung ngân sách mua sách mới kịp thời.
 
-Từ những đòi hỏi cấp thiết của thực tế, đề tài "Xây dựng website quản lý đăng ký mượn trả sách trực tuyến" được em lựa chọn thực hiện. Đề tài hướng tới việc xây dựng một hệ thống hiện đại dựa trên nền tảng web, số hóa toàn diện quy trình đăng ký mượn sách, tự động hóa khâu kiểm soát tồn kho, phê duyệt gia hạn và theo dõi quá hạn, đồng thời ứng dụng các công nghệ tiên tiến như Trí tuệ nhân tạo (AI Chatbot, Voice Search) và Bộ đệm hiệu năng cao (Redis Caching) để nâng tầm trải nghiệm của người dùng.
+Từ những đòi hỏi cấp thiết của thực tế, đề tài "Xây dựng website quản lý đăng ký mượn trả sách trực tuyến" được lựa chọn thực hiện. Đề tài hướng tới việc xây dựng một hệ thống hiện đại dựa trên nền tảng web, số hóa toàn diện quy trình đăng ký mượn sách, tự động hóa khâu kiểm soát tồn kho, phê duyệt gia hạn và theo dõi quá hạn, đồng thời ứng dụng các công nghệ tiên tiến như Trí tuệ nhân tạo (Gemini AI Chatbot, Voice Search AI) và Bộ đệm hiệu năng cao (Redis Caching) để nâng tầm trải nghiệm của người dùng.
 
 2. Mục tiêu nghiên cứu của đề tài
 
-Đề tài tập trung vào việc giải quyết trọn vẹn các mục tiêu trọng tâm sau:
-- Xây dựng một ứng dụng web hoàn chỉnh theo kiến trúc MEVN Stack (MongoDB, Express.js, Vue 3, Node.js) đạt chuẩn công nghiệp, vận hành ổn định và bảo mật cao.
-- Thiết kế cơ sở dữ liệu NoSQL tối ưu, bảo toàn 100% cấu trúc lược đồ nguyên bản của Giảng viên đồng thời mở rộng linh hoạt các trường dữ liệu phục vụ giao diện hiện đại.
-- Hiện thực hóa quy trình mượn - gia hạn - trả sách thông minh: Giải quyết dứt điểm bài toán Overbooking (chống tranh chấp tài nguyên kho sách), kiểm soát chặt chẽ hạn mức mượn tối đa 10 quyển/độc giả, áp dụng quy tắc gia hạn mượn sách có kiểm soát trước hạn trả 3 ngày và tự động phát hiện sách quá hạn bằng cơ chế Lazy-check.
-- Phân chia kiến trúc rõ ràng giữa hai không gian trải nghiệm: Cổng Độc giả (User Web) và Cổng Quản trị (Admin Web) độc lập về mã nguồn nhưng dùng chung một Backend API duy nhất, kết hợp phân quyền ba cấp độ (RBAC).
-- Đóng gói và triển khai ứng dụng thực tế theo đúng yêu cầu học phần bằng máy chủ web NGINX làm Reverse Proxy và công cụ quản lý tiến trình PM2.
+2.1. Mục tiêu tổng quát
+Nghiên cứu, phân tích, thiết kế và triển khai hoàn chỉnh một hệ thống thông tin quản lý mượn trả sách trực tuyến theo mô hình kiến trúc ứng dụng web phân tán hiện đại MEVN Stack (MongoDB, Express.js, Vue 3, Node.js), đáp ứng các tiêu chuẩn kỹ thuật công nghệ phần mềm và hỗ trợ vận hành tối ưu trong môi trường thực tiễn.
 
-3. Đối tượng và phạm vi ứng dụng
+2.2. Mục tiêu cụ thể
+- Thiết kế cơ sở dữ liệu NoSQL tối ưu: Sử dụng hệ quản trị MongoDB, bảo toàn 100% cấu trúc lược đồ nguyên bản của Giảng viên đồng thời mở rộng linh hoạt các trường dữ liệu phục vụ giao diện hiện đại; thiết lập hệ thống 17 chỉ mục (Indexes) duy nhất và chỉ mục kết hợp để đảm bảo tính toàn vẹn dữ liệu và tối đa hóa tốc độ truy vấn.
+- Hiện thực hóa quy trình mượn - gia hạn - trả sách thông minh: Giải quyết dứt điểm bài toán Overbooking (chống tranh chấp tài nguyên kho sách bằng thao tác trừ tồn kho nguyên tử tại thời điểm duyệt), kiểm soát chặt chẽ hạn mức mượn tối đa 10 quyển/độc giả, áp dụng quy tắc gia hạn mượn sách có kiểm soát trước hạn trả ít nhất 3 ngày và tự động phát hiện sách quá hạn bằng cơ chế Lazy-check.
+- Kiến trúc phân tách hai không gian trải nghiệm: Xây dựng Cổng Độc giả (User Web) và Cổng Quản trị (Admin Web) hoàn toàn độc lập về mã nguồn và giao diện, nhưng giao tiếp đồng bộ qua một hệ thống Backend API duy nhất theo chuẩn RESTful, kết hợp cơ chế kiểm soát truy cập dựa trên vai trò ba cấp độ (RBAC: Admin, Nhân viên Quản lý sách, Nhân viên Duyệt mượn).
+- Tích hợp các công nghệ mở rộng hiện đại: Ứng dụng Redis In-memory Caching tăng tốc độ truy xuất danh mục sách và báo cáo thống kê; tích hợp Trí tuệ nhân tạo thế hệ mới (Gemini AI Chatbot) với kiến trúc tự phục hồi 3 lớp (Resilience) để tư vấn tìm sách; tích hợp nhận diện giọng nói (Web Speech API) tìm kiếm sách rảnh tay; và cơ chế xác thực ủy quyền một chạm Google OAuth 2.0.
+- Triển khai và đóng gói ứng dụng Production: Cấu hình triển khai hệ thống hoàn chỉnh theo đúng chuẩn giáo trình bằng máy chủ NGINX làm Reverse Proxy phục vụ tĩnh và cân bằng tải, kết hợp công cụ quản lý tiến trình PM2 duy trì tính sẵn sàng liên tục của dịch vụ.
 
-- Đối tượng nghiên cứu: Quy trình quản lý luân chuyển tài liệu trong thư viện; kiến trúc hệ thống web phân tán; kỹ thuật xử lý bất đồng bộ trong Node.js; cơ chế lập chỉ mục trong MongoDB; công nghệ Vue 3 Single Page Application và kỹ thuật Caching in-memory.
-- Phạm vi ứng dụng: Hệ thống được xây dựng để phục vụ cho các thư viện trường học, thư viện công cộng hoặc các trung tâm học liệu có quy mô vừa và lớn.
+3. Đối tượng và phạm vi nghiên cứu
 
-4. Phương pháp tiếp cận và công nghệ sử dụng
+3.1. Đối tượng nghiên cứu
+- Cơ sở lý thuyết và nghiệp vụ chuyên môn: Các quy trình, quy tắc nghiệp vụ quản lý luân chuyển tài liệu, quy định mượn - gia hạn - thu hồi sách và xử lý vi phạm trễ hạn trong thư viện.
+- Kiến trúc hệ thống và công nghệ phần mềm: Mô hình kiến trúc phân lớp hướng dịch vụ RESTful API; kỹ thuật lập trình bất đồng bộ (Non-blocking I/O) và Event-driven trong Node.js/Express.js; kiến trúc ứng dụng đơn trang Single Page Application (SPA) với Vue 3 Composition API; hệ thống quản lý trạng thái và định tuyến máy khách (Vue Router, Pinia).
+- Công nghệ cơ sở dữ liệu NoSQL: Hệ quản trị MongoDB, kỹ thuật truy vấn dữ liệu mức thấp với Native MongoDB Driver, cơ chế thao tác nguyên tử (Atomic Operations) và chiến lược tối ưu hóa chỉ mục (Indexing Strategy).
+- Kỹ thuật nâng cao và bảo mật: Cơ chế lưu trữ bộ đệm trong bộ nhớ chính (In-memory Caching với Redis); chuẩn an toàn thông tin JSON Web Token (JWT) và giao thức xác thực ủy quyền bên thứ ba Google OAuth 2.0; công nghệ trí tuệ nhân tạo (Large Language Models API, Function Calling) và Web Speech API.
 
-Đề tài áp dụng phương pháp nghiên cứu kết hợp giữa lý thuyết phân tích thiết kế hệ thống thông tin hướng đối tượng (OOAD) và thực nghiệm phát triển phần mềm theo mô hình thác nước kết hợp lặp linh hoạt:
-- Tự tay lập trình toàn bộ tầng dịch vụ cơ sở dữ liệu bằng Native MongoDB Driver để hiểu sâu sắc cơ chế thao tác BSON và tối ưu hóa câu lệnh Aggregation Pipeline thay vì phụ thuộc vào thư viện bao bọc Mongoose.
-- Xây dựng giao diện đơn trang (Single Page Application - SPA) dựa trên Vue 3 Composition API kết hợp thư viện giao diện Bootstrap 5, cam kết không sử dụng Tailwind CSS để giữ toàn quyền kiểm soát mã CSS tùy biến.
-- Ứng dụng các giao thức và tiêu chuẩn bảo mật hiện đại: JWT (JSON Web Token), Bcrypt mã hóa mật khẩu, OAuth 2.0 xác thực ủy quyền với Google và Facebook.
+3.2. Phạm vi nghiên cứu và ứng dụng
+- Về phạm vi không gian: Hệ thống được thiết kế hướng tới việc triển khai ứng dụng thực tế tại các thư viện trường học, thư viện đại học, viện nghiên cứu hoặc các trung tâm học liệu số có quy mô vừa và lớn.
+- Về phạm vi nghiệp vụ: Tập trung giải quyết toàn diện các khâu: quản lý danh mục tài liệu và nhà xuất bản, quản lý hồ sơ độc giả và nhân viên, xử lý vòng đời phiếu mượn sách trực tuyến (từ đăng ký, thẩm định, phê duyệt, trừ kho, gia hạn, trả sách đến phạt quá hạn) và tổng hợp báo cáo thống kê. Hệ thống không đi sâu vào nghiệp vụ mua sắm thanh lý tài sản cố định hoặc thanh toán tiền phạt trực tuyến qua cổng ngân hàng.
+- Về phạm vi công nghệ: Toàn bộ hệ thống được xây dựng thuần túy trên nền tảng ngăn xếp công nghệ MEVN Stack mã nguồn mở, không sử dụng các dịch vụ đám mây trả phí phụ thuộc để đảm bảo tính tự chủ và khả năng triển khai linh hoạt trên hạ tầng máy chủ nội bộ.
+
+4. Phương pháp nghiên cứu
+
+Để thực hiện thành công đề tài, phương pháp nghiên cứu kết hợp chặt chẽ giữa nghiên cứu lý thuyết, phân tích thiết kế hệ thống và thực nghiệm phát triển phần mềm:
+- Phương pháp nghiên cứu tài liệu lý thuyết:
+  + Thu thập, đọc hiểu và tổng hợp các tài liệu học thuật, giáo trình chuyên ngành phát triển ứng dụng web, sách chuyên khảo về kiến trúc cơ sở dữ liệu NoSQL MongoDB và tài liệu đặc tả chính thức của Node.js, Vue 3, Redis và Google AI.
+  + Khảo sát thực tế các mô hình quản lý thư viện hiện đại để đúc kết bộ quy tắc nghiệp vụ chặt chẽ, tối ưu và thực tiễn.
+- Phương pháp phân tích và thiết kế hệ thống:
+  + Áp dụng phương pháp phân tích thiết kế hướng đối tượng (Object-Oriented Analysis and Design - OOAD).
+  + Sử dụng ngôn ngữ mô hình hóa thống nhất (UML) thông qua công cụ chuyên dụng StarUML để xây dựng Sơ đồ Use Case tổng quát, các sơ đồ phân rã Use Case chi tiết và Sơ đồ Thực thể - Mối quan hệ (ERD).
+  + Đặc tả chi tiết các ca sử dụng theo biểu mẫu chuẩn công nghệ phần mềm, xác định rõ ràng luồng sự kiện chính, các luồng phụ và các điều kiện tiền đề/hậu đề.
+- Phương pháp thực nghiệm và phát triển phần mềm:
+  + Áp dụng mô hình phát triển phần mềm linh hoạt (Agile/Iterative): Phát triển hệ thống qua 11 giai đoạn kế tiếp nhau, kiểm thử liên tục từng module trước khi tích hợp toàn diện.
+  + Tự tay lập trình toàn bộ tầng dịch vụ truy xuất cơ sở dữ liệu bằng Native MongoDB Driver thay vì phụ thuộc vào ODM Mongoose nhằm kiểm soát tuyệt đối hiệu năng và hành vi thao tác BSON.
+  + Xây dựng giao diện đơn trang SPA chuẩn hóa với Vue 3 Composition API kết hợp thư viện Bootstrap 5, tuân thủ nguyên tắc không sử dụng Tailwind CSS để nắm giữ toàn quyền kiểm soát mã nguồn CSS.
+  + Kiểm thử chức năng toàn diện (End-to-End Testing): Kiểm thử tính đúng đắn của logic trừ/cộng tồn kho, kiểm tra tải đồng thời và xác minh tính chịu lỗi của các dịch vụ ngoại vi.
+
+5. Các chức năng chính của hệ thống
+
+Hệ thống được tổ chức thành hai phân hệ độc lập, phục vụ hai nhóm đối tượng người dùng với các chức năng trọng tâm:
+
+5.1. Phân hệ dành cho Ban Quản trị và Thủ thư (Admin Web)
+- Quản lý kho sách và danh mục tài liệu: Cung cấp đầy đủ các thao tác Thêm mới, Hiệu chỉnh, Xóa bỏ thông tin sách; tìm kiếm đa tiêu chí, phân loại theo thể loại; tải lên và cập nhật hình ảnh bìa sách; kiểm soát chính xác số lượng sách tổng và số lượng sách còn lại trong kho.
+- Quản lý Nhà xuất bản: Thêm, sửa, xóa thông tin các đơn vị xuất bản đối tác; tự động liên kết và hiển thị trực quan Tên Nhà Xuất Bản thay vì chỉ lưu mã số kỹ thuật.
+- Quản lý quy trình mượn - trả sách (Nghiệp vụ cốt lõi):
+  + Tiếp nhận và kiểm duyệt danh sách yêu cầu mượn sách trực tuyến gửi từ độc giả.
+  + Phê duyệt phiếu mượn: Tự động đối chiếu tồn kho và thực hiện phép trừ tồn kho nguyên tử (Atomic Decrement), bảo vệ hệ thống tuyệt đối khỏi tình trạng Overbooking.
+  + Thẩm định và phê duyệt/từ chối yêu cầu gia hạn mượn sách của độc giả theo đúng quy tắc trước hạn 3 ngày.
+  + Xác nhận thu hồi sách vật lý tại quầy: Thực hiện phép hoàn trả tồn kho nguyên tử (Atomic Increment) và tự động tính tiền phạt trễ hạn (5.000 VNĐ/ngày) nếu độc giả trả quá hạn.
+- Quản lý người dùng và Phân quyền RBAC 3 cấp độ:
+  + Quản lý tài khoản độc giả: Xem danh sách thành viên, tra cứu lịch sử mượn trả, thực hiện khóa hoặc mở khóa tài khoản vi phạm.
+  + Quản lý nhân viên nội bộ: Phân cấp quyền hạn chặt chẽ theo 3 vai trò: Quản trị viên tối cao (Admin), Nhân viên Quản lý sách (NhanVienQuanLySach), và Nhân viên Duyệt mượn sách (NhanVienDuyetMuon).
+- Báo cáo và Thống kê trực quan: Cung cấp bảng điều khiển Dashboard cập nhật theo thời gian thực các chỉ số KPI: Tổng số sách, Sách đang mượn, Sách quá hạn, Độc giả đang hoạt động; biểu đồ tròn tỷ lệ mượn/trả và biểu đồ cột thống kê xu hướng sử dụng thư viện được vẽ trực quan bằng thư viện Chart.js.
+
+5.2. Phân hệ dành cho Bạn đọc (User Web)
+- Xác thực và Quản lý tài khoản cá nhân: Hỗ trợ Đăng ký tài khoản mới bằng Email/Mật khẩu; Đăng nhập truyền thống với cơ chế xác thực an toàn Bcrypt/JWT; và Đăng nhập một chạm thông qua tài khoản Google OAuth 2.0.
+- Tra cứu và Tìm kiếm sách đa phương thức:
+  + Khám phá kho tài liệu phong phú với hiệu ứng khung xương tải trang (Skeleton Loading), lọc theo thể loại và phân trang mượt mà.
+  + Tìm kiếm văn bản tức thời theo tên sách, tác giả, nhà xuất bản.
+  + Tìm kiếm rảnh tay bằng Giọng nói (Voice Search AI): Ứng dụng API Web Speech nhận diện giọng nói tiếng Việt và tự động thực hiện truy vấn mà không cần gõ bàn phím.
+- Trợ lý ảo thông minh (Gemini AI Chatbot): Tư vấn tìm sách theo chủ đề, giải đáp quy định mượn trả và kiểm tra tình trạng tài khoản bằng ngôn ngữ tự nhiên tiếng Việt với kiến trúc tự phục hồi đa tầng (Resilience Architecture).
+- Đăng ký mượn sách trực tuyến: Cho phép độc giả chọn sách, số lượng mong muốn, ngày dự kiến đến lấy và ngày hẹn trả; hệ thống tự động kiểm soát hạn mức nghiêm ngặt không vượt quá 10 quyển/độc giả.
+- Quản lý lịch sử mượn và Xin gia hạn sách: Theo dõi chi tiết tiến trình từng phiếu mượn (Chờ duyệt, Đang mượn, Đang gia hạn, Đã trả, Quá hạn); chủ động gửi yêu cầu xin gia hạn mượn thêm thời gian (trước hạn 3 ngày, tối đa 2 lần).
+- Chuông thông báo thông minh (In-App Notification Bell): Nhận thông báo tức thời ngay trên thanh điều hướng khi phiếu mượn được duyệt, sách sắp đến hạn trả hoặc sách đã bị quá hạn; ứng dụng thuật toán Deterministic Notification ID giải quyết triệt để lỗi nhảy lại số lượng thông báo khi tải lại trang (F5).
+
+6. Bố cục của bài báo cáo
+
+Nội dung của bài báo cáo niên luận được kết cấu một cách khoa học, logic và chặt chẽ gồm 6 chương chính như sau:
+- Chương I: Tổng quan đề tài: Trình bày lý do chọn đề tài và tính cấp thiết; xác định mục tiêu nghiên cứu tổng quát và cụ thể; định hình đối tượng và phạm vi nghiên cứu; trình bày phương pháp tiếp cận và công nghệ sử dụng; tóm tắt các chức năng chính của hệ thống và giới thiệu tổng thể bố cục toàn văn báo cáo.
+- Chương II: Đặc tả yêu cầu hệ thống: Khảo sát chi tiết bài toán quản lý thư viện thực tế; xây dựng danh mục yêu cầu chức năng cho từng phân hệ; phân tích các yêu cầu phi chức năng về hiệu năng, bảo mật và giao diện; giới thiệu tổng quan các ngôn ngữ lập trình (JavaScript, HTML5, CSS3) và các công cụ, nền tảng công nghệ liên quan được ứng dụng trong quá trình phát triển (Node.js, Express.js, MongoDB Native Driver, Vue 3, Bootstrap 5, Redis, NGINX, PM2, StarUML, VS Code, Postman).
+- Chương III: Phân tích và thiết kế hệ thống: Trình bày Sơ đồ Use Case tổng quát và cấu trúc các sơ đồ phân rã; xây dựng Bảng mô tả chức năng của sơ đồ Use Case tổng quát; hướng dẫn chi tiết thao tác kéo nối các đường liên kết trên phần mềm StarUML; lập 6 bảng đặc tả chi tiết cho các ca sử dụng cốt lõi; phân tích mô hình cơ sở dữ liệu với Chiến lược Hybrid Identifier, Sơ đồ Thực thể - Mối quan hệ (ERD), cấu trúc 5 bộ sưu tập dữ liệu (Collections) và thiết lập 17 chỉ mục (Indexes) tối ưu hóa hiệu năng truy vấn.
+- Chương IV: Thiết kế giao diện và các tính năng nổi bật: Minh họa hệ thống giao diện trực quan của Cổng Độc giả và Cổng Quản trị; phân tích các giải pháp kỹ thuật nâng cao bao gồm cơ chế khóa trừ tồn kho nguyên tử chống Overbooking, kỹ thuật tăng tốc truy xuất với Redis Caching, kiến trúc Trí tuệ nhân tạo Gemini AI Chatbot tự phục hồi, Tìm kiếm bằng giọng nói Voice Search AI, Đăng nhập ủy quyền Google OAuth 2.0 và Chuông thông báo bất biến.
+- Chương V: Triển khai và vận hành hệ thống: Trình bày mô hình kiến trúc triển khai Production chuẩn On-Premise/VPS; thiết lập cấu hình máy chủ Web NGINX Reverse Proxy giải quyết bài toán Vue Router History Mode và nén Gzip; quản lý tiến trình máy chủ Backend Node.js với công cụ PM2 duy trì tính sẵn sàng 24/7; và kiểm nghiệm thực tế hiệu năng tăng tốc độ truy xuất đạt 1-2ms với bộ đệm Redis In-memory.
+- Chương VI: Kết luận và hướng phát triển: Tổng kết và đánh giá các kết quả đạt được về mặt lý thuyết, kỹ thuật và ứng dụng thực tiễn; chỉ ra những điểm còn tồn tại, hạn chế của hệ thống; đồng thời đề xuất các định hướng nghiên cứu và giải pháp nâng cấp mở rộng hệ thống trong tương lai.
 
 
 ================================================================================
@@ -204,7 +280,7 @@ Quy trình mượn sách trực tuyến trong hệ thống được mô phỏng 
 2. Yêu cầu chức năng chi tiết
 
 2.1. Phân hệ dành cho Độc giả (User Web)
-- Đăng ký và Đăng nhập: Hỗ trợ tạo tài khoản mới bằng Email/Mật khẩu hoặc Đăng nhập một chạm thông qua tài khoản Google / Facebook (OAuth 2.0).
+- Đăng ký và Đăng nhập: Hỗ trợ tạo tài khoản mới bằng Email/Mật khẩu hoặc Đăng nhập một chạm thông qua tài khoản Google (OAuth 2.0).
 - Tra cứu danh mục sách: Xem danh sách sách với hiệu ứng khung xương tải trang (Skeleton Loading), lọc theo thể loại, tìm kiếm theo từ khóa.
 - Tìm kiếm bằng giọng nói (Voice Search AI): Tích hợp Web Speech API cho phép người dùng nói tên sách vào micro để hệ thống tự động nhận diện và lọc kết quả.
 - Trợ lý ảo thông minh (Gemini AI Chatbot): Tư vấn tìm sách, giải đáp quy định mượn trả và kiểm tra thông tin tài khoản bằng ngôn ngữ tự nhiên tiếng Việt.
@@ -269,9 +345,81 @@ CHƯƠNG III: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
 
 1. Phân tích chức năng và Sơ đồ Use Case
 
-1.1. Danh sách các tác nhân hệ thống (Actors)
+1.1. Sơ đồ Use Case tổng quát
 
-Bảng 1: Danh sách các Tác nhân trong hệ thống
+[HÌNH 1: Sơ đồ Use Case tổng quát toàn bộ hệ thống Quản lý mượn sách]
+(Vị trí chèn hình: Người dùng thực hiện vẽ sơ đồ Use Case trên phần mềm StarUML theo bảng chỉ dẫn thao tác kéo nối mũi tên tại mục 1.1.2 dưới đây, xuất ra file ảnh Hinh1_SoDoUseCase.png và chèn vào vị trí này trong bài báo cáo).
+
+1.1.1. Đặc tả chức năng sơ đồ use case tổng quát
+
+Bảng 1: Mô tả chức năng của sơ đồ use case tổng quát
+------------------------------------------------------------------------------------------------------------------------
+STT   Tên use case                Diễn giải
+------------------------------------------------------------------------------------------------------------------------
+1     Đăng ký                     Cho phép người dùng chưa có tài khoản đăng ký để trở thành độc giả thành viên của thư viện.
+2     Đăng nhập                   Đăng nhập vào website để có thể thao tác đầy đủ các chức năng theo vai trò phân quyền.
+3     Đăng xuất                   Thoát khỏi tài khoản thành viên ra khỏi hệ thống và xóa bỏ phiên làm việc.
+4     Xem chi tiết sách           Độc giả và khách vãng lai có thể xem toàn bộ sách trên website, xem chi tiết tác giả, NXB và tồn kho.
+5     Tìm kiếm sách               Người dùng có thể tìm kiếm các cuốn sách theo từ khóa bất kỳ hoặc bằng giọng nói (Voice Search).
+6     Hỏi đáp Trợ lý AI           Trò chuyện với AI Chatbot để tra cứu nội quy mượn trả và gợi ý đầu sách phù hợp.
+7     Đăng ký mượn sách           Độc giả có thể đăng ký mượn các cuốn sách mong muốn vào phiếu mượn trực tuyến (tối đa 10 quyển).
+8     Quản lý lịch sử mượn        Độc giả theo dõi các cuốn sách đang mượn, đã trả, hẹn ngày trả và xin gia hạn mượn sách.
+9     Nhận chuông thông báo       Độc giả nhận thông báo tức thời khi phiếu mượn được duyệt, sách sắp đến hạn hoặc quá hạn trả.
+10    Quản lý danh mục sách       Thủ thư và Admin có thể thêm, cập nhật, xóa các cuốn sách trong kho, tải ảnh bìa và điều chỉnh số lượng.
+11    Quản lý nhà xuất bản        Thủ thư và Admin có thể thêm mới, hiệu chỉnh thông tin và địa chỉ các đơn vị xuất bản liên kết.
+12    Duyệt phiếu mượn sách       Thủ thư duyệt mượn, tự động khóa trừ tồn kho bằng thao tác nguyên tử để chống Overbooking.
+13    Duyệt gia hạn mượn sách     Thủ thư thẩm định lý do và gia hạn thêm thời gian mượn sách theo quy tắc trước hạn 3 ngày.
+14    Xác nhận trả sách           Thủ thư tiếp nhận sách vật lý tại quầy, cập nhật hoàn kho và thu tiền phạt nếu trả quá hạn.
+15    Quản lý tài khoản           Admin có thể xem danh sách thành viên, khóa/mở khóa tài khoản độc giả và phân quyền nhân viên RBAC.
+16    Xem thống kê Dashboard      Admin và thủ thư theo dõi các chỉ số KPI mượn/trả và biểu đồ Chart.js trực quan theo thời gian thực.
+------------------------------------------------------------------------------------------------------------------------
+
+1.1.2. Hướng dẫn chi tiết cách vẽ Sơ đồ Use Case tổng quát trên StarUML (Note hướng dẫn kéo mũi tên từ đâu sang đâu)
+
+Để vẽ được sơ đồ Use Case tổng quát chuẩn xác trên phần mềm StarUML, sinh viên tuân thủ các quy tắc sử dụng ký hiệu và các thao tác kéo nối mũi tên chi tiết sau:
+
+A. Quy ước 4 loại công cụ và mũi tên trong StarUML:
+- Actor (Hình người): Đại diện cho tác nhân người dùng hoặc hệ thống bên ngoài.
+- Use Case (Hình Elip): Đại diện cho một ca sử dụng / chức năng của hệ thống.
+- Association (Đường thẳng liền nét, KHÔNG có mũi tên): Biểu diễn quan hệ tương tác trực tiếp giữa Actor và Use Case.
+- Generalization (Đường thẳng có đầu mũi tên TAM GIÁC RỖNG ──▷): Biểu diễn quan hệ thừa kế giữa các Actor (Actor con kế thừa toàn bộ quyền của Actor cha).
+- Include (Đường nét đứt có mũi tên nhọn và nhãn <<include>>): Kéo từ Use Case chính sang Use Case phụ bắt buộc phải thực thi kèm theo.
+- Extend (Đường nét đứt có mũi tên nhọn và nhãn <<extend>>): Kéo từ Use Case mở rộng trỏ ngược về Use Case cơ sở (chỉ kích hoạt khi thỏa mãn điều kiện rẽ nhánh).
+
+B. Bảng chỉ dẫn chi tiết thao tác kéo nối từng mũi tên trong sơ đồ:
+
+Bảng 1.1: Hướng dẫn chi tiết thao tác kéo nối các đường liên kết trong Sơ đồ Use Case
+-----------------------------------------------------------------------------------------------------------------------------------------
+STT   Điểm bắt đầu (Kéo từ đâu)          Điểm kết thúc (Thả vào đâu)        Loại công cụ / Mũi tên         Ý nghĩa nghiệp vụ
+-----------------------------------------------------------------------------------------------------------------------------------------
+1     Actor "Độc giả"                    Actor "Khách vãng lai"             Generalization (Tam giác rỗng) Độc giả kế thừa toàn bộ chức năng của Khách vãng lai.
+2     Actor "Quản trị viên"              Actor "Nhân viên QL Sách"          Generalization (Tam giác rỗng) Admin kế thừa toàn quyền quản lý kho sách của thủ thư.
+3     Actor "Quản trị viên"              Actor "Nhân viên Duyệt"            Generalization (Tam giác rỗng) Admin kế thừa toàn quyền duyệt mượn/trả của thủ thư.
+4     Actor "Khách vãng lai"             Use Case "Đăng ký"                 Association (Đường thẳng)      Khách vãng lai đăng ký tài khoản thành viên mới.
+5     Actor "Khách vãng lai"             Use Case "Đăng nhập"               Association (Đường thẳng)      Khách vãng lai đăng nhập vào hệ thống.
+6     Actor "Khách vãng lai"             Use Case "Xem chi tiết sách"       Association (Đường thẳng)      Khách vãng lai xem danh mục và thông tin sách.
+7     Actor "Khách vãng lai"             Use Case "Tìm kiếm sách"           Association (Đường thẳng)      Khách vãng lai tra cứu sách theo từ khóa.
+8     Actor "Khách vãng lai"             Use Case "Hỏi đáp Trợ lý AI"       Association (Đường thẳng)      Khách vãng lai trò chuyện hỏi đáp với AI Chatbot.
+9     Actor "Độc giả"                    Use Case "Đăng ký mượn sách"       Association (Đường thẳng)      Độc giả chọn sách và gửi yêu cầu mượn.
+10    Use Case "Đăng ký mượn sách"       Use Case "Kiểm tra hạn mức & Kho"  Include (Nét đứt <<include>>)  Mượn sách bắt buộc phải kiểm tra hạn mức 10 quyển và kho tồn.
+11    Actor "Độc giả"                    Use Case "Quản lý lịch sử mượn"    Association (Đường thẳng)      Độc giả theo dõi danh sách sách đang mượn và đã trả.
+12    Use Case "Xin gia hạn mượn"        Use Case "Quản lý lịch sử mượn"    Extend (Nét đứt <<extend>>)    Tại lịch sử mượn, độc giả có thể chọn mở rộng xin gia hạn sách.
+13    Actor "Độc giả"                    Use Case "Nhận chuông thông báo"   Association (Đường thẳng)      Độc giả nhận thông báo duyệt mượn và nhắc nhở hạn trả.
+14    Actor "Nhân viên QL Sách"          Use Case "Quản lý danh mục sách"   Association (Đường thẳng)      Thủ thư thêm, sửa, xóa sách và kiểm kê số lượng tồn kho.
+15    Actor "Nhân viên QL Sách"          Use Case "Quản lý nhà xuất bản"    Association (Đường thẳng)      Thủ thư quản lý thông tin các đối tác nhà xuất bản.
+16    Actor "Nhân viên Duyệt"            Use Case "Duyệt phiếu mượn sách"   Association (Đường thẳng)      Thủ thư kiểm tra và duyệt yêu cầu mượn của độc giả.
+17    Use Case "Duyệt phiếu mượn sách"   Use Case "Khóa trừ tồn kho"        Include (Nét đứt <<include>>)  Khi duyệt bắt buộc hệ thống phải khóa trừ kho chống Overbooking.
+18    Actor "Nhân viên Duyệt"            Use Case "Duyệt gia hạn mượn sách" Association (Đường thẳng)      Thủ thư thẩm định và chấp thuận gia hạn ngày trả.
+19    Actor "Nhân viên Duyệt"            Use Case "Xác nhận trả sách"       Association (Đường thẳng)      Thủ thư tiếp nhận sách độc giả hoàn trả tại quầy giao dịch.
+20    Use Case "Xác nhận trả sách"       Use Case "Hoàn trả tồn kho"        Include (Nét đứt <<include>>)  Khi trả sách bắt buộc hệ thống phải cộng hoàn trả số lượng vào kho.
+21    Use Case "Xử lý quá hạn & Phạt"    Use Case "Xác nhận trả sách"       Extend (Nét đứt <<extend>>)    Nếu trả sách quá hạn thì mở rộng sang quy trình thu phí phạt vi phạm.
+22    Actor "Nhân viên Duyệt"            Use Case "Xem thống kê Dashboard"  Association (Đường thẳng)      Thủ thư theo dõi biểu đồ thống kê tình hình mượn trả sách.
+23    Actor "Quản trị viên"              Use Case "Quản lý tài khoản"       Association (Đường thẳng)      Admin khóa/mở tài khoản độc giả và phân quyền nhân viên.
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+1.2. Danh sách các tác nhân hệ thống (Actors)
+
+Bảng 1.2: Danh sách các Tác nhân trong hệ thống
 ------------------------------------------------------------------------------------------------------------------------
 Tác nhân            Mô tả vai trò
 ------------------------------------------------------------------------------------------------------------------------
@@ -282,84 +430,282 @@ Nhân viên Duyệt     Thủ thư phụ trách quầy giao dịch; thực hiệ
 Quản trị viên       Người có quyền hạn cao nhất; quản trị tài khoản độc giả, phân quyền nhân viên và xem báo cáo tổng thể.
 ------------------------------------------------------------------------------------------------------------------------
 
-1.2. Bảng đặc tả chi tiết các Use Case chính
+1.3. Đặc tả chi tiết các Use Case nghiệp vụ cốt lõi
 
-Bảng 2: Danh sách và mô tả các Use Case chính
+Nhằm phục vụ quá trình cài đặt và kiểm thử phần mềm, 6 Use Case nghiệp vụ cốt lõi đóng vai trò xương sống của hệ thống được đặc tả chi tiết theo chuẩn mẫu kỹ thuật phần mềm:
+
+1.3.1. Đặc tả Use Case Đăng ký tài khoản (UC01)
+
+Bảng 2.1: Đặc tả chi tiết Use Case Đăng ký tài khoản
 ------------------------------------------------------------------------------------------------------------------------
-Mã UC   Tên Use Case                Tác nhân thực hiện              Mô tả tóm tắt
+Thuộc tính              Nội dung đặc tả
 ------------------------------------------------------------------------------------------------------------------------
-UC01    Đăng ký tài khoản           Khách vãng lai                  Tạo tài khoản độc giả mới với email và mật khẩu.
-UC02    Đăng nhập hệ thống          Tất cả tác nhân                 Xác thực danh tính qua JWT hoặc Google/Facebook OAuth2.
-UC03    Đăng xuất                   Độc giả, Nhân viên, Admin       Hủy phiên làm việc và xóa token lưu trữ phía máy khách.
-UC04    Tra cứu và xem sách         Khách vãng lai, Độc giả         Xem danh sách sách, xem chi tiết sách, lọc thể loại.
-UC05    Tìm kiếm bằng giọng nói     Khách vãng lai, Độc giả         Nhận diện giọng nói qua Micro để tìm kiếm sách nhanh.
-UC06    Hỏi đáp với Trợ lý AI       Khách vãng lai, Độc giả         Trò chuyện với AI Chatbot để tra cứu thông tin thư viện.
-UC07    Đăng ký mượn sách           Độc giả                         Tạo phiếu mượn sách (kiểm tra hạn mức tối đa 10 quyển).
-UC08    Xem lịch sử mượn sách       Độc giả                         Theo dõi trạng thái các phiếu mượn cá nhân.
-UC09    Nhận chuông thông báo       Độc giả                         Nhận cảnh báo sách quá hạn hoặc sách sắp đến hạn trả.
-UC10    Xin gia hạn mượn sách       Độc giả                         Yêu cầu gia hạn thêm ngày (tuân thủ quy tắc 3 ngày).
-UC11    Hẹn ngày trả sách           Độc giả                         Gửi thông báo ngày dự kiến mang sách đến trả tại quầy.
-UC12    Hủy / Sửa phiếu mượn        Độc giả                         Chỉnh sửa số lượng hoặc hủy phiếu khi đang chờ duyệt.
-UC13    Quản lý Danh mục Sách       Nhân viên QL Sách, Admin        Thêm sách mới, tải ảnh bìa, sửa và xóa sách trong kho.
-UC14    Quản lý Nhà xuất bản        Nhân viên QL Sách, Admin        Thêm, sửa, xóa thông tin nhà xuất bản.
-UC15    Duyệt / Từ chối mượn sách   Nhân viên Duyệt, Admin          Kiểm tra tồn kho First-come First-served và trừ kho.
-UC16    Duyệt / Từ chối gia hạn     Nhân viên Duyệt, Admin          Thẩm định yêu cầu gia hạn và cộng thêm thời gian trả.
-UC17    Xác nhận nhận lại sách      Nhân viên Duyệt, Admin          Tiếp nhận sách vật lý tại quầy và hoàn lại kho sách.
-UC18    Theo dõi sách quá hạn       Nhân viên Duyệt, Admin          Kiểm tra danh sách vi phạm bằng cơ chế Lazy-check.
-UC19    Quản lý tài khoản Độc giả   Quản trị viên                   Xem hồ sơ, lịch sử mượn và khóa/mở khóa tài khoản.
-UC20    Quản lý Nhân viên & RBAC    Quản trị viên                   Thêm nhân viên, chỉ định chức vụ và phân quyền hệ thống.
-UC21    Xem Dashboard Thống kê      Nhân viên Duyệt, Admin          Xem các chỉ số KPI và biểu đồ Chart.js trực quan.
+Mã Use Case             UC01
+Tên Use Case            Đăng ký tài khoản độc giả
+Tác nhân chính          Khách vãng lai
+Mô tả tóm tắt           Cho phép người dùng chưa có tài khoản thực hiện đăng ký để trở thành độc giả chính thức của thư viện.
+Điều kiện tiên quyết    Người dùng có kết nối mạng Internet và chưa đăng nhập vào hệ thống.
+Điều kiện sau (Kết quả) Tài khoản độc giả mới được tạo trong CSDL MongoDB với mã MaDocGia duy nhất, mật khẩu được băm Bcrypt.
+Luồng sự kiện chính:
+  1. Người dùng truy cập Cổng Độc giả (User Web) và nhấp chọn "Đăng ký" trên thanh điều hướng.
+  2. Hệ thống hiển thị biểu mẫu đăng ký với các trường thông tin cá nhân.
+  3. Người dùng nhập đầy đủ: Họ lót, Tên, Ngày sinh, Giới tính, Địa chỉ, Số điện thoại, Email và Mật khẩu.
+  4. Người dùng nhấn nút "Đăng ký tài khoản".
+  5. Hệ thống kiểm tra tính hợp lệ dữ liệu (Client-side validation với Yup và VeeValidate).
+  6. Hệ thống gửi yêu cầu POST /api/user/auth/register lên máy chủ Backend.
+  7. Backend kiểm tra trùng lặp Email và Số điện thoại trong bảng DOCGIA.
+  8. Hệ thống tự động sinh mã độc giả duy nhất (MaDocGia), băm mật khẩu bằng Bcrypt (Salt rounds = 10) và lưu vào MongoDB.
+  9. Hệ thống trả về mã trạng thái HTTP 201 Created và thông báo đăng ký thành công.
+  10. Trình duyệt tự động chuyển hướng người dùng sang trang Đăng nhập sau 1.5 giây.
+Luồng sự kiện rẽ nhánh:
+  5a. Dữ liệu nhập không hợp lệ (bỏ trống trường bắt buộc, email sai định dạng, mật khẩu < 6 ký tự):
+      - Hệ thống hiển thị thông báo lỗi chi tiết màu đỏ ngay dưới từng ô nhập liệu tương ứng.
+      - Người dùng điều chỉnh lại thông tin và bấm gửi lại.
+  7a. Email hoặc Số điện thoại đã tồn tại trong hệ thống:
+      - Backend trả về mã lỗi HTTP 400 kèm thông báo "Email này đã được sử dụng bởi một tài khoản khác".
+      - Hệ thống hiển thị thông báo lỗi và giữ nguyên các thông tin người dùng đã nhập trên form.
 ------------------------------------------------------------------------------------------------------------------------
 
-1.3. Sơ đồ Use Case tổng quát
+1.3.2. Đặc tả Use Case Đăng nhập hệ thống (UC02)
+
+Bảng 2.2: Đặc tả chi tiết Use Case Đăng nhập hệ thống
+------------------------------------------------------------------------------------------------------------------------
+Thuộc tính              Nội dung đặc tả
+------------------------------------------------------------------------------------------------------------------------
+Mã Use Case             UC02
+Tên Use Case            Đăng nhập hệ thống (Hỗ trợ Mật khẩu và OAuth 2.0)
+Tác nhân chính          Độc giả, Thủ thư, Quản trị viên (Admin)
+Mô tả tóm tắt           Xác thực danh tính người dùng và cấp phát mã thông báo JWT để sử dụng các chức năng theo phân quyền.
+Điều kiện tiên quyết    Người dùng đã có tài khoản và thiết bị có kết nối mạng.
+Điều kiện sau (Kết quả) Người dùng được cấp Token JWT hợp lệ, phiên làm việc được lưu trong localStorage và chuyển hướng đúng cổng.
+Luồng sự kiện chính:
+  1. Người dùng truy cập trang Đăng nhập tương ứng (Cổng Độc giả hoặc Cổng Quản trị).
+  2. Người dùng nhập thông tin: Email (hoặc Mã số nhân viên MSNV) và Mật khẩu.
+  3. Người dùng nhấn nút "Đăng nhập".
+  4. Hệ thống gửi thông tin đăng nhập lên Backend API.
+  5. Backend truy vấn tài khoản theo Email/MSNV trong CSDL MongoDB.
+  6. Backend so khớp mật khẩu bằng hàm so sánh một chiều Bcrypt.compare().
+  7. Kiểm tra trạng thái tài khoản: TrangThaiTaiKhoan phải là "BinhThuong".
+  8. Backend khởi tạo mã JSON Web Token (JWT) có gán payload định danh, vai trò phân quyền (aud: "user" hoặc "admin") và thời hạn hiệu lực.
+  9. Phía giao diện lưu trữ JWT token vào localStorage, cập nhật Pinia Store và điều hướng người dùng vào trang chủ hoặc Dashboard.
+Luồng sự kiện rẽ nhánh:
+  6a. Sai thông tin đăng nhập (Email không tồn tại hoặc sai Mật khẩu):
+      - Hệ thống hiển thị thông báo "Email hoặc mật khẩu không chính xác".
+  7a. Tài khoản đang trong trạng thái bị khóa ("BiKhoa"):
+      - Hệ thống hiển thị cảnh báo: "Tài khoản của bạn đã bị khóa do vi phạm nội quy thư viện. Vui lòng liên hệ thủ thư."
+  3a. Đăng nhập thông qua Google OAuth 2.0 (Tại Cổng Độc giả):
+      - Người dùng nhấn nút "Đăng nhập với Google".
+      - Hệ thống chuyển hướng sang máy chủ OAuth của Google để người dùng cấp quyền.
+      - Máy chủ OAuth trả mã ủy quyền về callback API của thư viện.
+      - Backend đối soát oauthId: Nếu là tài khoản mới thì tự động khởi tạo độc giả mới; nếu đã có thì cấp phát JWT tương ứng.
+------------------------------------------------------------------------------------------------------------------------
+
+1.3.3. Đặc tả Use Case Đăng ký mượn sách (UC07)
+
+Bảng 2.3: Đặc tả chi tiết Use Case Đăng ký mượn sách
+------------------------------------------------------------------------------------------------------------------------
+Thuộc tính              Nội dung đặc tả
+------------------------------------------------------------------------------------------------------------------------
+Mã Use Case             UC07
+Tên Use Case            Đăng ký mượn sách trực tuyến
+Tác nhân chính          Độc giả
+Mô tả tóm tắt           Cho phép độc giả đăng ký mượn các cuốn sách mong muốn và gửi yêu cầu đến ban thủ thư thẩm định.
+Điều kiện tiên quyết    - Độc giả đã đăng nhập (Token JWT hợp lệ).
+                        - Tài khoản ở trạng thái "Bình thường" và không có sách quá hạn chưa trả.
+                        - Tổng số sách đang mượn + đang chờ duyệt chưa chạm giới hạn tối đa 10 quyển.
+Điều kiện sau (Kết quả) Phiếu mượn ở trạng thái "Chờ duyệt" được tạo trong bảng THEODOIMUONSACH; kho chưa trừ cho đến khi duyệt.
+Luồng sự kiện chính:
+  1. Độc giả xem chi tiết cuốn sách muốn mượn tại Cổng Độc giả.
+  2. Độc giả nhấp nút "Mượn sách".
+  3. Modal đăng ký mượn sách hiển thị, độc giả chọn ngày hẹn trả mong muốn (mặc định 14 ngày).
+  4. Độc giả nhấn nút "Xác nhận gửi phiếu mượn".
+  5. Hệ thống kiểm tra số lượng tồn kho khả dụng của sách (SoQuyen > 0).
+  6. Hệ thống kiểm tra tổng hạn mức mượn của độc giả (Tổng số sách đang mượn + chờ duyệt < 10).
+  7. Hệ thống tạo một bản ghi mới trong bảng THEODOIMUONSACH với trạng thái "Chờ duyệt", lưu MaDocGia, MaSach, NgayYeuCau.
+  8. Hệ thống hiển thị Toast thông báo thành công và tự động tạo thông báo In-App thông báo phiếu đang chờ phê duyệt.
+Luồng sự kiện rẽ nhánh:
+  5a. Sách đã hết bản in trong kho (SoQuyen == 0):
+      - Hệ thống hiển thị thông báo "Cuốn sách này hiện đã hết trong kho thư viện, vui lòng quay lại sau."
+  6a. Độc giả đã chạm hạn mức mượn tối đa 10 quyển:
+      - Hệ thống từ chối yêu cầu và hiển thị: "Bạn đã đạt giới hạn mượn tối đa 10 quyển. Vui lòng hoàn trả sách cũ trước khi mượn thêm."
+  6b. Độc giả đang có sách mượn quá hạn:
+      - Hệ thống hiển thị: "Tài khoản đang có sách mượn quá hạn chưa trả. Bạn không thể đăng ký mượn thêm sách mới."
+------------------------------------------------------------------------------------------------------------------------
+
+1.3.4. Đặc tả Use Case Kiểm duyệt phiếu mượn sách (UC15)
+
+Bảng 2.4: Đặc tả chi tiết Use Case Kiểm duyệt phiếu mượn sách
+------------------------------------------------------------------------------------------------------------------------
+Thuộc tính              Nội dung đặc tả
+------------------------------------------------------------------------------------------------------------------------
+Mã Use Case             UC15
+Tên Use Case            Kiểm duyệt phiếu mượn sách (Chống Overbooking)
+Tác nhân chính          Nhân viên Duyệt mượn, Quản trị viên
+Mô tả tóm tắt           Thủ thư kiểm tra và phê duyệt yêu cầu mượn, tự động khóa trừ số lượng tồn kho bằng thao tác nguyên tử.
+Điều kiện tiên quyết    Thủ thư đã đăng nhập Cổng Quản trị; tồn tại phiếu mượn ở trạng thái "Chờ duyệt".
+Điều kiện sau (Kết quả) Phiếu mượn chuyển sang trạng thái "Đang mượn", số lượng tồn kho sách giảm 1 đơn vị, gửi thông báo cho độc giả.
+Luồng sự kiện chính:
+  1. Thủ thư mở màn hình "Quản lý Mượn Sách" tại Cổng Quản trị.
+  2. Lọc danh sách theo trạng thái "Chờ duyệt" để xem các yêu cầu mượn mới gửi.
+  3. Thủ thư nhấp vào dropdown thao tác tại dòng phiếu mượn tương ứng và chọn "Duyệt mượn".
+  4. Backend thực thi thao tác cập nhật nguyên tử (Atomic FindAndModify) trên MongoDB:
+     - Truy vấn sách với điều kiện: { _id: bookId, SoQuyen: { $gt: 0 } }.
+     - Nếu thỏa mãn, giảm tồn kho ngay lập tức: { $inc: { SoQuyen: -1 } }.
+  5. Cập nhật trạng thái phiếu mượn trong THEODOIMUONSACH thành "Đang mượn", gán NgayMuon là thời điểm hiện tại và ghi nhận MSNV người duyệt.
+  6. Hệ thống tạo thông báo In-App gửi tới tài khoản độc giả xác nhận phiếu mượn đã được duyệt thành công.
+  7. Hệ thống làm mới bảng dữ liệu và hiển thị thông báo "Duyệt phiếu mượn thành công".
+Luồng sự kiện rẽ nhánh:
+  3a. Thủ thư chọn "Từ chối mượn":
+      - Modal xác nhận hiển thị yêu cầu nhập lý do từ chối (ví dụ: bản sách đang bảo trì đóng bìa).
+      - Hệ thống cập nhật trạng thái phiếu thành "Đã từ chối", không trừ kho sách, gửi thông báo kèm lý do cho độc giả.
+  4a. Tranh chấp Overbooking xảy ra (nhiều độc giả cùng gửi yêu cầu và sách vừa hết tồn kho):
+      - Thao tác nguyên tử kiểm tra SoQuyen > 0 thất bại.
+      - Hệ thống tự động từ chối giao dịch, hiển thị cảnh báo "Sách đã hết bản in khả dụng trong kho, không thể duyệt."
+------------------------------------------------------------------------------------------------------------------------
+
+1.3.5. Đặc tả Use Case Xin gia hạn mượn sách (UC10)
+
+Bảng 2.5: Đặc tả chi tiết Use Case Xin gia hạn mượn sách
+------------------------------------------------------------------------------------------------------------------------
+Thuộc tính              Nội dung đặc tả
+------------------------------------------------------------------------------------------------------------------------
+Mã Use Case             UC10
+Tên Use Case            Xin gia hạn mượn sách (Quy tắc 3 ngày)
+Tác nhân chính          Độc giả, Nhân viên Duyệt mượn
+Mô tả tóm tắt           Độc giả gửi yêu cầu gia hạn thêm thời gian mượn đối với cuốn sách sắp hết hạn và chờ thủ thư thẩm định.
+Điều kiện tiên quyết    - Phiếu mượn ở trạng thái "Đang mượn", chưa quá hạn trả.
+                        - Thời điểm xin gia hạn phải cách ngày hết hạn ít nhất 3 ngày (Quy tắc 3 ngày).
+                        - Phiếu mượn chưa vượt quá số lần gia hạn tối đa (SoLanGiaHan < 2).
+Điều kiện sau (Kết quả) Ngày hẹn trả được cộng thêm thời gian gia hạn sau khi thủ thư phê duyệt.
+Luồng sự kiện chính:
+  1. Độc giả truy cập màn hình "Lịch sử mượn sách" tại Cổng Độc giả.
+  2. Tìm cuốn sách đang mượn cần xin thêm thời gian và nhấp nút "Xin gia hạn".
+  3. Modal hiển thị, độc giả chọn thời gian gia hạn thêm (+7 ngày hoặc +14 ngày) và nhập lý do gia hạn.
+  4. Độc giả nhấn "Gửi yêu cầu gia hạn".
+  5. Hệ thống kiểm tra điều kiện quy tắc 3 ngày (NgayTra - HiệnTại >= 3 ngày) và số lần đã gia hạn < 2.
+  6. Hệ thống cập nhật trạng thái phiếu thành "Chờ gia hạn", lưu lý do và số ngày đề xuất.
+  7. Thủ thư mở Cổng Quản trị, lọc danh sách "Chờ gia hạn", xem xét lý do và bấm "Duyệt gia hạn".
+  8. Hệ thống tự động cộng thêm số ngày vào trường NgayTra, tăng SoLanGiaHan lên 1 và đưa trạng thái trở lại "Đang mượn".
+  9. Hệ thống gửi thông báo In-App tới độc giả xác nhận ngày hết hạn mới.
+Luồng sự kiện rẽ nhánh:
+  5a. Vi phạm quy tắc 3 ngày (gửi yêu cầu khi chỉ còn dưới 3 ngày nữa là hết hạn hoặc sách đã quá hạn):
+      - Hệ thống khóa chức năng gia hạn và thông báo: "Chỉ được phép gia hạn trước ngày hết hạn ít nhất 3 ngày. Vui lòng mang sách đến quầy trả sách đúng hạn."
+  5b. Đã đạt số lần gia hạn tối đa (SoLanGiaHan == 2):
+      - Hệ thống thông báo: "Sách đã đạt giới hạn tối đa 2 lần gia hạn. Vui lòng hoàn trả sách về thư viện."
+  7a. Thủ thư từ chối yêu cầu gia hạn:
+      - Thủ thư bấm "Từ chối gia hạn" kèm lý do (ví dụ: cuốn sách đang có danh sách chờ mượn đông đảo).
+      - Phiếu mượn trở về trạng thái "Đang mượn" với hạn trả ban đầu, gửi thông báo giải thích cho độc giả.
+------------------------------------------------------------------------------------------------------------------------
+
+1.3.6. Đặc tả Use Case Xác nhận trả sách và Xử lý quá hạn (UC17, UC18)
+
+Bảng 2.6: Đặc tả chi tiết Use Case Xác nhận trả sách và Xử lý quá hạn
+------------------------------------------------------------------------------------------------------------------------
+Thuộc tính              Nội dung đặc tả
+------------------------------------------------------------------------------------------------------------------------
+Mã Use Case             UC17, UC18
+Tên Use Case            Xác nhận trả sách và Thu phí phạt trễ hạn
+Tác nhân chính          Nhân viên Duyệt mượn, Quản trị viên
+Mô tả tóm tắt           Thủ thư tiếp nhận sách vật lý từ độc giả, kiểm tra tình trạng, hoàn lại kho và thu phí phạt nếu quá hạn.
+Điều kiện tiên quyết    Thủ thư đã đăng nhập Cổng Quản trị; phiếu mượn ở trạng thái "Đang mượn" hoặc "Chờ gia hạn".
+Điều kiện sau (Kết quả) Trạng thái phiếu cập nhật thành "Đã trả", số lượng tồn kho sách tăng thêm 1, độc giả được giải phóng hạn mức.
+Luồng sự kiện chính:
+  1. Thủ thư mở màn hình "Quản lý Mượn Sách", tìm kiếm phiếu mượn theo Mã độc giả hoặc Mã sách.
+  2. Thủ thư tiếp nhận cuốn sách, kiểm tra độ nguyên vẹn vật lý (không rách, ẩm ướt, mất trang).
+  3. Thủ thư nhấp chọn "Xác nhận trả sách" trên menu thao tác.
+  4. Hệ thống so sánh ngày trả thực tế với ngày hẹn trả (NgayTra):
+     - Trường hợp đúng hạn hoặc trả sớm: Hệ thống ghi nhận trạng thái là "Đã trả".
+  5. Hệ thống thực thi thao tác nguyên tử tăng số lượng tồn kho sách: { $inc: { SoQuyen: 1 } }.
+  6. Hệ thống lưu NgayTraThucTe và mã nhân viên tiếp nhận (MSNV).
+  7. Hệ thống gửi thông báo In-App xác nhận hoàn tất giao dịch trả sách đến tài khoản độc giả.
+Luồng sự kiện rẽ nhánh:
+  4a. Độc giả trả sách trễ hạn (NgayTraThucTe > NgayTra):
+      - Hệ thống tự động tính số ngày quá hạn và tiền phạt vi phạm (5.000 VNĐ / ngày trễ).
+      - Modal thu phí phạt hiển thị: "Sách quá hạn [X] ngày. Số tiền phạt: [Y] VNĐ."
+      - Sau khi độc giả nộp phạt, thủ thư bấm xác nhận, hệ thống lưu trạng thái "Đã trả (Quá hạn)".
+  2a. Sách bị hư hỏng nghiêm trọng hoặc làm mất sách:
+      - Thủ thư chọn trạng thái "Bị mất / Hư hại".
+      - Hệ thống hiển thị giá bìa cuốn sách (DonGia) và thông tin độc giả để lập biên bản bồi thường giá trị cuốn sách.
+------------------------------------------------------------------------------------------------------------------------
+
+1.4. Sơ đồ Use Case tổng quát và cấu trúc các sơ đồ phân rã
 
 [HÌNH 1: Sơ đồ Use Case tổng quát toàn bộ hệ thống Quản lý mượn sách]
-(Vị trí chèn hình: Người dùng thực hiện vẽ sơ đồ Use Case trên phần mềm StarUML theo hướng dẫn chi tiết tại mục 1.4 dưới đây, sau đó xuất ra file ảnh Hinh1_SoDoUseCase.png và chèn vào vị trí này trong bài báo cáo).
+(Vị trí chèn hình: Người dùng thực hiện vẽ sơ đồ Use Case trên phần mềm StarUML theo hướng dẫn chi tiết tại mục 1.5 dưới đây, sau đó xuất ra file ảnh Hinh1_SoDoUseCase.png và chèn vào vị trí này trong bài báo cáo).
 
-1.4. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML trên máy tính
+Bản thiết kế cấu trúc Sơ đồ Use Case tổng quát (System Use Case Architecture):
+- Ranh giới hệ thống (System Boundary): Hình chữ nhật lớn đại diện cho toàn bộ hệ thống "WEBSITE QUẢN LÝ MƯỢN TRẢ SÁCH MEVN".
+- Phía bên trái (Phân hệ Người dùng): 
+  + Actor "Khách vãng lai": Nối Association tới các Use Case: "Đăng ký tài khoản", "Đăng nhập", "Tra cứu và xem sách", "Tìm kiếm bằng giọng nói", "Hỏi đáp với Trợ lý AI".
+  + Actor "Độc giả": Có liên kết thừa kế Generalization (mũi tên tam giác rỗng) trỏ về "Khách vãng lai" (thừa hưởng toàn bộ quyền của khách). Nối Association tới các Use Case riêng: "Đăng ký mượn sách", "Xem lịch sử mượn", "Xin gia hạn mượn", "Hẹn ngày trả sách", "Nhận chuông thông báo".
+- Phía bên phải (Phân hệ Quản trị): 
+  + Actor "Nhân viên QL Sách": Nối Association tới các Use Case: "Quản lý Danh mục Sách", "Quản lý Nhà xuất bản".
+  + Actor "Nhân viên Duyệt": Nối Association tới các Use Case: "Duyệt / Từ chối mượn sách", "Duyệt / Từ chối gia hạn", "Xác nhận nhận lại sách", "Theo dõi sách quá hạn", "Xem Dashboard Thống kê".
+  + Actor "Quản trị viên (Admin)": Có liên kết thừa kế Generalization trỏ về cả 2 vai trò nhân viên (thừa hưởng toàn quyền của thủ thư). Nối Association tới các Use Case tối cao: "Quản lý tài khoản Độc giả", "Quản lý Nhân viên & RBAC".
+- Các mối quan hệ phụ thuộc Use Case then chốt:
+  + Quan hệ <<include>> (Bắt buộc phải thực thi):
+    * "Đăng ký mượn sách" --<<include>>--> "Kiểm tra hạn mức 10 quyển & Tồn kho"
+    * "Duyệt mượn sách" --<<include>>--> "Khóa trừ tồn kho nguyên tử (Atomic Decrement)"
+    * "Xác nhận trả sách" --<<include>>--> "Hoàn trả tồn kho (Atomic Increment)"
+  + Quan hệ <<extend>> (Mở rộng tùy chọn theo điều kiện):
+    * "Đăng nhập Google OAuth 2.0" --<<extend>>--> "Đăng nhập hệ thống"
+    * "Tìm kiếm bằng giọng nói" --<<extend>>--> "Tra cứu và xem sách"
+    * "Xin gia hạn mượn sách" --<<extend>>--> "Xem lịch sử mượn sách"
+    * "Xử lý quá hạn & Phạt trễ hạn" --<<extend>>--> "Xác nhận nhận lại sách"
 
-Để có được hình vẽ sơ đồ Use Case chuyên nghiệp và đúng quy chuẩn UML nộp cho Giảng viên, sinh viên thực hiện thao tác trên phần mềm StarUML theo các bước sau:
+1.5. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML trên máy tính
+
+Để có được hình vẽ sơ đồ Use Case chuyên nghiệp và đúng chuẩn kỹ thuật UML để nộp cho Giảng viên, sinh viên thực hiện thao tác trên phần mềm StarUML theo 6 bước cụ thể như sau:
 
 Bước 1: Khởi tạo mô hình Use Case Diagram
 - Mở phần mềm StarUML đã cài đặt trên máy tính.
-- Tại khung bên phải (Model Explorer), nhấp chuột phải vào mục "Model" (hoặc chọn menu Model trên thanh công cụ) -> chọn "Add Diagram" -> chọn "Use Case Diagram".
+- Tại khung bên phải (Model Explorer), nhấp chuột phải vào mục "Model" -> chọn "Add Diagram" -> chọn "Use Case Diagram".
 - Đặt tên cho sơ đồ là "SoDoUseCaseTongQuat".
 
 Bước 2: Tạo Khung ranh giới hệ thống (System Boundary)
 - Tại thanh công cụ bên trái (Toolbox), chọn thẻ "Use Case".
-- Chọn công cụ "Boundary" (hoặc "System"), nhấp chuột vào giữa vùng làm việc và kéo dãn thành một khung chữ nhật lớn.
-- Đặt tên cho khung ranh giới là: "HỆ THỐNG QUẢN LÝ MƯỢN SÁCH ONLINE". Khung này thể hiện phạm vi bên trong của phần mềm.
+- Chọn công cụ "Boundary" (hoặc "System"), nhấp chuột vào giữa vùng làm việc và kéo dãn thành một khung chữ nhật lớn cân đối ở giữa màn hình.
+- Đặt tên cho khung ranh giới là: "HỆ THỐNG QUẢN LÝ MƯỢN SÁCH ONLINE". Khung này thể hiện phạm vi phân định rõ ràng giữa bên trong hệ thống và các tác nhân tương tác từ bên ngoài.
 
 Bước 3: Khởi tạo các Tác nhân (Actors)
-- Chọn công cụ "Actor" trong Toolbox, nhấp chuột vào bên ngoài phía bên trái của khung Boundary để tạo các tác nhân phía người dùng:
+- Chọn công cụ "Actor" (hình người) trong Toolbox, nhấp chuột vào vùng làm việc bên ngoài phía bên trái của khung Boundary để tạo 2 tác nhân phía người dùng:
   + Đặt tên: "Khách vãng lai"
   + Đặt tên: "Độc giả"
-- Nhấp chuột vào bên ngoài phía bên phải của khung Boundary để tạo các tác nhân phía quản trị:
-  + Đặt tên: "Nhân viên Quản lý sách"
-  + Đặt tên: "Nhân viên Duyệt mượn"
-  + Đặt tên: "Quản trị viên (Admin)"
-- Thiết lập quan hệ Kế thừa (Generalization): Chọn công cụ "Generalization" (mũi tên tam giác rỗng) trong Toolbox, kéo từ "Nhân viên Quản lý sách" về "Nhân viên", và từ "Admin" về "Nhân viên" để thể hiện tính chất kế thừa quyền hạn.
+  + Dùng công cụ "Generalization" (mũi tên tam giác rỗng) kéo từ "Độc giả" trỏ lên "Khách vãng lai".
+- Tiếp tục chọn công cụ "Actor", nhấp chuột vào vùng làm việc bên ngoài phía bên phải của khung Boundary để tạo 3 tác nhân phía quản trị:
+  + Đặt tên: "Nhân viên QL Sách"
+  + Đặt tên: "Nhân viên Duyệt"
+  + Đặt tên: "Quản trị viên"
+  + Dùng công cụ "Generalization" kéo từ "Quản trị viên" trỏ về 2 vai trò nhân viên.
 
-Bước 4: Tạo các Use Case bên trong Khung Boundary
+Bước 4: Tạo các Use Case (Hình Elip) bên trong Khung Boundary
 - Chọn công cụ "Use Case" (hình elip) trong Toolbox, nhấp chuột vào bên trong khung Boundary để tạo các Use Case:
-  + Nhóm Độc giả: "Đăng ký", "Đăng nhập", "Tra cứu danh mục sách", "Tìm kiếm bằng giọng nói", "Trò chuyện với AI Chatbot", "Đăng ký mượn sách", "Xem lịch sử mượn", "Xin gia hạn mượn sách", "Hẹn ngày trả sách", "Nhận chuông thông báo".
-  + Nhóm Quản trị: "Quản lý Sách", "Quản lý Nhà xuất bản", "Duyệt yêu cầu mượn", "Duyệt yêu cầu gia hạn", "Xác nhận trả sách", "Quản lý tài khoản Độc giả", "Quản lý Nhân viên & Phân quyền", "Xem Dashboard Thống kê".
+  + Nhóm Độc giả: "Đăng ký tài khoản", "Đăng nhập hệ thống", "Tra cứu & Xem sách", "Tìm kiếm bằng giọng nói", "Hỏi đáp với Trợ lý AI", "Đăng ký mượn sách", "Xem lịch sử mượn", "Xin gia hạn mượn", "Hẹn ngày trả sách", "Nhận chuông thông báo".
+  + Nhóm Quản trị: "Quản lý Sách", "Quản lý Nhà xuất bản", "Duyệt yêu cầu mượn", "Duyệt yêu cầu gia hạn", "Xác nhận trả sách", "Quản lý tài khoản Độc giả", "Quản lý Nhân viên & RBAC", "Xem Dashboard Thống kê".
+  + Các Use Case phụ trợ phục vụ quan hệ phụ thuộc: "Kiểm tra hạn mức 10 quyển", "Khóa trừ tồn kho nguyên tử", "Xử lý quá hạn & Phạt trễ hạn".
 
-Bước 5: Thiết lập các đường liên kết (Relationships)
-- Quan hệ Association: Chọn công cụ "Association" (đường thẳng nối liền), kéo từ Actor đến các Use Case tương ứng mà tác nhân đó được phép kích hoạt.
-- Quan hệ Include (Bắt buộc): Chọn công cụ "Include" (mũi tên nét đứt có chữ <<include>>):
-  + Kéo từ "Đăng ký mượn sách" -> <<include>> -> "Kiểm tra hạn mức 10 quyển".
-  + Kéo từ "Duyệt yêu cầu mượn" -> <<include>> -> "Kiểm tra tồn kho sách".
-  + Kéo từ "Xin gia hạn mượn sách" -> <<include>> -> "Kiểm tra quy tắc 3 ngày".
-- Quan hệ Extend (Mở rộng tùy chọn): Chọn công cụ "Extend" (mũi tên nét đứt có chữ <<extend>>):
-  + Kéo từ "Tìm kiếm bằng giọng nói" -> <<extend>> -> "Tra cứu danh mục sách".
-  + Kéo từ "Đăng nhập OAuth 2.0" -> <<extend>> -> "Đăng nhập".
+Bước 5: Thiết lập các đường liên kết và quan hệ chuẩn UML
+- Quan hệ Association (Đường liên kết thông thường):
+  + Chọn công cụ "Association" (đường thẳng liền nét) trong Toolbox.
+  + Kéo từ từng Actor đến các Use Case tương ứng mà tác nhân đó được phép kích hoạt như đã mô tả trong bản thiết kế ở mục 1.4.
+- Quan hệ Include (Quan hệ bắt buộc - Mũi tên nét đứt có nhãn <<include>>):
+  + Chọn công cụ "Include" trong Toolbox.
+  + Kéo từ Use Case nguồn tới Use Case bắt buộc phải gọi:
+    * Kéo từ "Đăng ký mượn sách" trỏ sang "Kiểm tra hạn mức 10 quyển".
+    * Kéo từ "Duyệt yêu cầu mượn" trỏ sang "Khóa trừ tồn kho nguyên tử".
+- Quan hệ Extend (Quan hệ mở rộng tùy chọn - Mũi tên nét đứt có nhãn <<extend>>):
+  + Chọn công cụ "Extend" trong Toolbox.
+  + Kéo từ Use Case mở rộng trỏ về Use Case cơ sở:
+    * Kéo từ "Tìm kiếm bằng giọng nói" trỏ về "Tra cứu & Xem sách".
+    * Kéo từ "Xin gia hạn mượn" trỏ về "Xem lịch sử mượn".
+    * Kéo từ "Xử lý quá hạn & Phạt trễ hạn" trỏ về "Xác nhận trả sách".
 
 Bước 6: Xuất file hình ảnh chất lượng cao để chèn vào báo cáo
-- Nhấp vào khoảng trắng của sơ đồ để hoàn tất bố cục.
+- Nhấp chọn toàn bộ các thành phần trên sơ đồ, căn chỉnh vị trí các hình elip sao cho các đường nối không bị cắt chéo nhau.
 - Vào menu: File -> chọn "Export Image as..." -> chọn định dạng "PNG (*.png)".
-- Chọn độ phân giải chuẩn, lưu tệp với tên "Hinh1_SoDoUseCase.png".
-- Mở tệp báo cáo bằng Microsoft Word, tại mục Hình 1, chọn Insert -> Picture -> chọn tệp "Hinh1_SoDoUseCase.png" vừa lưu để chèn vào báo cáo.
+- Chọn độ phân giải cao (High DPI), lưu tệp với tên "Hinh1_SoDoUseCase.png".
+- Mở tệp báo cáo bằng Microsoft Word, tại mục Hình 1, chọn Insert -> Picture -> chọn tệp "Hinh1_SoDoUseCase.png" vừa lưu để chèn vào bài báo cáo.
+
 
 
 2. Phân tích và Thiết kế Cơ sở dữ liệu
@@ -392,8 +738,8 @@ DienThoai           String          Optional                Số điện thoại
 Email               String          Required, Sparse Unique Địa chỉ email dùng để đăng nhập hệ thống
 Password            String          Nullable                Mật khẩu băm Bcrypt (Null nếu đăng nhập qua OAuth2)
 TrangThaiTaiKhoan   String          Default: "BinhThuong"   Trạng thái tài khoản ("BinhThuong" / "BiKhoa")
-oauthProvider       String          Optional                Nhà cung cấp đăng nhập xã hội ("google" / "facebook")
-oauthId             String          Optional                Mã định danh người dùng do Google/Facebook cung cấp
+oauthProvider       String          Optional                Nhà cung cấp đăng nhập xã hội ("google")
+oauthId             String          Optional                Mã định danh người dùng do Google cung cấp
 ------------------------------------------------------------------------------------------------------------------------
 
 Bảng 4: Cấu trúc bộ sưu tập "NHANVIEN"
@@ -471,7 +817,7 @@ STT   Tên Collection      Tên Chỉ mục                   Loại Index      
 4     SACH                idx_MaNXB                     Single field        Tối ưu hóa phép nối tự động tên NXB
 5     DOCGIA              uniq_MaDocGia                 Unique              Ngăn chặn trùng lặp Mã độc giả
 6     DOCGIA              uniq_Email                    Sparse Unique       Đảm bảo mỗi email chỉ đăng ký 1 tài khoản
-7     DOCGIA              idx_oauth                     Sparse              Tăng tốc đăng nhập liên kết Google/Facebook
+7     DOCGIA              idx_oauth                     Sparse              Tăng tốc đăng nhập liên kết Google OAuth
 8     NHANVIEN            uniq_MSNV                     Unique              Ngăn chặn trùng lặp Mã số nhân viên
 9     NHANVIEN            uniq_EMAIL                    Sparse Unique       Đảm bảo tính duy nhất email nội bộ
 10    NHAXUATBAN          uniq_MaNXB                    Unique              Ngăn chặn trùng lặp Mã nhà xuất bản
@@ -577,10 +923,10 @@ Trang chi tiết sách cung cấp đầy đủ thông tin: Năm xuất bản, T�
 Tại Modal mượn sách, độc giả chọn số lượng và chọn Ngày dự kiến đến thư viện lấy sách cùng Ngày hẹn trả sách. Hệ thống kiểm soát nghiêm ngặt: Tổng số lượng sách độc giả đang chờ duyệt + đã duyệt + đang mượn không bao giờ được vượt quá 10 quyển. Nếu vượt quá, hệ thống từ chối tạo phiếu và thông báo lý do rõ ràng.
 
 2.5. Đăng nhập truyền thống và Đăng nhập ủy quyền mạng xã hội OAuth 2.0
-Màn hình đăng nhập cung cấp biểu mẫu nhập Email/Mật khẩu truyền thống kết hợp 2 nút bấm Đăng nhập nhanh bằng tài khoản Google và Facebook. Hệ thống tự động liên kết tài khoản và cấp phát JWT token nội bộ an toàn.
+Màn hình đăng nhập cung cấp biểu mẫu nhập Email/Mật khẩu truyền thống kết hợp nút bấm Đăng nhập nhanh bằng tài khoản Google (OAuth 2.0). Hệ thống tự động liên kết tài khoản và cấp phát JWT token nội bộ an toàn.
 
 [HÌNH 13: Đăng nhập bằng tài khoản thông thường và Ủy quyền OAuth 2.0]
-(Hướng dẫn lấy hình: Tại User-Web, mở trang Đăng nhập, chụp ảnh màn hình biểu mẫu đăng nhập có đầy đủ nút Google, Facebook và chèn vào vị trí này).
+(Hướng dẫn lấy hình: Tại User-Web, mở trang Đăng nhập, chụp ảnh màn hình biểu mẫu đăng nhập có nút Google và chèn vào vị trí này).
 
 2.6. Trang Lịch sử Mượn sách, Hẹn trả sách và Xin Gia hạn mượn sách
 Độc giả có thể theo dõi tiến độ từng phiếu mượn. Tại cột thao tác:
@@ -651,7 +997,7 @@ Trải qua quá trình nghiên cứu lý thuyết, phân tích thiết kế và 
 - Về mặt nghiệp vụ: Xây dựng trọn vẹn chu trình mượn - gia hạn - trả sách thông minh. Giải quyết triệt để bài toán Overbooking bằng nguyên tắc First-come First-served tại thời điểm duyệt; áp dụng quy tắc gia hạn chặt chẽ trước 3 ngày; tự động cập nhật quá hạn bằng cơ chế Lazy-check và tự động ánh xạ hiển thị đầy đủ Tên Nhà Xuất Bản.
 - Về mặt kiến trúc: Hiện thực hóa mô hình 1 Backend API tập trung phục vụ 2 Frontend Vue 3 SPA độc lập. Phân quyền RBAC 3 vai trò chặt chẽ ở cả tầng máy khách và máy chủ.
 - Về mặt kỹ thuật cơ sở dữ liệu: Làm chủ hoàn toàn Native MongoDB Driver, thiết lập 17 chỉ mục (Indexes) duy nhất và chỉ mục kết hợp, áp dụng thành công Chiến lược Hybrid Identifier tối ưu hóa hiệu năng.
-- Về mặt công nghệ mở rộng: Ứng dụng thành công Redis In-memory Caching tăng tốc độ truy xuất gấp 40 lần; tích hợp Trí tuệ nhân tạo Gemini AI Chatbot với kiến trúc tự phục hồi Resilience 3 lớp; tích hợp Tìm kiếm sách bằng giọng nói Voice Search và Đăng nhập ủy quyền OAuth 2.0 (Google/Facebook).
+- Về mặt công nghệ mở rộng: Ứng dụng thành công Redis In-memory Caching tăng tốc độ truy xuất gấp 40 lần; tích hợp Trí tuệ nhân tạo Gemini AI Chatbot với kiến trúc tự phục hồi Resilience 3 lớp; tích hợp Tìm kiếm sách bằng giọng nói Voice Search và Đăng nhập ủy quyền OAuth 2.0 (Google).
 - Về mặt triển khai vận hành: Hoàn thành cấu hình Production theo đúng quy cách giáo trình với máy chủ NGINX Reverse Proxy và quản lý tiến trình PM2, kèm theo bộ kịch bản tự động hóa start.bat và stop.bat ổn định trên môi trường Windows.
 
 2. Những ưu điểm nổi bật của đồ án

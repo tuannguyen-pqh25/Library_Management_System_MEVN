@@ -41,7 +41,7 @@
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
 [TRẠNG THÁI DỰ ÁN — 2026-10-24]
-- ✅ Hoàn thành: Giai đoạn 1–11 (RBAC 3 vai trò, E2E mượn/trả/gia hạn 3 ngày, Tên NXB, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google/Facebook, In-App Notification Bell kèm Read Tracking, Action Dropdowns, Chuẩn hóa Zero Emoji, 17 Unique Indexes MongoDB, Cấu hình NGINX + PM2, Sửa lỗi triệt để start.bat/stop.bat).
+- ✅ Hoàn thành: Giai đoạn 1–11 (RBAC 3 vai trò, E2E mượn/trả/gia hạn 3 ngày, Tên NXB, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google, In-App Notification Bell kèm Read Tracking, Action Dropdowns, Chuẩn hóa Zero Emoji, 17 Unique Indexes MongoDB, Cấu hình NGINX + PM2, Sửa lỗi triệt để start.bat/stop.bat).
 - 🔄 Tiếp theo: Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide thuyết trình, và Bộ câu hỏi phản biện của Giảng viên.
 
 [KIẾN TRÚC DEPLOY — NGINX + PM2 ĐÃ CẤU HÌNH]

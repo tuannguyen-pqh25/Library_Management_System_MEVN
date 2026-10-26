@@ -77,16 +77,6 @@
               </svg>
               <span>Đăng nhập với Google</span>
             </button>
-
-            <!-- Facebook Button -->
-            <button
-              type="button"
-              class="btn py-2 d-flex align-items-center justify-content-center gap-2 rounded-3 fw-medium social-btn facebook-btn text-white shadow-sm"
-              @click="loginWithFacebook"
-            >
-              <i class="fab fa-facebook-f text-white fs-6"></i>
-              <span>Đăng nhập với Facebook</span>
-            </button>
           </div>
 
           <div class="text-center small text-muted-custom font-body mt-4">
@@ -145,11 +135,6 @@ const loginWithGoogle = () => {
   const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
   window.location.href = `${apiBase}/user/auth/google`
 }
-
-const loginWithFacebook = () => {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-  window.location.href = `${apiBase}/user/auth/facebook`
-}
 </script>
 
 <style scoped>
@@ -166,16 +151,6 @@ const loginWithFacebook = () => {
   background-color: #f8f9fa;
   border-color: #c6c9cc;
   color: #202124;
-  transform: translateY(-1px);
-}
-.facebook-btn {
-  background-color: #1877F2;
-  border-color: #1877F2;
-}
-.facebook-btn:hover {
-  background-color: #166fe5;
-  border-color: #166fe5;
-  color: #ffffff;
   transform: translateY(-1px);
 }
 </style>

@@ -129,7 +129,7 @@ class DocGiaService {
     }
 
     /**
-     * Tìm hoặc tạo mới độc giả thông qua tài khoản ủy quyền OAuth (Google / Facebook)
+     * Tìm hoặc tạo mới độc giả thông qua tài khoản ủy quyền OAuth (Google)
      * @param {object} profileData { Email, HoLot, Ten, provider, providerId }
      * @returns {object} Document độc giả (đã bỏ Password)
      */
@@ -168,13 +168,12 @@ class DocGiaService {
         }
 
         // Chưa có tài khoản -> Tự động khởi tạo tài khoản mới cho Độc giả
-        const prefix = profileData.provider === "facebook" ? "FB" : "GG";
-        const maDocGia = `DG_${prefix}_${Date.now().toString().slice(-6)}`;
+        const maDocGia = `DG_GG_${Date.now().toString().slice(-6)}`;
 
         const newDocGia = {
             MaDocGia: maDocGia,
             HoLot: profileData.HoLot || "Độc giả",
-            Ten: profileData.Ten || (profileData.provider === "facebook" ? "Facebook" : "Google"),
+            Ten: profileData.Ten || "Google",
             NgaySinh: "",
             Phai: "Khác",
             DiaChi: "Cập nhật sau",

@@ -38,7 +38,7 @@ Nguyên tắc xuyên suốt: **giữ nguyên 100% tên bảng và tên thuộc t
 
 Tính đến thời điểm hiện tại, toàn bộ 11 giai đoạn phát triển đã hoàn thành 100%:
 
-- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google/Facebook), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao, và Trợ lý ảo Gemini AI Chatbot (Resilience Architecture) kết hợp Voice Search Web Speech API. Tích hợp Chuông thông báo In-App Notification Bell, Action Dropdowns ngữ cảnh và 17 Unique/Compound Indexes MongoDB.
+- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao, và Trợ lý ảo Gemini AI Chatbot (Resilience Architecture) kết hợp Voice Search Web Speech API. Tích hợp Chuông thông báo In-App Notification Bell, Action Dropdowns ngữ cảnh và 17 Unique/Compound Indexes MongoDB.
 - **Hoàn thiện Nghiệp vụ Nâng cao (2026-10-24):**
   - **Quy trình Gia hạn Mượn Sách (Book Renewal):** Độc giả có thể xin gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, +7 hoặc +14 ngày kèm lý do). Trạng thái chuyển sang "Chờ gia hạn" và phải được Thủ thư thẩm định phê duyệt hoặc từ chối có lý do.
   - **Trải nghiệm Tra cứu NXB:** Tự động lookup/mapping để hiển thị trực quan Tên Nhà Xuất Bản (`TenNXB`) thay cho mã số kỹ thuật trên mọi màn hình chi tiết.

@@ -701,7 +701,7 @@ docs(report): refine BaoCao.txt with pure academic styling, image capture guides
 4. **Sub-2ms Redis Caching & Invalidation:** Tăng tốc truy xuất danh sách sách từ ~65ms xuống 1-2ms; cơ chế Cache Invalidation tự động xóa cache khi có thao tác thêm/sửa/xóa hoặc duyệt mượn.
 5. **Resilient AI Architecture (Gemini 3.8 Flash):** Kiến trúc 3 lớp tự phục hồi đối phó lỗi 503/429 (Exponential Backoff with Jitter $\pm 25\%$, Fallback Chain sang Flash-Lite, Multi-Key Rotation).
 6. **Deterministic Notification IDs:** Giải quyết triệt để lỗi F5 reload trang làm nhảy lại badge chuông thông báo bằng ID bất biến.
-7. **Voice Search AI & OAuth 2.0:** Tìm kiếm bằng giọng nói Web Speech API và đăng nhập mạng xã hội Google/Facebook kèm Mock OAuth mode cho việc kiểm thử offline.
+7. **Voice Search AI & OAuth 2.0:** Tìm kiếm bằng giọng nói Web Speech API và đăng nhập mạng xã hội Google OAuth 2.0 kèm Mock OAuth mode cho việc kiểm thử offline.
 8. **DevOps NGINX + PM2:** Reverse Proxy, Gzip, cache tĩnh, try_files Vue Router HTML5 History Mode, PM2 cluster management và script batch Windows CRLF.
 
 ### 3. Git Commit Message chuẩn (Conventional Commits)
@@ -770,6 +770,127 @@ chore(git): ignore local batch scripts and keep README manual-only for GitHub
 - Remove all references to .bat scripts and local disk paths from README.md
 - Update checkpoint.md with batch exclusion milestone
 ```
+
+## Cập nhật 2026-10-26 — Chuẩn Hóa Mục "3. Ngôn ngữ lập trình và các công cụ liên quan" trong Báo cáo
+
+### 1. Đồng bộ cấu trúc theo mẫu chuẩn của Giảng viên (CT449)
+- **Tái cấu trúc Mục 3 Chương II**: Khắc phục triệt để các mã mục cũ (`4.2` - `4.7`) thành cấu trúc phân cấp chuẩn `3.1` đến `3.6`:
+  + `3.1. Ngôn ngữ lập trình sử dụng (JavaScript, HTML5, CSS3)`: Khai báo rõ ràng các ngôn ngữ lập trình cốt lõi của đề tài.
+  + `3.2. Nền tảng và Framework phát triển hệ thống`: Tổng quan kiến trúc MEVN Stack, môi trường Node.js & framework Express.js, thư viện giao diện Vue 3 (Composition API) & Bootstrap 5.
+  + `3.3. Hệ quản trị cơ sở dữ liệu và công nghệ lưu trữ đệm`: Phân tích MongoDB Native Driver (v6.x) và cơ chế bộ đệm Redis In-memory.
+  + `3.4. Cơ chế xác thực và bảo mật`: JSON Web Token (JWT với phân tách audience), mã hóa mật khẩu Bcrypt và giao thức OAuth 2.0.
+  + `3.5. Các công cụ hỗ trợ thiết kế, phát triển và kiểm thử`: Bổ sung đầy đủ các công cụ học thuật và thực tiễn gồm StarUML (thiết kế sơ đồ Use Case và ERD), Visual Studio Code, Postman (kiểm thử API), MongoDB Compass (quản trị trực quan) và Git/GitHub.
+  + `3.6. Công cụ triển khai và quản lý tiến trình máy chủ`: Phân tích vai trò của máy chủ web NGINX (Reverse Proxy, nén Gzip) và công cụ duy trì tiến trình PM2.
+- **Đồng bộ Mục lục**: Cập nhật danh mục phân cấp các tiểu mục từ `3.1` đến `3.6` tại phần Mục lục đầu tài liệu `BaoCao.txt`.
+- **Chuẩn hóa văn phong học thuật**: Loại bỏ hoàn toàn các từ ngữ phô trương, thiếu khiêm tốn hoặc mang hơi hướng AI, đảm bảo văn phong trang trọng, khách quan và khoa học.
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(report): standardize chapter II section 3 with programming languages and tools
+
+- Refactor section 3 in BaoCao.txt to explicitly cover languages (JS, HTML5, CSS3) and tools (StarUML, VS Code, Postman, Compass, Git, NGINX, PM2)
+- Fix legacy numbering scheme (4.2-4.7 -> 3.1-3.6) and eliminate AI/hyperbolic phrasing
+- Sync Table of Contents with updated section 3 subsections
+- Update checkpoint.md with documentation milestone
+```
+
+## Cập nhật 2026-10-26 — Hoàn Thiện Đặc Tả Use Case Cốt Lõi & Hướng Dẫn Vẽ Sơ Đồ StarUML trong `BaoCao.txt`
+
+### 1. Chuẩn hóa học thuật cấu trúc Use Case trong Báo cáo
+- **Làm rõ nguyên lý UML cho "Use Case tổng quát"**: Giải thích rõ ràng rằng Sơ đồ Use Case tổng quát là mô hình cấp kiến trúc hệ thống (System-level), không thể viết 1 kịch bản luồng sự kiện đơn lẻ cho toàn bộ hệ thống; thay vào đó hệ thống được tổ chức thành Danh mục Use Case toàn hệ thống (Bảng 2) và phân rã các ca sử dụng nguyên tử để đặc tả chi tiết.
+- **Bổ sung 6 Bảng đặc tả chi tiết chuẩn công nghệ phần mềm**:
+  + `Bảng 2.1: Đặc tả chi tiết Use Case Đăng ký tài khoản (UC01)` (Khách vãng lai, kiểm tra trùng lặp email/SĐT, sinh MaDocGia, băm Bcrypt).
+  + `Bảng 2.2: Đặc tả chi tiết Use Case Đăng nhập hệ thống (UC02)` (Độc giả/Thủ thư/Admin, Bcrypt so khớp, JWT aud phân quyền, mở rộng Google OAuth 2.0).
+  + `Bảng 2.3: Đặc tả chi tiết Use Case Đăng ký mượn sách (UC07)` (Độc giả, kiểm tra hạn mức 10 quyển, kiểm tra tồn kho, tạo phiếu Chờ duyệt).
+  + `Bảng 2.4: Đặc tả chi tiết Use Case Kiểm duyệt phiếu mượn sách (UC15)` (Thủ thư, thao tác nguyên tử FindAndModify trừ kho chống Overbooking).
+  + `Bảng 2.5: Đặc tả chi tiết Use Case Xin gia hạn mượn sách (UC10)` (Độc giả & Thủ thư, quy tắc 3 ngày trước hạn trả, tối đa 2 lần, thủ thư duyệt).
+  + `Bảng 2.6: Đặc tả chi tiết Use Case Xác nhận trả sách và Xử lý quá hạn (UC17, UC18)` (Thủ thư, thao tác nguyên tử hoàn kho, tính tiền phạt trễ hạn 5.000đ/ngày).
+- **Thiết kế kiến trúc sơ đồ & Hướng dẫn vẽ StarUML 6 bước thực chiến**:
+  + Phân tích rõ các thành phần: Khung Boundary hệ thống, 5 Actor kèm quan hệ thừa kế Generalization (Độc giả -> Khách, Admin -> Thủ thư).
+  + Bố trí các liên kết Association rõ ràng cho từng nhóm chức năng.
+  + Chỉ rõ từng mũi tên quan hệ `<<include>>` (ràng buộc bắt buộc) và `<<extend>>` (mở rộng theo điều kiện).
+  + Hướng dẫn cụ thể từng bước thao tác chuột trên phần mềm StarUML và cách xuất file ảnh `Hinh1_SoDoUseCase.png` độ phân giải cao để chèn vào báo cáo.
+- **Đồng bộ Mục lục và Danh mục Bảng**: Cập nhật các tiểu mục từ `1.1` đến `1.5` cùng danh mục Bảng 2.1 đến 2.6 tại phần đầu tài liệu `BaoCao.txt`.
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(report): complete use case specifications and StarUML diagram guidance in BaoCao.txt
+
+- Clarify distinction between system-level use case diagram and atomic use case specifications
+- Add 6 formal specification tables (Tables 2.1-2.6) for core workflows: Register, Login/OAuth, Borrow, Approve/Anti-overbooking, Renewal, and Return/Fine
+- Detail StarUML step-by-step drawing instructions with explicit Include, Extend, and Generalization relationships
+- Synchronize Table of Contents and Table of Tables in BaoCao.txt
+- Update checkpoint.md with documentation milestone
+```
+
+## Cập nhật 2026-10-26 (Chiều) — Chuẩn Hóa Xác Thực OAuth 2.0: Loại Bỏ Facebook, Tập Trung Tuyệt Đối Vào Google OAuth 2.0
+
+### 1. Bối cảnh & Quyết định Kỹ thuật
+- **Vấn đề thực tế của Facebook Login**: Nền tảng Meta for Developers yêu cầu ngặt nghèo về tên miền công khai có chứng chỉ SSL/HTTPS hợp lệ, kiểm duyệt ứng dụng (App Review) phức tạp và thường xuyên lỗi token callback trên môi trường máy chủ cục bộ (Localhost).
+- **Giải pháp dứt điểm**: Loại bỏ hoàn toàn Facebook OAuth khỏi toàn bộ mã nguồn frontend, backend, cấu hình môi trường và tài liệu học thuật. Duy trì duy nhất **Google OAuth 2.0** với Google Cloud Console Client ID/Secret đã được cấu hình sẵn sàng và kiểm thử thành công, kết hợp chế độ **Mock OAuth** phục vụ chấm thi offline.
+
+### 2. Chi tiết các tệp mã nguồn và tài liệu đã làm sạch
+1. **Frontend (`user-web/src/views/LoginUser.vue`)**:
+   - Gỡ bỏ hoàn toàn nút bấm Facebook cùng hàm `loginWithFacebook()`.
+   - Giữ nguyên nút Google với biểu tượng SVG chuẩn màu nhận diện thương hiệu Google, hiệu ứng hover mượt mà và chuyển hướng chính xác đến `/api/user/auth/google`.
+2. **Backend Authentication Layer**:
+   - `BACKEND/app/config/passport.js`: Gỡ bỏ `FacebookStrategy`, hàm `isFacebookConfigured()`, chỉ còn cấu hình `GoogleStrategy` và hàm kiểm tra `isGoogleConfigured()`.
+   - `BACKEND/app/routes/user/auth.route.js`: Xóa bỏ 2 endpoint `/facebook` và `/facebook/callback`.
+   - `BACKEND/app/controllers/user/auth.controller.js`: Xóa các hàm `facebookAuth` và `facebookCallback`; cập nhật `mockOAuth` tạo tài khoản demo `docgia.google@example.com`.
+   - `BACKEND/app/config/index.js`: Xóa bỏ object `config.oauth.facebook`.
+   - `BACKEND/app/services/docgia.service.js`: Chuẩn hóa sinh mã độc giả `DG_GG_xxxxxx` cho luồng Google OAuth.
+   - `BACKEND/package.json`: Gỡ bỏ dependency `passport-facebook`.
+   - `BACKEND/.env` & `.env.example`: Xóa các biến `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_CALLBACK_URL`.
+   - `BACKEND/app/utils/indexes.util.js`: Chuẩn hóa mô tả chỉ mục `idx_oauth` thành "Tối ưu định danh đăng nhập OAuth 2.0 (Google)".
+3. **Đồng bộ Báo cáo và Hồ sơ Đồ án**:
+   - `Cores/BaoCao.txt`: Thay thế toàn bộ cụm từ "Google / Facebook" thành "Google OAuth 2.0" tại các mục Mục tiêu bảo mật, Yêu cầu chức năng, Kịch bản Use Case Đăng nhập (UC02), Lược đồ quan hệ `DOCGIA`, Danh mục chỉ mục Indexes và Hướng dẫn chụp màn hình giao diện.
+   - `README.md`: Cập nhật mô tả kiến trúc User Web, bảng Công nghệ & External APIs, cùng mục 9 Tính năng nổi bật.
+   - `Cores/presentation.md`: Cập nhật nội dung Slide 9 và Kịch bản trả lời chất vấn Câu 13 sang chuẩn Google OAuth 2.0.
+
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+refactor(auth): remove Facebook OAuth and standardize on Google OAuth 2.0
+
+- Purge FacebookStrategy, routes, controllers, and env variables from backend
+- Remove Facebook login button and unused styles from LoginUser.vue
+- Update Mock OAuth to produce Google reader identities
+- Remove passport-facebook dependency from package.json
+- Synchronize BaoCao.txt, README.md, presentation.md, and checkpoint.md
+```
+
+## Cập nhật 2026-10-26 (Chiều) — Hoàn Thiện Toàn Diện 6 Mục Chuẩn Học Thuật Trong Chương I `BaoCao.txt`
+
+### 1. Chi tiết phục hồi & nâng cấp Chương I (Tổng quan đề tài)
+- Khôi phục và nâng cấp đầy đủ **6 mục chuẩn công nghệ phần mềm / đề cương luận văn**:
+  1. `1. Đặt vấn đề và lý do chọn đề tài`: Bối cảnh chuyển đổi số giáo dục, các bất cập thực tế của quản lý thủ công truyền thống và tính cấp thiết của đề tài.
+  2. `2. Mục tiêu nghiên cứu của đề tài`: Phân tách rành mạch thành **Mục tiêu tổng quát** và **Mục tiêu cụ thể** (Database NoSQL, Nghiệp vụ chống Overbooking/Gia hạn/Lazy-check, Kiến trúc 2 Frontend 1 Backend RBAC, Công nghệ mở rộng Redis/Gemini/Voice Search/Google OAuth 2.0, Triển khai NGINX/PM2).
+  3. `3. Đối tượng và phạm vi nghiên cứu`:
+     - Đối tượng nghiên cứu: Nghiệp vụ luân chuyển tài liệu, kiến trúc web phân tán RESTful API, mô hình Non-blocking Node.js/Express, SPA Vue 3 Composition API, Native MongoDB Driver, Redis Caching, bảo mật JWT/Google OAuth 2.0.
+     - Phạm vi nghiên cứu & ứng dụng: Phạm vi không gian (thư viện trường học/học liệu số), phạm vi nghiệp vụ (vòng đời phiếu mượn, tài khoản, danh mục, thống kê), phạm vi công nghệ (MEVN Stack thuần tự chủ, không lệ thuộc Cloud trả phí).
+  4. `4. Phương pháp nghiên cứu`:
+     - Phương pháp nghiên cứu tài liệu lý thuyết.
+     - Phương pháp phân tích thiết kế hệ thống hướng đối tượng (OOAD với StarUML: Use Case, ERD).
+     - Phương pháp thực nghiệm và phát triển phần mềm (mô hình lặp Agile 11 giai đoạn, Native MongoDB Driver, Vue 3 SPA không Tailwind, E2E Testing).
+  5. `5. Các chức năng chính của hệ thống`: Liệt kê chi tiết tính năng của 2 phân hệ độc lập:
+     - Phân hệ Quản trị (Admin Web - Quản lý sách, NXB, Phê duyệt mượn/trả/gia hạn/chống Overbooking/phạt, Phân quyền RBAC 3 vai trò, Dashboard KPI Chart.js).
+     - Phân hệ Độc giả (User Web - Đăng ký/đăng nhập/Google OAuth 2.0, Tra cứu Skeleton Loader, Voice Search AI, Gemini AI Chatbot, Mượn sách giới hạn 10 quyển, Gia hạn trước 3 ngày, Chuông thông báo Deterministic ID).
+  6. `6. Bố cục của bài báo cáo`: Tóm tắt nội dung chi tiết của toàn bộ 5 chương trong báo cáo.
+- **Đồng bộ Mục lục**: Cập nhật danh mục phân cấp Chương I tại đầu tài liệu `BaoCao.txt`.
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(report): restore and expand chapter 1 with 6 formal academic sections in BaoCao.txt
+
+- Add complete 6-section structure: Problem Statement, Research Objectives, Scope, Methods, Core Features, and Report Layout
+- Detail research methodology with OOAD, StarUML, and Agile iterative software engineering
+- Differentiate core feature sets for Admin Web and User Web
+- Synchronize Table of Contents in BaoCao.txt
+- Update checkpoint.md with documentation milestone
+```
+
+
+
+
 
 
 

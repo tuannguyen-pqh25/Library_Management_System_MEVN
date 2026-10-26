@@ -93,7 +93,7 @@
 - **In-App Notification Bell:** Chuông thông báo nhắc hẹn trả sách với thuật toán **Deterministic ID** (loại bỏ hoàn toàn lỗi nhảy lại badge khi F5 reload trang).
 - **Gemini AI Chatbot (Resilience 3 Lớp):** Tự động tư vấn tìm sách, xử lý lỗi 503/429 bằng cơ chế Exponential Backoff with Jitter, Model Fallback Chain và Multi-Key Rotation.
 - **Voice Search AI:** Tìm kiếm sách rảnh tay qua giọng nói bằng Web Speech API.
-- **OAuth 2.0:** Đăng nhập một chạm bằng Google & Facebook kèm chế độ Mock OAuth cho chấm thi offline.
+- **OAuth 2.0:** Đăng nhập một chạm bằng Google OAuth 2.0 kèm chế độ Mock OAuth cho chấm thi offline.
 
 ### Slide 10: Tối Ưu Hóa & Đóng Gói Triển Khai (DevOps & Deploy)
 - **Chuẩn hóa mã nguồn:** Loại bỏ 100% hardcoded emoji trong codebase (Zero-Emoji standard) đảm bảo tương thích đa nền tảng và văn phong kỹ thuật chuẩn mực.
@@ -322,7 +322,7 @@
 
 ---
 
-### Câu 13: Đăng nhập Google/Facebook OAuth 2.0 hoạt động như thế nào và liên kết với collection `DOCGIA` ra sao?
+### Câu 13: Đăng nhập Google OAuth 2.0 hoạt động như thế nào và liên kết với collection `DOCGIA` ra sao?
 - **Trả lời chuẩn Senior:**
   > *"Dạ thưa Thầy, luồng OAuth 2.0 diễn ra như sau:
   > 1. Độc giả bấm nút đăng nhập Google $\rightarrow$ Chuyển hướng sang Google Authentication Server.

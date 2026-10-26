@@ -49,17 +49,12 @@ const config = {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXPIRES_IN || "1d",
     },
-    // Cấu hình OAuth 2.0 (Đăng nhập Google & Facebook cho Độc giả)
+    // Cấu hình OAuth 2.0 (Đăng nhập Google cho Độc giả)
     oauth: {
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
             callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/api/user/auth/google/callback",
-        },
-        facebook: {
-            appId: process.env.FACEBOOK_APP_ID || "",
-            appSecret: process.env.FACEBOOK_APP_SECRET || "",
-            callbackURL: process.env.FACEBOOK_CALLBACK_URL || "http://localhost:3000/api/user/auth/facebook/callback",
         },
         clientRedirectUrl: process.env.OAUTH_CLIENT_REDIRECT_URL || "http://localhost:5173/oauth-callback",
     }
