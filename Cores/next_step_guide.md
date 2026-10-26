@@ -6,7 +6,7 @@
 > **Stack cốt lõi:** MongoDB + Express.js + Vue 3 + Node.js (KHÔNG thay đổi).
 > **CSDL:** Giữ nguyên 100% tên bảng và tên thuộc tính đã thiết kế trong `Cores/Chienluoc.md`; đối chiếu mã nguồn khi tài liệu lịch sử khác hiện trạng.
 > **Frontend:** Vue 3 (Composition API) là chính, Bootstrap 5 là phụ trợ layout.
-> **Trạng thái hiện tại (2026-10-24):** Dự án HOÀN THÀNH 100% tất cả 11 giai đoạn (Bao gồm Deploy NGINX + PM2 và sửa lỗi batch scripts) + Hoàn thiện toàn diện Nghiệp vụ Gia hạn mượn sách (Quy tắc 3 ngày & Thủ thư duyệt), Hiển thị Tên NXB thay cho Mã, và sửa lỗi Badge thông báo F5/Refresh. Bước tiếp theo là Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide báo cáo và Bộ câu hỏi phản biện của Giảng viên. Phần roadmap lịch sử bên dưới KHÔNG phải danh sách việc phải làm lại. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
+> **Trạng thái hiện tại (2026-10-26):** Dự án HOÀN THÀNH 100% tất cả 11 giai đoạn (Bao gồm Deploy NGINX + PM2). Đã hoàn tất chuẩn hóa xác thực: Loại bỏ hoàn toàn Facebook OAuth, tích hợp Google OAuth 2.0 độc lập với Google Cloud Project `ASALib` (Client ID: 229912325455). Báo cáo `BaoCao.txt` đã hoàn thiện trọn vẹn 6 chương học thuật (bao gồm Sơ đồ Use Case tổng quát, Bảng đặc tả 6 ca sử dụng, Hướng dẫn kéo nối StarUML, và Chương V Triển khai NGINX/PM2/Redis). Hồ sơ đồ án đã sẵn sàng cho khâu bảo vệ và đóng gói CV. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
 
 ---
 
@@ -15,7 +15,7 @@
 > **Hướng dẫn cho bạn:** Bất cứ khi nào bạn mở một phiên chat mới với AI (Claude, ChatGPT, Gemini, v.v.), hãy copy nội dung trong khối code bên dưới và gửi cho AI. Điều này giúp AI ngay lập tức nắm bắt toàn bộ ngữ cảnh, nguyên tắc code và không làm sai lệch kiến trúc.
 
 ```text
-Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449) — đã HOÀN THÀNH 100% tính năng, nghiệp vụ mượn/gia hạn/trả và cấu hình Deploy (NGINX + PM2), đang ở giai đoạn Chuẩn bị bảo vệ đồ án.
+Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449 - Đại học Cần Thơ) — đã HOÀN THÀNH 100% tính năng, nghiệp vụ mượn/gia hạn/trả, Google OAuth 2.0 (Project ASALib), Deploy (NGINX + PM2) và hoàn tất Báo cáo học thuật 6 chương (BaoCao.txt). Hiện tại đang ở giai đoạn Chuẩn bị bảo vệ đồ án, kiểm thử và đóng gói portfolio.
 
 [YÊU CẦU CỐT LÕI - TUYỆT ĐỐI KHÔNG ĐƯỢC VI PHẠM]
 1. Tech stack: MongoDB (native driver, KHÔNG Mongoose), Express.js, Vue 3 (Composition API), Node.js.
@@ -23,8 +23,9 @@
 3. Cơ sở dữ liệu: Giữ nguyên 100% tên bảng và tên thuộc tính. Service layer dùng camelCase (TenSach, DonGia). KHÔNG đổi ngược lại VIẾT HOA.
    - Các field mở rộng (SoTrang, MoTa, NgonNgu, TheLoai, HinhAnh, TacGia) KHÔNG có trong CSDL thầy → KHÔNG đặt là required trong Yup.
 4. Giao diện: Vue 3 core logic + Bootstrap 5 layout. TUYỆT ĐỐI KHÔNG DÙNG TAILWIND.
-5. Hạn mức mượn: 10 quyển tổng cộng/độc giả. Phiếu chờ duyệt chưa trừ kho; trừ kho lúc Admin duyệt.
+5. Hạn mức mượn: 10 quyển tổng cộng/độc giả. Phiếu chờ duyệt chưa trừ kho; trừ kho lúc Admin duyệt bằng thao tác nguyên tử chống Overbooking.
 6. Nghiệp vụ Gia hạn: Sách phải ở trạng thái "đang mượn", chưa quá hạn, gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, mỗi lần +7 hoặc +14 ngày) và phải được Thủ thư duyệt ("chờ gia hạn" -> "đang mượn").
+7. Xác thực OAuth: Sử dụng duy nhất Google OAuth 2.0 (Google Cloud Project ASALib, Client ID: 229912325455). Đã loại bỏ hoàn toàn Facebook OAuth.
 
 [CẢNH BÁO LỖI ĐÃ GẶP - ĐỌC TRƯỚC KHI CODE]
 - app.js route order: Route prefix rộng (có middleware) PHẢI mount SAU route cụ thể. Sai thứ tự → 401.
@@ -36,25 +37,33 @@
 
 [QUYẾT ĐỊNH KIẾN TRÚC ĐÃ THỐNG NHẤT — KHÔNG THAY ĐỔI]
 - _id (ObjectId): URL routing, aggregate $lookup, FK nội bộ. Nhanh nhất (clustered index ~0.1ms).
-- MaSach/MaDocGia/MSNV/MaNXB: Hiển thị UI, tìm kiếm nghiệp vụ, báo cáo. Cần unique index thủ công.
+- MaSach/MaDocGia/MSNV/MaNXB: Hiển thị UI, tìm kiếm nghiệp vụ, báo cáo. Đã cấu hình 17 unique/compound indexes MongoDB.
 - Tên NXB: Luôn được join/lookup hiển thị dưới dạng Tên NXB (TenNXB) thay vì chỉ để Mã NXB.
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
-[TRẠNG THÁI DỰ ÁN — 2026-10-24]
-- ✅ Hoàn thành: Giai đoạn 1–11 (RBAC 3 vai trò, E2E mượn/trả/gia hạn 3 ngày, Tên NXB, Dashboard Chart.js, Redis Cache, Gemini AI Chatbot, Voice Search AI, OAuth 2.0 Google, In-App Notification Bell kèm Read Tracking, Action Dropdowns, Chuẩn hóa Zero Emoji, 17 Unique Indexes MongoDB, Cấu hình NGINX + PM2, Sửa lỗi triệt để start.bat/stop.bat).
-- 🔄 Tiếp theo: Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide thuyết trình, và Bộ câu hỏi phản biện của Giảng viên.
-
-[KIẾN TRÚC DEPLOY — NGINX + PM2 ĐÃ CẤU HÌNH]
-Internet → NGINX (port 80) → proxy /api/* & /uploads/* → Node.js qua PM2 (port 3000)
-                           → serve /* → Vue dist/ (user-web)
-Admin web: NGINX (port 8080) → serve admin-web/dist/ & proxy /api/* + /uploads/*
-File cấu hình đã có sẵn tại: nginx.conf và BACKEND/ecosystem.config.js.
+[TRẠNG THÁI DỰ ÁN — 2026-10-26]
+- ✅ Hoàn thành: 11 giai đoạn + RBAC 3 vai trò + E2E mượn/trả/gia hạn 3 ngày + Tên NXB + Dashboard Chart.js + Redis Cache 1-2ms + Gemini AI Chatbot + Voice Search AI + Google OAuth 2.0 (ASALib) + In-App Notification Bell Deterministic ID + 17 Indexes + NGINX & PM2 + Báo cáo BaoCao.txt chuẩn 6 chương.
+- 🔄 Tiếp theo: Chụp ảnh minh họa giao diện cho BaoCao.txt, luyện tập bảo vệ đồ án theo `Cores/presentation.md`.
 
 [HÀNH ĐỘNG ĐẦU TIÊN CỦA BẠN]
 1. Đọc Cores/checkpoint.md để biết trạng thái mới nhất.
-2. Hỗ trợ người dùng chuẩn bị bảo vệ đồ án: xây dựng kịch bản demo tính năng, luyện tập trả lời câu hỏi phản biện, làm slide/báo cáo, hoặc giải đáp kỹ thuật.
-3. KHÔNG tự ý triển khai thêm tính năng nghiệp vụ mới.
+2. Hỗ trợ người dùng chuẩn bị bảo vệ đồ án: giải đáp thắc mắc kỹ thuật, luyện tập trả lời câu hỏi phản biện, hướng dẫn lấy số liệu/ảnh minh họa cho báo cáo.
+3. KHÔNG tự ý thay đổi kiến trúc hoặc triển khai thêm tính năng không cần thiết.
 ```
+
+---
+
+## 📌 BỘ PROMPT MẪU CHO CÁC BƯỚC TIẾP THEO
+
+### Prompt 1: Hướng dẫn chụp 18 hình ảnh thực tế để hoàn thiện bài Báo cáo
+> *"Hãy hướng dẫn chi tiết từng bước cho tôi để chụp đủ 18 hình ảnh minh họa thực tế trên giao diện hệ thống (từ Sơ đồ StarUML, các màn hình User Web, Admin Web đến Network Tab Redis Cache) theo đúng các vị trí ghi chú trong `Cores/BaoCao.txt` để tôi dán vào file Word nộp cho Giảng viên."*
+
+### Prompt 2: Luyện tập kịch bản bảo vệ đồ án và phản biện trước Hội đồng
+> *"Dựa vào tài liệu `Cores/presentation.md` và `Cores/BaoCao.txt`, hãy đóng vai Giảng viên chấm thi vấn đáp tôi về các điểm sáng kỹ thuật (Chống Overbooking nguyên tử, Chiến lược Hybrid Identifier, Redis Invalidation, Resilience AI Chatbot, Deterministic Notification ID và Cấu hình NGINX/PM2) và đánh giá câu trả lời của tôi."*
+
+### Prompt 3: Kiểm thử hoàn chỉnh luồng Google OAuth 2.0
+> *"Hãy hướng dẫn tôi kiểm thử toàn diện luồng đăng nhập Google OAuth 2.0 vừa cấu hình với project ASALib, cách kiểm tra dữ liệu độc giả mới được sinh ra trong collection DOCGIA và cách đối soát token JWT."*
+
 
 ---
 

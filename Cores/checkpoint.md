@@ -888,6 +888,40 @@ docs(report): restore and expand chapter 1 with 6 formal academic sections in Ba
 - Update checkpoint.md with documentation milestone
 ```
 
+## Cập nhật 2026-10-26 (Cuối chiều) — Khởi Tạo Dự Án Mới Google Cloud (ASALib), Hoàn Tất Chuẩn Hóa OAuth 2.0 & Đồng Bộ Hồ Sơ Cores
+
+### 1. Chi tiết kỹ thuật & Môi trường triển khai
+- **Khởi tạo Google Cloud Project độc lập (`ASALib`)**:
+  + Thay thế hoàn toàn project mượn tạm cũ (`flashcard-lens`) bằng project mới `ASALib` (Project Number: `229912325455`).
+  + Cấu hình Màn hình đồng thuận Google Auth Platform: User Type `External`, cập nhật thông tin nhận diện thương hiệu `Branding` và thêm tài khoản kiểm thử tại mục `Audience` -> `Test users`.
+  + Tạo mới thông tin xác thực Web Application với các URI ủy quyền:
+    * `Authorized redirect URIs`: `http://localhost:3000/api/user/auth/google/callback`
+    * `Authorized JavaScript origins`: `http://localhost:5173`
+  + Cập nhật trực tiếp vào file môi trường `BACKEND/.env`:
+    * `GOOGLE_CLIENT_ID=229912325455-xxxxxxxxxx.apps.googleusercontent.com` (Đã nạp an toàn vào .env)
+    * `GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx` (Đã nạp an toàn vào .env)
+    * `GOOGLE_CALLBACK_URL=http://localhost:3000/api/user/auth/google/callback`
+- **Bảo toàn và Chuẩn hóa Cấu trúc Báo cáo Học thuật (`BaoCao.txt`)**:
+  + Khẳng định và duy trì nguyên vẹn cấu trúc **6 chương chuẩn mực**, đặc biệt là **Chương V: Triển khai và vận hành hệ thống** (NGINX Reverse Proxy, PM2 Cluster Management, Redis In-memory Caching thực nghiệm 1-2ms).
+  + Sửa chữa triệt để phần tóm tắt tại mục `6. Bố cục của bài báo cáo` ở Chương I để phản ánh chính xác nội dung toàn văn 6 chương (Chương I đến Chương VI).
+- **Đồng bộ hóa toàn diện hệ thống tài liệu ngữ cảnh (`Cores/`)**:
+  + `BaoCao.txt`: 6 chương đầy đủ, chi tiết, văn phong chuẩn học thuật Đại học Cần Thơ.
+  + `checkpoint.md`: Ghi nhận nhật ký phát triển chính xác từng bước, lưu vết commit chuẩn mực.
+  + `next_step_guide.md`: Cung cấp ngữ cảnh cô đọng, trạng thái hệ thống mới nhất và bộ prompts sẵn sàng cho các phiên làm việc tiếp theo.
+  + `Chienluoc.md`: Tinh chỉnh ghi nhận hoàn thành 100% tất cả các phân hệ kỹ thuật nâng cao.
+  + `README.md`: Chuẩn hóa 2 ngôn ngữ Anh - Việt, đóng vai trò Portfolio cá nhân chuyên nghiệp phục vụ ứng tuyển việc làm (CV).
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(auth): integrate dedicated Google Cloud project ASALib and synchronize all core docs
+
+- Configure dedicated Google Cloud OAuth 2.0 Web Client credentials for ASALib
+- Update BACKEND/.env with newly generated Client ID and Client Secret
+- Reaffirm 6-chapter structure in BaoCao.txt with Chapter V (Deployment and Operations)
+- Fully synchronize documentation across BaoCao.txt, next_step_guide.md, Chienluoc.md, and checkpoint.md
+```
+
+
 
 
 
