@@ -1,359 +1,689 @@
 ĐẠI HỌC CẦN THƠ
-TRƯỜNG CÔNG NGHỆ THÔNG TIN & TRUYỀN THÔNG
-ĐẠI HỌC
-CẦN THƠ
-BÁO CÁO PHÁT TRIỂN ỨNG DỤNG WEB
-Đề tài:
-XÂY DỰNG WEBSITE QUẢN LÝ ĐĂNG KÝ MƯỢN SÁCH ONLINE
-Giáo viên hướng dẫn
-Ths.GVC Nguyễn Minh Trung
-Sinh viên thực hiện
-Tên: Nguyễn Minh Tuấn
-MSSV: B2306598
-Cần thơ, tháng 11 năm 2026
+TRƯỜNG CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG
+KHOA CÔNG NGHỆ PHẦN MỀM
 
+BÁO CÁO HỌC PHẦN
+PHÁT TRIỂN ỨNG DỤNG WEB (MÃ HỌC PHẦN: CT449)
+
+ĐỀ TÀI:
+XÂY DỰNG WEBSITE QUẢN LÝ ĐĂNG KÝ MƯỢN TRẢ SÁCH TRỰC TUYẾN
+
+Giảng viên hướng dẫn:
+Ths.GVC Nguyễn Minh Trung
+
+Sinh viên thực hiện:
+Nguyễn Minh Tuấn
+Mã số sinh viên: B2306598
+Lớp: Kỹ thuật phần mềm - Khóa 49
+
+Cần Thơ, tháng 11 năm 2026
+
+
+================================================================================
 LỜI CẢM ƠN
-Để hoàn thành được báo cáo Phát triển ứng dụng web, đầu tiên cho em gửi một
-lời cảm ơn chân thành nhất đến với tất cả các giảng viên của Trường Công Nghệ
-Thông Tin và Truyền Thông đã tận tình giảng dạy, chỉ bảo để em có kiến thức cơ bản,
-những kỹ năng lập trình vững chắc. Để hôm nay em có thể hoàn thành tốt báo cáo niên
-luận.
-Đặc biệt, xin gửi đến thầy Ths.GVC Nguyễn Minh Trung một lời cảm ơn sâu
-sắc vì đã hỗ trợ và tận tình giúp đỡ em trong quá trình làm đề tài. Những lời góp ý
-cũng như nhắc nhở đã giúp em có thêm nhiều ý tưởng cũng như điều chỉnh những sai
-sót của mình.
-Một lần nữa, em xin cảm ơn Thầy cô, bạn bè, gia đình, ... đã tận tình động
-viên, giúp đỡ, cho em những lời góp ý hữu ích trong suốt quá trình học tập và thực
-hiện đề tài.
-Dù đã hoàn thành xong đề tài báo cáo nhưng sẽ khó tránh khỏi những sai sót.
-Mong Thầy có thể thông cảm và cho em những góp ý chân thành.
-Em xin chân thành cảm ơn.
-Cần Thơ, ngày 04 tháng 05 năm 2023
+================================================================================
+
+Để hoàn thành được báo cáo kết thúc học phần Phát triển ứng dụng web (CT449), lời đầu tiên em xin bày tỏ lòng biết ơn sâu sắc và chân thành nhất đến toàn thể Quý Thầy Cô của Trường Công Nghệ Thông Tin và Truyền Thông - Đại học Cần Thơ, những người đã tận tình truyền đạt cho em nền tảng kiến thức chuyên môn vững vàng, tư duy lập trình khoa học cùng những bài học quý báu trong suốt quá trình học tập tại trường.
+
+Đặc biệt, em xin gửi lời cảm ơn sâu sắc và trân trọng nhất đến Thầy Ths.GVC Nguyễn Minh Trung - giảng viên phụ trách học phần. Trong suốt thời gian thực hiện đề tài, nhờ có sự định hướng tâm huyết, những lời chỉ bảo tận tình cũng như những phản biện và gợi ý xác đáng của Thầy mà em đã có thể làm sáng tỏ nhiều vấn đề kỹ thuật phức tạp, điều chỉnh kịp thời các sai sót trong kiến trúc và hoàn thiện hệ thống phần mềm một cách chỉn chu, đúng chuẩn kỹ thuật công nghiệp.
+
+Em cũng xin chân thành cảm ơn gia đình, bạn bè đã luôn động viên, tạo điều kiện thuận lợi và chia sẻ những ý kiến đóng góp quý giá để em hoàn thành đề tài này.
+
+Mặc dù em đã nỗ lực hết mình để hiện thực hóa các yêu cầu bài toán một cách chặt chẽ nhất, song đề tài chắc chắn khó tránh khỏi những thiếu sót nhất định do kiến thức và kinh nghiệm thực tế còn hạn chế. Em rất mong nhận được những nhận xét, góp ý quý báu từ Thầy để đồ án ngày một hoàn thiện hơn.
+
+Kính chúc Thầy luôn dồi dào sức khỏe, hạnh phúc và gặt hái được nhiều thành công hơn nữa trong sự nghiệp giảng dạy và nghiên cứu khoa học.
+
+Em xin chân thành cảm ơn!
+
+Cần Thơ, ngày 26 tháng 10 năm 2026
 Sinh viên thực hiện
 Nguyễn Minh Tuấn
 
+
+================================================================================
 MỤC LỤC
+================================================================================
 
-DANH MỤC HÌNH
-Hình 1: Sơ đồ Use Case tổng quát
-Hình 2: Sơ đồ cơ sở dữ liệu (ERD)
-Hình 3: Giao diện trang chủ User
-Hình 4: Giao diện chi tiết mượn sách
-Hình 5: Dashboard thống kê Admin
+CHƯƠNG I: TỔNG QUAN ĐỀ TÀI
+1. Đặt vấn đề và lý do chọn đề tài
+2. Mục tiêu nghiên cứu của đề tài
+3. Đối tượng và phạm vi ứng dụng
+4. Phương pháp tiếp cận và công nghệ sử dụng
 
-DANH MỤC BẢNG
-Bảng 1: Phân quyền hệ thống
-Bảng 2: Cấu trúc bộ sưu tập (Collections) MongoDB
+CHƯƠNG II: ĐẶC TẢ YÊU CẦU HỆ THỐNG
+1. Mô tả bài toán nghiệp vụ thư viện thực tế
+2. Yêu cầu chức năng chi tiết
+   2.1. Phân hệ dành cho Độc giả
+   2.2. Phân hệ dành cho Thủ thư và Quản trị viên
+3. Yêu cầu phi chức năng
+4. Công nghệ và môi trường phát triển hệ thống
+   4.1. Kiến trúc MEVN Stack
+   4.2. Môi trường Node.js và Express.js Framework
+   4.3. Hệ quản trị cơ sở dữ liệu MongoDB và Native Driver
+   4.4. Thư viện giao diện Vue 3 (Composition API) và Bootstrap 5
+   4.5. Hệ thống lưu trữ bộ đệm Redis In-memory Caching
+   4.6. Trí tuệ nhân tạo Gemini AI và API Web Speech
+   4.7. Máy chủ Web NGINX và Quản lý tiến trình PM2
 
-CHƯƠNG I: GIỚI THIỆU
-1. Đặt vấn đề
-Ngày nay, sự phát triển mạnh mẽ của khoa học công nghệ là một trong những yếu tố quyết định và có vai trò hết sức quan trọng tạo nên những bước đột phá mạnh mẽ cho nền giáo dục, kinh tế, đất nước... Chúng ta có thể cảm nhận và thấy được công nghệ đã tạo được ảnh hưởng to lớn đối với tất cả các ngành và cả trong đời sống ngày thường.
+CHƯƠNG III: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+1. Phân tích chức năng và Sơ đồ Use Case
+   1.1. Danh sách các tác nhân hệ thống
+   1.2. Bảng đặc tả chi tiết các Use Case
+   1.3. Sơ đồ Use Case tổng quát
+   1.4. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML
+2. Phân tích và Thiết kế Cơ sở dữ liệu
+   2.1. Mô hình dữ liệu và Chiến lược Hybrid Identifier
+   2.2. Sơ đồ Thực thể - Mối quan hệ (ERD)
+   2.3. Cấu trúc chi tiết các Bộ sưu tập (Collections Schema)
+   2.4. Thiết kế 17 Chỉ mục (Indexes) và Ràng buộc toàn vẹn dữ liệu
 
-Khi con người đang sống trong thời kì công nghệ 4.0, mọi thứ đều trở nên tiên tiến, lĩnh vực số hóa giáo dục và quản lý thư viện trực tuyến đang là mục tiêu của nhiều trường học, cơ sở giáo dục. Khi mà con người sử dụng internet rất nhiều và có xu hướng chuyển qua tra cứu, tìm kiếm trực tuyến bởi sự tiện lợi, đa dạng và những lợi ích to lớn mà nó đem lại. Việc không xây dựng một hệ thống website thư viện đối với các cơ sở giáo dục là một thiếu sót lớn và bỏ lỡ nhiều cơ hội để đưa nguồn tri thức đến gần hơn với độc giả, sinh viên.
+CHƯƠNG IV: THIẾT KẾ GIAO DIỆN VÀ CÁC TÍNH NĂNG NỔI BẬT
+1. Giao diện Cổng Quản trị (Admin Web)
+   1.1. Màn hình Đăng nhập và Kiểm soát phiên làm việc
+   1.2. Màn hình Dashboard Thống kê thời gian thực với Chart.js
+   1.3. Màn hình Quản lý Danh mục Sách và Tải lên hình ảnh
+   1.4. Màn hình Quản lý Nhà xuất bản
+   1.5. Màn hình Quản lý Mượn Sách với Dropdown thao tác ngữ cảnh
+   1.6. Màn hình Quản lý Độc giả và Khóa tài khoản vi phạm
+   1.7. Màn hình Quản lý Nhân viên và Phân quyền RBAC 3 cấp độ
+2. Giao diện Cổng Độc giả (User Web)
+   2.1. Trang chủ Thư viện, Bộ lọc Thể loại và Tải dữ liệu Skeleton
+   2.2. Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)
+   2.3. Màn hình Chi tiết Sách hiển thị đầy đủ Tên Nhà Xuất Bản
+   2.4. Đăng ký Mượn sách và Cơ chế Kiểm soát Hạn mức 10 quyển
+   2.5. Đăng nhập truyền thống và Đăng nhập ủy quyền mạng xã hội OAuth 2.0
+   2.6. Trang Lịch sử Mượn sách, Hẹn trả sách và Xin Gia hạn mượn sách
+   2.7. Hệ thống Chuông Thông báo (In-App Notification Bell) với Deterministic ID
+   2.8. Trợ lý Ảo Gemini AI với Kiến trúc Tự phục hồi Resilience đa lớp
 
-Để nắm bắt tình hình trên, cho thấy việc xây dựng một website quản lý mượn trả sách trực tuyến sẽ có rất nhiều lợi ích, có thể tạo dựng hình ảnh của một thư viện hiện đại, thân thiện, giúp các đầu sách được nhiều người biết đến, giúp việc tra cứu, đăng ký mượn sách trở nên dễ dàng... Đó là lý do em chọn chủ đề "Xây dựng website quản lý đăng ký mượn sách online" với mong muốn giúp cho việc quản lý mượn trả được dễ dàng, thuận tiện, và tránh những bất cập, thiếu sót trong việc quản lý thư viện truyền thống bằng sổ sách.
-
-2. Mục tiêu đề tài
-Tạo ra một trang web quản lý mượn sách trực tuyến để cho thủ thư có thể quản lý các đầu sách của mình một cách hệ thống, tối ưu hóa chiến lược quản lý mượn trả. Độc giả có thể dễ tiếp cận được những quyển sách mà mình cần tra cứu một cách nhanh chóng.
-
-- Về giao diện: Website đơn giản, màu sắc hài hòa, dễ dàng sử dụng cũng như đáp ứng đầy đủ các chức năng cho độc giả như xem sách, tra cứu, đăng ký tạo phiếu mượn sách...
-- Về quản lý: Hệ thống quản lý các thông tin của độc giả một cách bảo mật tránh tình trạng bị ăn cắp dữ liệu, quản lý các danh mục sách, kho sách và các phiếu mượn một cách chặt chẽ, chống thất thoát.
-
-3. Đối tượng và phạm vi nghiên cứu
-Website quản lý đăng ký mượn sách online được xây dựng với mục đích phục vụ nhu cầu xem các đầu sách dành cho mọi người khi truy cập vào trang web, để đăng ký mượn sách thì độc giả cần có tài khoản thư viện. Riêng người quản lý (thủ thư/admin) có thể tùy chọn thay đổi thêm, sửa, xóa các loại sách, nhà xuất bản, quản lý các phiếu mượn sách cũng như tài khoản của độc giả và nhân viên.
-
-4. Phương pháp nghiên cứu
-Thu thập các thông tin có sẵn từ các nguồn sách, báo, internet. Tham khảo các trang web quản lý thư viện, các website lập trình sẵn có từ đó lên ý tưởng.
-- Tổng hợp các kiến thức về tổ chức, phân tích, thiết kế cơ sở dữ liệu.
-- Sử dụng các ngôn ngữ: MongoDB, Express.js, Vue.js và Node.js (stack công nghệ MEVN).
-- Biết phân tích và thiết kế hệ thống thông tin.
-- Nắm vững và vận dụng các kỹ năng lập trình web hiện đại.
-
-5. Các chức năng chính
-Website quản lý mượn sách được tạo ra nhằm giúp người quản lý dễ dàng quản lý kho sách, cũng như giúp độc giả có thể dễ dàng tìm kiếm sách tiện lợi cùng nhanh chóng.
-
-- Đối với quản trị viên:
-  + Quản lý danh mục sách, nhà xuất bản (thêm, sửa, xóa).
-  + Tìm kiếm và phân loại sách.
-  + Quản lý tài khoản độc giả và phân quyền nhân viên.
-  + Quản lý phiếu mượn (Duyệt, Từ chối, Xác nhận trả sách).
-  + Thống kê số lượng sách, phiếu mượn.
-
-- Đối với độc giả:
-  + Đăng ký, đăng nhập, đăng xuất tài khoản.
-  + Xem sách, chi tiết thông tin sách và số lượng tồn kho.
-  + Đăng ký phiếu mượn sách (chọn số lượng, ngày mượn, ngày trả).
-  + Xem lịch sử mượn sách và xin trả sách.
-  + Tìm kiếm sách.
-
-
-CHƯƠNG II: ĐẶC TẢ YÊU CẦU
-1. Mô tả bài toán
-Theo quy trình truyền thống, để mượn một cuốn sách, độc giả phải đến trực tiếp thư viện, tra cứu qua hệ thống thẻ hoặc hỏi thủ thư. Khi tìm được sách, độc giả viết phiếu mượn bằng tay và thủ thư sẽ lưu trữ vào hồ sơ. Khi trả sách, thủ thư phải lục lại hồ sơ giấy để gạch tên và đưa sách trở lại kho. Quá trình này hoàn toàn thủ công, tốn kém thời gian và không gian lưu trữ. Thêm vào đó, thủ thư không có cách nào nhanh chóng thống kê được số lượng sách trễ hạn để nhắc nhở, cũng như gặp khó khăn trong việc kiểm kê số lượng sách thực tế còn lại trong kho.
-Bài toán đặt ra là phải số hóa toàn bộ quy trình này. Độc giả có thể ngồi ở nhà truy cập vào website để xem thư viện đang có sách gì, số lượng còn bao nhiêu, và thực hiện việc "đặt cọc" phiếu mượn. Yêu cầu mượn này sẽ được chuyển ngay đến hệ thống của thủ thư. Thủ thư chỉ cần kiểm tra tính hợp lệ và nhấn "Duyệt". Mọi phép tính toán cộng trừ số lượng sách tồn kho, thay đổi trạng thái phiếu, và ghi nhận ngày tháng đều phải được phần mềm tự động thực thi với độ chính xác tuyệt đối.
-
-2. Yêu cầu bài toán
-2.1. Yêu cầu chức năng
-- Quản lý quy trình mượn - trả chặt chẽ: Phiếu mượn phải đi qua các trạng thái logic: "Chờ duyệt" -> "Đang mượn" -> "Chờ gia hạn" -> "Đang chờ trả" -> "Đã trả". Hoặc có thể bị "Từ chối" ở bước đầu, và có thể rơi vào trạng thái "Quá hạn" nếu người dùng không trả đúng hạn.
-- Cơ chế chống Overbooking (Vượt quá số lượng): Khi độc giả tạo phiếu mượn ở trạng thái "Chờ duyệt", số lượng sách trong kho chưa bị trừ để đảm bảo tính tự do. Tuy nhiên, khi thủ thư nhấn "Duyệt", hệ thống phải lập tức đối chiếu số lượng tồn kho. Nếu số sách trong kho không đủ so với yêu cầu, hệ thống phải chặn lại và báo lỗi, buộc thủ thư phải từ chối phiếu đó.
-- Ràng buộc hạn mức mượn: Mỗi tài khoản độc giả chỉ được phép mượn tổng cộng tối đa 10 quyển sách (bao gồm tất cả các phiếu chưa trả). Nếu vượt quá hạn mức, hệ thống không cho phép tạo thêm yêu cầu mượn mới.
-- Nghiệp vụ Gia hạn mượn sách có kiểm soát (Book Renewal Workflow): Độc giả đang mượn sách có quyền xin gia hạn thêm thời gian đọc sách với các quy tắc kiểm soát nghiêm ngặt:
-  + Ràng buộc thời gian: Bắt buộc phải gửi yêu cầu gia hạn trước ngày hết hạn ít nhất 3 ngày (Hạn trả - Ngày hiện tại >= 3 ngày). Nếu còn dưới 3 ngày hoặc đã quá hạn, hệ thống kiên quyết từ chối để chống tình trạng chây ì và buộc độc giả phải đem sách trả đúng hạn.
-  + Giới hạn số lần: Mỗi cuốn sách chỉ được phép xin gia hạn tối đa 2 lần. Độc giả có thể lựa chọn thời gian xin thêm: +7 ngày (1 tuần) hoặc +14 ngày (2 tuần) kèm lý do giải trình.
-  + Phê duyệt bởi Thủ thư: Yêu cầu gia hạn chuyển sang trạng thái "Chờ gia hạn" và phải được Thủ thư thẩm định chấp thuận hoặc từ chối (kèm lý do). Khi được duyệt, hạn trả mới sẽ tự động cập nhật và gửi thông báo trực tiếp đến Độc giả.
-- Hiển thị Tên Nhà Xuất Bản trực quan: Loại bỏ hoàn toàn sự bất tiện trong trải nghiệm người dùng (UX) khi chỉ hiển thị các mã số kỹ thuật (như "NXB01"). Hệ thống backend tự động ánh xạ (lookup) để luôn luôn hiển thị đầy đủ Tên Nhà Xuất Bản trên cả giao diện xem chi tiết sách của Độc giả lẫn màn hình quản lý sách của Thủ thư.
-
-2.2. Yêu cầu phi chức năng
-- Về bảo mật: Giao diện quản trị (Admin Web) và giao diện độc giả (User Web) phải được tách biệt thành 2 dự án Frontend khác nhau để ngăn chặn nguy cơ lộ lọt đường dẫn quản trị. Cơ chế xác thực sử dụng JSON Web Token (JWT) có phân rõ Audience (quyền hạn người dùng).
-- Về cấu trúc dữ liệu: Dữ liệu phải được thiết kế và ánh xạ hoàn toàn chính xác theo các bảng và thuộc tính đã được hoạch định sẵn trên MongoDB. Tuyệt đối không làm thay đổi các trường dữ liệu lõi để duy trì tính toàn vẹn hệ thống.
-- Về giao diện (UI/UX): Thiết kế theo xu hướng hiện đại, bố cục rõ ràng, màu sắc hài hòa. Trải nghiệm người dùng phải mượt mà, hạn chế tối đa việc tải lại toàn bộ trang (tận dụng sức mạnh của SPA Vue.js). Các thông báo phản hồi (Toast, Modal, Loading Skeleton) phải hiển thị tức thì khi người dùng tương tác.
-
-3. Ngôn ngữ lập trình và các công cụ liên quan.
-3.1. Vue
-Vue.js
-Gọi tắt là Vue (phát âm là /vju:/, giống như view trong tiếng Anh), Vue.js là
-một framework linh động (nguyên bản tiếng Anh: progressive – tiệm tiến) dùng để xây dựng
-giao diện người dùng (user interfaces). Khác với các framework nguyên khối (monolithic),
-Vue được thiết kế từ đầu theo hướng cho phép và khuyến khích việc phát triển ứng dụng theo
-từng bước. Khi phát triển lớp giao diện (view layer), người dùng chỉ cần dùng thư viện lõi
-(core library) của Vue, vốn rất dễ học và tích hợp với các thư viện hoặc dự án có sẵn. Cùng lúc
-đó, nếu kết hợp với những kĩ thuật hiện đại như SFC (single file components) và các thư
-viện hỗ trợ, Vue cũng đáp ứng được dễ dàng nhu cầu xây dựng những ứng dụng một trang
-(SPA- Single-Page Applications) với độ phức tạp cao hơn nhiều.
-
-3.2.Node
-NodeJS là một môi trường runtime chạy JavaScript đa nền tảng và có mã nguồn mở, được
-sử dụng để chạy các ứng dụng web bên ngoài trình duyệt của client. Nền tảng này được phát
-triển bởi Ryan Dahl vào năm 2009, được xem là một giải pháp hoàn hảo cho các ứng dụng sử
-dụng nhiều dữ liệu nhờ vào mô hình hướng sự kiện (event-driven) không đồng bộ.
-
-3.3.VS CODE
-Visual Studio Code
-Visual Studio Code chính là ứng dụng cho phép biên tập, soạn thảo các đoạn code để hỗ trợ
-trong quá trình thực hiện xây dựng, thiết kế website một cách nhanh chóng. Visual Studio
-Code hay còn được viết tắt là VS Code. Trình soạn thảo này vận hành mượt mà trên các nền
-tảng như Windows, macOS, Linux. Hơn thế nữa, VS Code còn cho khả năng tương thích với
-những thiết bị máy tính có cấu hình tầm trung vẫn có thể sử dụng dễ dàng.
- 
-3.4. MongoDB
-MongoDB là một database hướng tài liệu (document-oriented), một loại cơ sở dữ liệu NoSQL. Thay vì lưu trữ dữ liệu dưới dạng bảng và dòng như các CSDL quan hệ, MongoDB lưu trữ dữ liệu dưới dạng các document JSON linh hoạt, cho phép cấu trúc dữ liệu dễ dàng thay đổi và mở rộng theo thời gian.
- 
-3.5. BOOTSTRAP
-Bootstrap được phát triển bởi Mark Otto và Jacob Thornton tại Twitter. Bootstrap là framework HTML, CSS và JS phổ biến hiện nay, bootstrap hỗ trợ thiết kế giao diện đáp ứng trên nhiều thiết bị. 
-CHƯƠNG III: CÁC SƠ ĐỒ VÀ MÔ HÌNH CƠ SỞ DỮ LIỆU
-1. Phân tích và thiết kế
-1.1. Sơ đồ use case tổng quát
-1.1.1. Đặc tả chức năng sơ đồ use case tổng quát
-Bảng 1: Mô tả chức năng của sơ đồ use case tổng quát
-| STT | Tên use case | Diễn giải |
-|---|---|---|
-| 1 | Đăng ký | Cho phép Độc giả chưa có tài khoản đăng ký để thực hiện mượn sách. |
-| 2 | Đăng nhập | Đăng nhập vào website để sử dụng các chức năng quản lý hoặc mượn sách. |
-| 3 | Đăng xuất | Thoát khỏi tài khoản hiện tại ra khỏi hệ thống. |
-| 4 | Xem danh sách và chi tiết sách | Độc giả và khách vãng lai có thể xem tất cả các sách trên website, lọc theo thể loại và xem chi tiết trước khi mượn. |
-| 5 | Tìm kiếm sách | Người dùng có thể tìm kiếm các sách theo tên sách. |
-| 6 | Đăng ký mượn sách | Độc giả có thể chọn sách và số lượng, ngày hẹn mượn và ngày dự kiến trả để tạo phiếu yêu cầu mượn (Giới hạn tối đa 10 quyển/người). |
-| 7 | Xem lịch sử mượn | Độc giả có thể xem danh sách các phiếu mượn của mình, theo dõi trạng thái và yêu cầu trả sách. |
-| 8 | Quản lý sách & NXB | Nhân viên và Admin có thể thêm, sửa, xóa sách và nhà xuất bản. |
-| 9 | Quản lý phiếu mượn | Nhân viên và Admin có thể duyệt, từ chối, và xác nhận trả sách cho độc giả. |
-| 10 | Quản lý người dùng | Admin có thể quản lý Độc giả (khóa/mở khóa) và Nhân viên (phân quyền: Admin, NhanVienQuanLySach, NhanVienDuyetMuon). |
-| 11 | Xem Dashboard Thống kê | Admin có thể xem biểu đồ và các số liệu KPI (Chart.js) thống kê hoạt động của thư viện. |
-| 12 | Tra cứu Trợ lý ảo (AI) | Độc giả có thể giao tiếp với AI Chatbot (Gemini) để hỏi đáp thông tin sách, kiểm tra lịch sử mượn, quá hạn và quy định thư viện bằng ngôn ngữ tự nhiên. |
-| 13 | Tìm kiếm bằng giọng nói | Độc giả sử dụng Micro để đọc tên sách thay vì nhập liệu, hệ thống tự động nhận diện (Voice Search) và trả về kết quả. |
-
-1.2. Mô hình cơ sở dữ liệu (MongoDB)
-Hệ thống sử dụng MongoDB native driver để giao tiếp với cơ sở dữ liệu, đảm bảo hiệu năng và dễ dàng mở rộng.
-Bảng 2: Danh sách các Collection
-| STT | Tên Collection | Diễn giải |
-|---|---|---|
-| 1 | DOCGIA | Lưu thông tin cá nhân và tài khoản (Email, MatKhau, TrangThaiTaiKhoan) của Độc giả. |
-| 2 | NHANVIEN | Lưu thông tin và quyền hạn (ChucVu) của Nhân viên/Admin. |
-| 3 | SACH | Thông tin chi tiết của sách, bao gồm cả số lượng tồn kho và thông tin mở rộng (TheLoai, HinhAnh, SoTrang, MoTa). |
-| 4 | NHAXUATBAN | Thông tin nhà xuất bản. |
-| 5 | THEODOIMUONSACH | Theo dõi các phiếu mượn, bao gồm thông tin số lượng, ngày mượn, ngày trả, và trạng thái phiếu. |
-
-1.3. Chi tiết Cấu trúc Cơ sở dữ liệu (Collections Schema)
-Để hệ thống vận hành chính xác và đồng bộ, các thuộc tính (fields) trong CSDL được thiết kế và quy định kiểu dữ liệu khắt khe như sau:
-
-Bảng 3: Collection "DOCGIA"
-| STT | Tên thuộc tính | Kiểu dữ liệu | Mô tả |
-|---|---|---|---|
-| 1 | _id | ObjectId | Khóa chính tự sinh của MongoDB |
-| 2 | MaDocGia | String | Mã độc giả (Required, Unique) |
-| 3 | HoLot | String | Họ và tên đệm |
-| 4 | Ten | String | Tên |
-| 5 | NgaySinh | String | Ngày tháng năm sinh |
-| 6 | Phai | String | Giới tính (Nam/Nữ) |
-| 7 | DiaChi | String | Địa chỉ liên hệ |
-| 8 | DienThoai | String | Số điện thoại liên lạc |
-| 9 | Email | String | Email dùng để đăng nhập (Required, Unique) |
-| 10| Password | String | Mật khẩu đã được mã hóa (Bcrypt) |
-| 11| TrangThaiTaiKhoan | String | Trạng thái (BinhThuong / BiKhoa) |
-
-Bảng 4: Collection "NHANVIEN"
-| STT | Tên thuộc tính | Kiểu dữ liệu | Mô tả |
-|---|---|---|---|
-| 1 | _id | ObjectId | Khóa chính tự sinh của MongoDB |
-| 2 | MSNV | String | Mã số nhân viên (Required, Unique) |
-| 3 | HoTenNV | String | Họ và tên nhân viên |
-| 4 | Password | String | Mật khẩu đã được mã hóa (Bcrypt) |
-| 5 | ChucVu | String | Quyền hạn (Admin / NhanVienQuanLySach / NhanVienDuyetMuon) |
-| 6 | DiaChi | String | Địa chỉ nhân viên |
-| 7 | SoDienThoai | String | Số điện thoại liên lạc |
-
-Bảng 5: Collection "SACH"
-| STT | Tên thuộc tính | Kiểu dữ liệu | Mô tả |
-|---|---|---|---|
-| 1 | _id | ObjectId | Khóa chính tự sinh của MongoDB |
-| 2 | MaSach | String | Mã sách (Required, Unique) |
-| 3 | TenSach | String | Tên sách |
-| 4 | DonGia | Number | Đơn giá của sách |
-| 5 | SoQuyen | Number | Số lượng quyển sách còn tồn kho |
-| 6 | NamXuatBan | Number | Năm xuất bản |
-| 7 | MaNXB | String | Khóa ngoại liên kết tới NHAXUATBAN |
-| 8 | TacGia | String | Tên tác giả |
-| 9 | SoTrang | Number | Số trang sách (Mở rộng) |
-| 10| MoTa | String | Mô tả nội dung sách (Mở rộng) |
-| 11| NgonNgu | String | Ngôn ngữ sách (Mở rộng) |
-| 12| TheLoai | String | Thể loại sách (Mở rộng) |
-| 13| HinhAnh | String | Đường dẫn/URL ảnh bìa sách (Mở rộng) |
-
-Bảng 6: Collection "NHAXUATBAN"
-| STT | Tên thuộc tính | Kiểu dữ liệu | Mô tả |
-|---|---|---|---|
-| 1 | _id | ObjectId | Khóa chính tự sinh của MongoDB |
-| 2 | MaNXB | String | Mã nhà xuất bản (Required, Unique) |
-| 3 | TenNXB | String | Tên nhà xuất bản |
-| 4 | DiaChi | String | Địa chỉ nhà xuất bản |
-
-Bảng 7: Collection "THEODOIMUONSACH"
-| STT | Tên thuộc tính | Kiểu dữ liệu | Mô tả |
-|---|---|---|---|
-| 1 | _id | ObjectId | Khóa chính tự sinh của MongoDB |
-| 2 | MaDocGia | String | Khóa ngoại liên kết tới DOCGIA (người mượn) |
-| 3 | MaSach | String | Khóa ngoại liên kết tới SACH (sách được mượn) |
-| 4 | SoLuong | Number | Số lượng sách mượn |
-| 5 | NgayMuon | Date | Ngày dự kiến đến thư viện lấy sách |
-| 6 | NgayTra | Date | Ngày bắt buộc phải trả (Hạn chót) |
-| 7 | NgayDuKienTra| Date | Ngày độc giả thông báo sẽ mang sách lên trả (Xin trả) |
-| 8 | TrangThai | String | Trạng thái phiếu (chờ duyệt, đã duyệt, đang mượn, đang chờ trả, đã trả, từ chối, quá hạn) |
-| 9 | MaNhanVien | String | Khóa ngoại liên kết tới NHANVIEN (người thực hiện duyệt/nhận) |
-
-4. Chiến lược Đánh chỉ mục (Indexing Strategy) & Ràng buộc Toàn vẹn Dữ liệu
-Để tối ưu hóa tối đa hiệu năng truy vấn và bảo vệ toàn vẹn dữ liệu ở mức Database Engine, hệ thống đã thiết lập 17 chỉ mục (Indexes) trên các collections chính:
-- Ràng buộc Khóa duy nhất (Unique Constraints): Thiết lập Unique Index cho các trường mã nghiệp vụ gồm MaSach (bảng SACH), MaDocGia (bảng DOCGIA), MSNV (bảng NHANVIEN), MaNXB và TenNXB (bảng NHAXUATBAN). Đồng thời cấu hình Sparse Unique Index cho Email của Độc giả và Nhân viên. Cơ chế này loại bỏ hoàn toàn rủi ro tạo trùng lặp dữ liệu kể cả khi xảy ra các truy vấn đồng thời (concurrent requests).
-- Chỉ mục kết hợp (Compound Indexes): Thiết lập chỉ mục kết hợp { MaDocGia: 1, trangThai: 1 } trên bảng THEODOIMUONSACH để tăng tốc độ kiểm tra hạn mức mượn (tối đa 10 quyển/người) và truy xuất lịch sử độc giả; chỉ mục { ngayHenTra: 1 } phục vụ cơ chế Lazy-check quá hạn và hệ thống Chuông thông báo; chỉ mục { MaSach: 1 } và { trangThai: 1 } phục vụ thống kê Dashboard.
-- Cơ chế Tự động hóa Chỉ mục (Index Automation): Xây dựng module quản lý chỉ mục tập trung (indexes.util.js) và tự động thực thi kiểm tra/tạo chỉ mục an toàn ngay khi máy chủ Node.js khởi động (server.js), đi kèm script CLI độc lập (createIndexes.js) phục vụ bảo trì hệ thống.
-
-CHƯƠNG IV: THIẾT KẾ GIAO DIỆN
-1. Giao diện quản trị viên (Admin Web)
-Hệ thống Admin được xây dựng trên một dự án Vue 3 SPA riêng biệt nhằm đảm bảo bảo mật.
-1.1. Dashboard Thống Kê
-Hiển thị tổng quan các số liệu KPI quan trọng (Tổng sách, số độc giả, phiếu đang mượn, phiếu quá hạn). Cung cấp 3 biểu đồ trực quan sử dụng thư viện Chart.js: Biểu đồ đường (Line chart) theo dõi lượng mượn/trả trong 6 tháng, biểu đồ tròn (Doughnut) phân tích tỷ lệ trạng thái phiếu, và biểu đồ cột (Bar chart) thống kê Top sách được mượn nhiều nhất.
-1.2. Quản lý Sách
-Cho phép thêm, sửa, xóa sách. Hệ thống có sẵn Modal để nhập liệu thông tin sách và upload ảnh bìa (static files). Tích hợp Validation an toàn với thư viện VeeValidate và Yup.
-1.3. Quản lý Độc giả
-Hiển thị danh sách độc giả đã đăng ký, tích hợp tính năng xem Lịch sử mượn trả của từng người và khả năng Khóa tài khoản nếu độc giả vi phạm quy định (ví dụ: mượn quá hạn nhiều lần).
-1.4. Quản lý Phiếu mượn
-Bảng điều khiển hiển thị trạng thái của các phiếu mượn (Chờ duyệt, Đang mượn, Quá hạn, Đang chờ trả, Đã trả, Từ chối). Hệ thống đã tối ưu hóa trải nghiệm người dùng (UX) bằng việc áp dụng Dropdown Thao tác ngữ cảnh thông minh: các lựa chọn thao tác (Duyệt phiếu, Từ chối, Giao sách, Xác nhận trả sách) tự động biến đổi linh hoạt tương ứng với trạng thái thực tế của từng phiếu mượn, kết hợp nút bấm thực thi đổi màu trực quan, giúp thủ thư thao tác chuẩn xác, nhanh chóng và loại bỏ hoàn toàn nguy cơ nhầm lẫn nghiệp vụ.
-1.5. Quản lý Nhân viên
-Trang dành riêng cho vai trò Admin, có thể thêm, sửa, xóa nhân viên và phân quyền RBAC (Role-Based Access Control) ba cấp độ: Admin, Nhân viên Quản lý sách, Nhân viên Duyệt mượn.
-
-2. Giao diện người dùng (User Web)
-Được thiết kế hiện đại với Bootstrap 5, ứng dụng Composition API của Vue 3 để đem lại trải nghiệm mượt mà.
-2.1. Trang chủ và Danh sách Sách
-Khách vãng lai và Độc giả đều có thể xem danh sách sách thư viện. Trang sách có thanh tìm kiếm tích hợp bộ lọc theo Thể loại tiện dụng. Đặc biệt, UI được tối ưu hóa với Skeleton Loading (hiệu ứng khung xương tải trang) và thông báo Toast Notification thân thiện.
-2.2. Chi tiết Sách & Mượn sách
-Độc giả nhấp vào một cuốn sách để xem thông tin chi tiết. Khi nhấn "Mượn sách", Modal xác nhận mượn xuất hiện cho phép chọn số lượng, ngày dự kiến đến lấy và ngày trả sách. Hệ thống kiểm tra chặt chẽ hạn mức mượn (tối đa 10 quyển tổng cộng/người).
-2.3. Lịch sử mượn & Xin trả sách
-Hiển thị toàn bộ tiến trình của các phiếu mượn. Bảng lịch sử được trang bị Dropdown Thao tác ngữ cảnh thông minh:
-- Khi phiếu ở trạng thái "Chờ duyệt": Độc giả có thể chọn "Sửa số lượng" (mở Modal điều chỉnh số lượng mượn với kiểm tra hạn mức) hoặc "Hủy yêu cầu" (nếu không còn nhu cầu).
-- Khi phiếu ở trạng thái "Đã duyệt", "Đang mượn" hoặc "Quá hạn": Dropdown cung cấp tùy chọn "Hẹn trả sách", mở Modal cho phép nhập "Ngày dự kiến mang sách đến trả" để chuyển trạng thái sang "Đang chờ trả", thông báo trước cho thủ thư chuẩn bị tiếp nhận.
-- Khi phiếu ở trạng thái "Đang chờ trả": Hiển thị huy hiệu (Badge) thông báo đang chờ thủ thư tiếp nhận tại quầy.
-
-2.4. Trợ lý Ảo AI (Chatbot)
-Tích hợp công nghệ Trí tuệ nhân tạo thế hệ mới (Gemini 3.8 Flash) hoạt động dưới dạng Widget nổi ở góc màn hình. Chatbot được cung cấp khả năng truy xuất cơ sở dữ liệu trực tiếp (Function Calling), giúp Độc giả có thể hỏi đáp tự nhiên bằng tiếng Việt về thông tin sách, kiểm tra sách đang mượn, hoặc quy định thư viện thay vì phải tra cứu thủ công.
-Điểm nhấn kỹ thuật của tính năng này là việc xây dựng một kiến trúc "Tự phục hồi" (Resilience Architecture) đa lớp để đối phó với tình trạng quá tải thường xuyên của API Google (lỗi HTTP 503/429):
-- Exponential Backoff with Jitter: Tự động thử lại (retry) các request thất bại với độ trễ tăng dần, kết hợp độ lệch ngẫu nhiên để tránh hiện tượng thundering herd.
-- Model Fallback Chain: Tự động hạ cấp xuống mô hình nhẹ hơn (Gemini 3.5 Flash Lite) khi mô hình chính liên tục báo bận, đảm bảo luồng hội thoại không bị đứt đoạn.
-- Trải nghiệm người dùng (UX): Hiển thị trạng thái "đang suy nghĩ" khi độ trễ cao, cùng cơ chế tự động đếm ngược để thử lại khi có lỗi mạng, giúp hệ thống luôn phản hồi thân thiện thay vì báo lỗi kỹ thuật.
-
-2.5. Tìm kiếm bằng Giọng nói (Voice Search AI)
-Để nâng cao hơn nữa tính tiếp cận và trải nghiệm người dùng, hệ thống đã tích hợp API Web Speech của trình duyệt để cung cấp tính năng Tìm kiếm sách bằng Giọng nói. Độc giả có thể nhấp vào biểu tượng Microphone trên thanh tìm kiếm và đọc tên sách. Hệ thống AI nội bộ của trình duyệt sẽ nhận diện giọng nói, chuyển thành văn bản và tự động tra cứu trong cơ sở dữ liệu mà không cần phải gõ phím. Tính năng này được đi kèm với các hiệu ứng trực quan (Pulse animation) để mô phỏng tương tác sinh động như các Trợ lý ảo chuyên nghiệp.
-
-2.6. Đăng nhập Ủy quyền Mạng xã hội (OAuth 2.0 - Google & Facebook)
-Để tối ưu hóa trải nghiệm đăng nhập cho Độc giả, hệ thống đã tích hợp thành công giao thức ủy quyền hiện đại OAuth 2.0 với hai nền tảng phổ biến nhất hiện nay: Google và Facebook:
-- Phân tách rõ ràng giữa Xác thực (Authentication) và Cấp quyền (Authorization): Nhà cung cấp OAuth chỉ đảm nhận việc xác thực danh tính ban đầu của người dùng. Sau khi callback thành công, hệ thống backend tự động tạo hoặc liên kết hồ sơ trong bộ sưu tập DOCGIA và tự phát hành mã thông báo JWT nội bộ (`aud: "user"`), giúp duy trì cơ chế bảo mật và phân quyền thống nhất trong toàn bộ hệ thống.
-- Cơ chế liên kết tài khoản thông minh (Account Linking): Nếu Độc giả đã từng đăng ký bằng Email đó, hệ thống sẽ tự động ghép nối; nếu chưa có, hệ thống tự động sinh Mã độc giả (`DG_GG_...` hoặc `DG_FB_...`) và khởi tạo hồ sơ độc giả mới mà không cần mật khẩu truyền thống.
-- Giao diện thân thiện và Trải nghiệm người dùng: Cung cấp các nút đăng nhập thương hiệu Google/Facebook với màu sắc và biểu tượng SVG chuẩn hóa, kết hợp màn hình trung chuyển Callback với thanh tiến trình hoạt họa hiển thị mượt mà trước khi tự động điều hướng vào thư viện.
-
-2.7. Hệ thống Chuông Thông báo Trong Ứng Dụng (In-App Notification Bell)
-Để chủ động nhắc nhở độc giả và giảm thiểu tối đa tình trạng trễ hạn trả sách, hệ thống đã trang bị tính năng Chuông Thông báo (Notification Bell) trực quan ngay trên thanh điều hướng (AppHeader):
-- Cơ chế nhận diện thông minh: Hệ thống tự động phân tích dữ liệu lịch sử mượn sách của độc giả để phát hiện hai nhóm phiếu cần xử lý khẩn cấp: (1) Phiếu quá hạn (ngày hẹn trả đã qua so với thời điểm hiện tại); (2) Phiếu sắp hết hạn (còn từ 0 đến 2 ngày là đến hạn trả).
-- Tương tác sinh động: Khi có phiếu cần lưu ý, biểu tượng chuông hiển thị huy hiệu (Badge) số lượng màu đỏ nổi bật và tự động kích hoạt hiệu ứng rung chuông (Bell Shake Animation) thu hút sự chú ý.
-- Dropdown danh sách chi tiết: Nhấp vào chuông sẽ mở ra panel thông báo sang trọng với ảnh bìa sách thu nhỏ, tiêu đề sách, chip cảnh báo thời gian quá hạn hoặc số ngày còn lại, kèm nút bấm chuyển hướng tức thì đến trang Lịch sử mượn để thực hiện hẹn trả sách.
-- Tối ưu hóa hiệu năng: Toàn bộ quá trình tính toán được thực hiện mượt mà tại client thông qua chu kỳ tự động thăm dò (polling) 5 phút/lần, hoàn toàn không cần can thiệp CSDL hay tạo thêm API nặng nề.
-
-2.8. Chuẩn hóa Mã Nguồn và Tính Nhất Quán Giao Diện (Code Cleanliness & Professional Standards)
-Toàn bộ hệ thống giao diện và mã nguồn đã được rà soát và chuẩn hóa theo các tiêu chuẩn kỹ thuật nghiêm ngặt: loại bỏ triệt để các ký tự emoji tự do khỏi các nhãn thao tác, thông báo hệ thống và log máy chủ, thay thế bằng FontAwesome SVG icons và câu từ tiếng Việt chuyên nghiệp, đảm bảo tính thẩm mỹ, nhất quán và không phát sinh lỗi mã hóa ký tự (encoding) khi triển khai thực tế trên các môi trường máy chủ khác nhau.
-
-2.9. Hệ thống Quản lý Trạng thái Đã đọc Thông báo Bền vững (Deterministic Notification ID & Read State Persistence)
-Trong quá trình thử nghiệm thực tế, hệ thống phát sinh lỗi bất cập: độc giả đã xem thông báo và số trên huy hiệu (Badge) đã được trừ về 0, nhưng khi tải lại trang (F5 / Refresh) thì số lượng thông báo lại nhảy trở lại.
-- Nguyên nhân kỹ thuật: Do danh sách thông báo được tính toán động (dynamic computed) từ lịch sử mượn sách, mã định danh `notifId` trước đây sử dụng hàm `new Date().toISOString()` khi bản ghi thiếu trường `updatedAt`. Mỗi lần F5, hàm này sinh ra một timestamp mới hoàn toàn khác, khiến ID thông báo mới không thể khớp với danh sách đã lưu trong `localStorage`.
-- Giải pháp kiến trúc:
-  + Chuẩn hóa Deterministic Notification ID: Chuyển đổi toàn bộ `notifId` thành chuỗi định danh bất biến theo sự kiện nghiệp vụ: `${item._id}_approved`, `${item._id}_ext_approved_${giaHanCount}`, `${item._id}_ext_rejected_${giaHanCount}`, `${item._id}_rejected`, `${item._id}_overdue_${item.ngayTra}`, `${item._id}_soon_${item.ngayTra}`. Mã này giữ nguyên 100% qua mọi lần F5.
-  + Kiểm tra tiền tố đa tầng (`isNotifRead`): Hỗ trợ kiểm tra trực tiếp và kiểm tra tiền tố `${item._id}_${item.alertType}` đảm bảo tương thích ngược tuyệt đối với các ID cũ có chứa timestamp mà trình duyệt đã lưu trước đó.
-  + Trải nghiệm người dùng: Bổ sung nút "Đã đọc" (Mark all as read) tại tiêu đề dropdown giúp xóa badge về 0 tức thì; tự động đánh dấu đã đọc khi nhấp vào xem chi tiết hoặc chuyển đến trang Lịch sử; làm mờ nhẹ các thông báo đã đọc và ẩn chấm xanh chưa đọc; hiển thị Live Toast thông báo nổi khi yêu cầu gia hạn sách được phê duyệt.
-
-CHƯƠNG V: TRIỂN KHAI VÀ VẬN HÀNH HỆ THỐNG (DEPLOYMENT VỚI NGINX & PM2)
-1. Kiến trúc Triển khai Production (On-Premise / VPS)
-Để đưa ứng dụng từ môi trường phát triển (Development) sang môi trường vận hành thực tế (Production), hệ thống đã được triển khai theo mô hình Reverse Proxy chuẩn mực kết hợp Process Manager theo đúng định hướng của học phần:
-- Tách biệt cổng truy cập theo vai trò: Cổng dành cho Độc giả (User Web) hoạt động tại cổng mặc định HTTP 80; Cổng dành cho Quản trị viên (Admin Web) hoạt động độc lập tại cổng 8080 để tăng cường mức độ bảo mật.
-- Reverse Proxy tập trung: Máy chủ Web NGINX đóng vai trò tiếp nhận mọi yêu cầu (requests) gửi đến từ mạng ngoài, phân loại và điều phối chính xác: các yêu cầu tài nguyên giao diện được phục vụ trực tiếp từ các thư mục tĩnh đã đóng gói (dist/), trong khi các yêu cầu dữ liệu (/api/*) và tài nguyên tải lên (/uploads/*) được chuyển tiếp an toàn đến máy chủ dịch vụ Backend Node.js tại cổng nội bộ 3000.
-
-2. Cấu hình Máy chủ Web NGINX
-Toàn bộ quy tắc điều phối của NGINX được thiết lập chặt chẽ trong tệp cấu hình nginx.conf:
-- Phục vụ Ứng dụng Trang Đơn (Single Page Application - SPA): Cả hai cổng 80 và 8080 đều được trang bị chỉ thị `try_files $uri $uri/ /index.html;`, giải quyết triệt để vấn đề mất liên kết (lỗi HTTP 404) khi người dùng làm mới trang (F5) hoặc truy cập trực tiếp vào các định tuyến HTML5 History Mode của Vue Router (như /sach, /lich-su, /admin/muonsach).
-- Tối ưu hóa Truyền tải Dữ liệu (Gzip Compression): Kích hoạt nén Gzip mức độ 5 cho toàn bộ các định dạng văn bản, stylesheet, mã kịch bản JavaScript và dữ liệu JSON, giúp giảm thiểu đến 65% dung lượng truyền tải qua mạng và rút ngắn thời gian hiển thị giao diện ban đầu.
-- Quản lý Bộ đệm Trình duyệt (Browser Caching): Thiết lập tiêu đề Cache-Control `max-age=31536000, immutable` cho các gói tài nguyên tĩnh (assets) có mã hash phiên bản, đồng thời áp dụng `no-cache` đối với tệp index.html để đảm bảo người dùng luôn nhận được phiên bản ứng dụng mới nhất ngay khi hệ thống có cập nhật.
-- Bảo đảm Ổn định cho Tác vụ Trí tuệ Nhân tạo: Thiết lập thời gian chờ chuyển tiếp (proxy_read_timeout) lên 60 giây, đảm bảo các phiên hội thoại phức tạp của Trợ lý Ảo Gemini AI không bị ngắt kết nối đột ngột trong những thời điểm mạng tải cao.
-
-3. Quản lý Tiến trình Máy chủ với PM2 (Process Manager)
-Ứng dụng Backend Node.js được đóng gói và giám sát vận hành thông qua công cụ quản lý tiến trình chuyên nghiệp PM2 với tệp định hình ecosystem.config.js:
-- Duy trì Vận hành Liên tục (High Availability): Cơ chế tự động giám sát và khởi động lại ứng dụng (autorestart) ngay lập tức khi phát hiện ngoại lệ ngoài ý muốn, đảm bảo dịch vụ Backend luôn sẵn sàng 24/7 mà không cần can thiệp thủ công.
-- Kiểm soát Tài nguyên Hệ thống: Thiết lập giới hạn bộ nhớ (max_memory_restart: 500M) nhằm phòng ngừa hiện tượng rò rỉ bộ nhớ (memory leak), tự động dọn dẹp và khởi tạo lại tiến trình một cách an toàn.
-
-4. Đồng bộ Biến Môi trường Đóng gói (Production Build)
-Để loại bỏ sự phụ thuộc vào cấu hình Proxy phát triển trong Vite (vite.config.js), hệ thống đã được trang bị các tệp biến môi trường đóng gói .env.production:
-- Đồng bộ biến VITE_API_BASE_URL=/api tại cả hai giao diện, cho phép ứng dụng tự động nhận diện domain/origin hiện tại của máy chủ NGINX mà không bị hardcode địa chỉ localhost, bảo đảm khả năng triển khai linh hoạt trên mọi dải IP cục bộ hoặc tên miền thực tế.
+CHƯƠNG V: TRIỂN KHAI VÀ VẬN HÀNH HỆ THỐNG
+1. Kiến trúc Triển khai Production chuẩn On-Premise / VPS
+2. Cấu hình Máy chủ Web NGINX Reverse Proxy
+3. Quản lý Tiến trình Máy chủ Node.js với PM2
+4. Kiểm thử Tối ưu hóa Tốc độ với Bộ đệm Redis
 
 CHƯƠNG VI: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
-1. Kết quả đạt được
-- Hoàn thành đầy đủ các yêu cầu cốt lõi của môn học (Đăng ký/đăng nhập, nghiệp vụ mượn sách, CRUD Sách, quản trị mượn/trả).
-- Tách biệt hoàn toàn hai nền tảng Frontend (Admin Web và User Web) nhưng giao tiếp qua chung 1 Backend API, đảm bảo an toàn bảo mật.
-- Ứng dụng mô hình RBAC cho phép phân quyền chi tiết 3 lớp tài khoản Nhân viên.
-- Giải quyết bài toán quá hạn bằng cơ chế Lazy-check (Cập nhật khi fetch data) và chống tình trạng Overbooking (hết sách nhưng vẫn cho mượn) thành công.
-- Hoàn thiện trọn vẹn quy trình Gia hạn mượn sách (Book Renewal) với ràng buộc nghiêm ngặt: yêu cầu gia hạn trước ít nhất 3 ngày, tối đa 2 lần, và được Thủ thư thẩm định phê duyệt có thông báo phản hồi.
-- Tối ưu hóa trải nghiệm tra cứu với việc tự động hiển thị đầy đủ Tên Nhà Xuất Bản thay cho các mã số kỹ thuật khó nhớ.
-- Giao diện người dùng tương tác cao, hiện đại với Toast, Skeleton Loader, và Biểu đồ Chart.js (kèm số lượng thực và tỷ lệ % phân bổ trực quan).
-- Cấu hình phục vụ file tĩnh và script Seeding tự động hàng loạt dữ liệu phong phú (100+ quyển sách thực tế).
-- Đột phá về mặt công nghệ: Tích hợp thành công Trợ lý Ảo Gemini AI (Function Calling, Resilience Architecture) đem lại trải nghiệm tra cứu thông minh thế hệ mới.
-- Nâng tầm trải nghiệm người dùng: Tích hợp thành công công nghệ nhận diện giọng nói (Web Speech API) cho phép Độc giả tìm kiếm sách rảnh tay nhanh chóng và trực quan.
-- Hiện đại hóa cơ chế xác thực: Tích hợp hoàn chỉnh đăng nhập ủy quyền OAuth 2.0 (Google & Facebook) với thư viện Passport.js, liên kết tài khoản tự động và cấp phát JWT nội bộ chuẩn hóa cho Độc giả.
-- Tối ưu hóa hệ thống hiệu suất cao: Triển khai thành công Redis Caching trên nền tảng Windows, giải quyết triệt để tình trạng nghẽn cổ chai (bottleneck) khi truy xuất hàng nghìn quyển sách và tải Dashboard Thống kê phức tạp, với cơ chế Cache Invalidation thông minh để đảm bảo tính nhất quán dữ liệu.
-- Hoàn thiện tính năng Thông báo trực quan trong ứng dụng (In-App Notification Bell) với cơ chế lưu trữ trạng thái đã đọc bền vững (Deterministic Notification ID), giúp badge đếm không bao giờ bị nhảy lại khi F5 refresh trang.
-- Triển khai ứng dụng lên môi trường production theo đúng yêu cầu giáo trình: sử dụng nginx làm Reverse Proxy phân luồng request (file tĩnh Vue.js và API Node.js) và PM2 làm Process Manager đảm bảo Node.js luôn hoạt động ổn định, tự động khởi động lại khi có sự cố.
-
-2. Hạn chế
-- Hệ thống chưa hỗ trợ thanh toán online cho các khoản phạt quá hạn.
-- Cơ chế tìm kiếm hiện tại chỉ dừng ở mức lọc theo Tên và Thể loại, chưa phải Full-text Search mạnh mẽ.
-
-3. Hướng phát triển (Giai đoạn mở rộng tiếp theo)
-- Ứng dụng mô hình Machine Learning/Collaborative Filtering để tự động gợi ý sách cho độc giả dựa trên lịch sử mượn.
-- Tích hợp hệ thống thông báo real-time (Web Push Notification) nhắc hạn trả sách.
+1. Đánh giá kết quả đạt được
+2. Những ưu điểm nổi bật của đồ án
+3. Hạn chế của hệ thống
+4. Hướng phát triển trong tương lai
 
 TÀI LIỆU THAM KHẢO
-1. Bài giảng "Phát triển ứng dụng Web" - Ths.GVC Nguyễn Minh Trung.
-2. Vue.js Documentation (https://vuejs.org/)
-3. Node.js Documentation (https://nodejs.org/)
-4. MongoDB Documentation (https://www.mongodb.com/docs/)
+
+
+================================================================================
+DANH MỤC HÌNH
+================================================================================
+
+Hình 1: Sơ đồ Use Case tổng quát toàn bộ hệ thống Quản lý mượn sách
+Hình 2: Sơ đồ Thực thể - Mối quan hệ (ERD) Cơ sở dữ liệu MongoDB
+Hình 3: Màn hình Đăng nhập Quản trị viên và xác thực bảo vệ route
+Hình 4: Dashboard Thống kê thời gian thực với các biểu đồ Chart.js
+Hình 5: Màn hình Quản lý Danh mục Sách và Modal nhập liệu
+Hình 6: Màn hình Quản lý Nhà xuất bản
+Hình 7: Màn hình Quản lý Mượn Sách với Dropdown thao tác ngữ cảnh
+Hình 8: Màn hình Quản lý Độc giả và Modal Khóa tài khoản
+Hình 9: Màn hình Quản lý Nhân viên và Phân quyền RBAC 3 vai trò
+Hình 10: Trang chủ Thư viện với Bộ lọc Thể loại và Tìm kiếm sách
+Hình 11: Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)
+Hình 12: Màn hình Chi tiết Sách hiển thị đầy đủ Tên NXB và Modal Mượn sách
+Hình 13: Đăng nhập bằng tài khoản thông thường và Ủy quyền OAuth 2.0
+Hình 14: Trang Lịch sử Mượn sách, Modal Xin gia hạn và Hẹn trả sách
+Hình 15: Hệ thống Chuông Thông báo (In-App Bell) và trạng thái Đã đọc bền vững
+Hình 16: Trợ lý Ảo Gemini AI với giao diện hội thoại tương tác trực tiếp
+Hình 17: Sơ đồ Kiến trúc Triển khai NGINX Reverse Proxy và PM2
+Hình 18: Tốc độ phản hồi API đạt 1-2ms khi trúng Redis Cache trên Network Tab
+
+
+================================================================================
+DANH MỤC BẢNG
+================================================================================
+
+Bảng 1: Danh sách các Tác nhân (Actors) trong hệ thống
+Bảng 2: Danh sách và mô tả các Use Case chính
+Bảng 3: Cấu trúc bộ sưu tập DOCGIA (Độc giả)
+Bảng 4: Cấu trúc bộ sưu tập NHANVIEN (Nhân viên)
+Bảng 5: Cấu trúc bộ sưu tập SACH (Sách)
+Bảng 6: Cấu trúc bộ sưu tập NHAXUATBAN (Nhà xuất bản)
+Bảng 7: Cấu trúc bộ sưu tập THEODOIMUONSACH (Theo dõi mượn sách)
+Bảng 8: Danh sách 17 Chỉ mục (Indexes) trên cơ sở dữ liệu MongoDB
+Bảng 9: Bảng ma trận phân quyền hệ thống (RBAC Matrix)
+
+
+================================================================================
+CHƯƠNG I: TỔNG QUAN ĐỀ TÀI
+================================================================================
+
+1. Đặt vấn đề và lý do chọn đề tài
+
+Trong bối cảnh chuyển đổi số đang diễn ra mạnh mẽ trong mọi lĩnh vực của đời sống xã hội, giáo dục và đào tạo là một trong những lĩnh vực tiên phong ứng dụng công nghệ thông tin nhằm nâng cao chất lượng phục vụ và tối ưu hóa nguồn lực. Thư viện truyền thống tại các trường đại học, viện nghiên cứu đóng vai trò là kho tàng tri thức quý báu, phục vụ đắc lực cho công tác nghiên cứu, học tập của cán bộ, giảng viên và sinh viên.
+
+Tuy nhiên, phương thức quản lý thư viện truyền thống bằng sổ sách thủ công hoặc các phần mềm quản lý đơn lẻ (offline) bộc lộ nhiều hạn chế nghiêm trọng:
+- Đối với độc giả: Mất nhiều thời gian đến thư viện trực tiếp để tra cứu mục lục thẻ, không biết trước cuốn sách mình cần có đang còn trong kho hay đã được người khác mượn, dẫn đến lãng phí thời gian di chuyển.
+- Đối với thủ thư: Quy trình lập phiếu mượn tay, ghi sổ theo dõi, ký nhận trả sách diễn ra chậm chạp, dễ xảy ra sai sót số liệu. Công tác kiểm kê kho sách và thống kê độc giả mượn sách quá hạn gặp vô vàn khó khăn, đòi hỏi phải lật lại từng tập hồ sơ giấy tờ cồng kềnh.
+- Về công tác quản trị: Lãnh đạo thư viện không thể nắm bắt tức thời bức tranh tổng thể về tình hình luân chuyển sách, đầu sách nào đang được quan tâm nhiều nhất, hoặc tỷ lệ sách trễ hạn để đưa ra các quyết định bổ sung ngân sách mua sách mới kịp thời.
+
+Từ những đòi hỏi cấp thiết của thực tế, đề tài "Xây dựng website quản lý đăng ký mượn trả sách trực tuyến" được em lựa chọn thực hiện. Đề tài hướng tới việc xây dựng một hệ thống hiện đại dựa trên nền tảng web, số hóa toàn diện quy trình đăng ký mượn sách, tự động hóa khâu kiểm soát tồn kho, phê duyệt gia hạn và theo dõi quá hạn, đồng thời ứng dụng các công nghệ tiên tiến như Trí tuệ nhân tạo (AI Chatbot, Voice Search) và Bộ đệm hiệu năng cao (Redis Caching) để nâng tầm trải nghiệm của người dùng.
+
+2. Mục tiêu nghiên cứu của đề tài
+
+Đề tài tập trung vào việc giải quyết trọn vẹn các mục tiêu trọng tâm sau:
+- Xây dựng một ứng dụng web hoàn chỉnh theo kiến trúc MEVN Stack (MongoDB, Express.js, Vue 3, Node.js) đạt chuẩn công nghiệp, vận hành ổn định và bảo mật cao.
+- Thiết kế cơ sở dữ liệu NoSQL tối ưu, bảo toàn 100% cấu trúc lược đồ nguyên bản của Giảng viên đồng thời mở rộng linh hoạt các trường dữ liệu phục vụ giao diện hiện đại.
+- Hiện thực hóa quy trình mượn - gia hạn - trả sách thông minh: Giải quyết dứt điểm bài toán Overbooking (chống tranh chấp tài nguyên kho sách), kiểm soát chặt chẽ hạn mức mượn tối đa 10 quyển/độc giả, áp dụng quy tắc gia hạn mượn sách có kiểm soát trước hạn trả 3 ngày và tự động phát hiện sách quá hạn bằng cơ chế Lazy-check.
+- Phân chia kiến trúc rõ ràng giữa hai không gian trải nghiệm: Cổng Độc giả (User Web) và Cổng Quản trị (Admin Web) độc lập về mã nguồn nhưng dùng chung một Backend API duy nhất, kết hợp phân quyền ba cấp độ (RBAC).
+- Đóng gói và triển khai ứng dụng thực tế theo đúng yêu cầu học phần bằng máy chủ web NGINX làm Reverse Proxy và công cụ quản lý tiến trình PM2.
+
+3. Đối tượng và phạm vi ứng dụng
+
+- Đối tượng nghiên cứu: Quy trình quản lý luân chuyển tài liệu trong thư viện; kiến trúc hệ thống web phân tán; kỹ thuật xử lý bất đồng bộ trong Node.js; cơ chế lập chỉ mục trong MongoDB; công nghệ Vue 3 Single Page Application và kỹ thuật Caching in-memory.
+- Phạm vi ứng dụng: Hệ thống được xây dựng để phục vụ cho các thư viện trường học, thư viện công cộng hoặc các trung tâm học liệu có quy mô vừa và lớn.
+
+4. Phương pháp tiếp cận và công nghệ sử dụng
+
+Đề tài áp dụng phương pháp nghiên cứu kết hợp giữa lý thuyết phân tích thiết kế hệ thống thông tin hướng đối tượng (OOAD) và thực nghiệm phát triển phần mềm theo mô hình thác nước kết hợp lặp linh hoạt:
+- Tự tay lập trình toàn bộ tầng dịch vụ cơ sở dữ liệu bằng Native MongoDB Driver để hiểu sâu sắc cơ chế thao tác BSON và tối ưu hóa câu lệnh Aggregation Pipeline thay vì phụ thuộc vào thư viện bao bọc Mongoose.
+- Xây dựng giao diện đơn trang (Single Page Application - SPA) dựa trên Vue 3 Composition API kết hợp thư viện giao diện Bootstrap 5, cam kết không sử dụng Tailwind CSS để giữ toàn quyền kiểm soát mã CSS tùy biến.
+- Ứng dụng các giao thức và tiêu chuẩn bảo mật hiện đại: JWT (JSON Web Token), Bcrypt mã hóa mật khẩu, OAuth 2.0 xác thực ủy quyền với Google và Facebook.
+
+
+================================================================================
+CHƯƠNG II: ĐẶC TẢ YÊU CẦU HỆ THỐNG
+================================================================================
+
+1. Mô tả bài toán nghiệp vụ thư viện thực tế
+
+Quy trình mượn sách trực tuyến trong hệ thống được mô phỏng bám sát thực tế hoạt động của thư viện hiện đại:
+- Độc giả truy cập cổng website, tìm kiếm cuốn sách mong muốn. Độc giả có thể tra cứu theo tên sách, thể loại, tác giả, hoặc tìm kiếm bằng giọng nói và hỏi đáp với Trợ lý ảo AI.
+- Độc giả tạo yêu cầu mượn: Chọn số lượng sách (tối đa không quá 10 quyển tổng cộng cho mọi phiếu mượn đang giữ), chọn ngày dự kiến đến thư viện lấy sách và ngày hẹn trả sách. Phiếu mượn được khởi tạo ở trạng thái "Chờ duyệt".
+- Tại thời điểm này, số lượng sách trong kho thư viện CHƯA BỊ TRỪ. Điều này nhằm đảm bảo nhiều độc giả cùng lúc có thể gửi yêu cầu, tránh trường hợp một độc giả tạo phiếu mượn nhưng không đến lấy sách làm đóng băng kho tài nguyên của thư viện.
+- Thủ thư đăng nhập Cổng quản trị, kiểm tra danh sách các yêu cầu mượn đang chờ xử lý. Khi thủ thư bấm "Duyệt phiếu", hệ thống sẽ lập tức kiểm tra tồn kho theo thời gian thực (Nguyên tắc First-come, first-served tại thời điểm duyệt). Nếu kho sách còn đủ số lượng, hệ thống tự động trừ kho, chuyển trạng thái phiếu sang "Đang mượn". Nếu sách đã hết (do người khác được duyệt trước), hệ thống chặn lại và báo lỗi, buộc thủ thư phải từ chối phiếu đó.
+- Trong thời gian đọc sách, nếu muốn mượn thêm thời gian, độc giả có thể xin gia hạn. Điều kiện bắt buộc: Sách phải chưa quá hạn, phải xin gia hạn trước hạn trả ít nhất 3 ngày, và mỗi cuốn sách chỉ được gia hạn tối đa 2 lần (+7 hoặc +14 ngày). Yêu cầu gia hạn này phải được Thủ thư thẩm định và phê duyệt trên hệ thống.
+- Khi muốn trả sách, độc giả gửi thông báo hẹn ngày trả sách trên web. Thủ thư tại quầy nhận sách vật lý, kiểm tra nguyên vẹn và bấm "Xác nhận trả sách". Lúc này, trạng thái chuyển sang "Đã trả" và số lượng sách tồn kho tự động được cộng hoàn trả lại.
+
+2. Yêu cầu chức năng chi tiết
+
+2.1. Phân hệ dành cho Độc giả (User Web)
+- Đăng ký và Đăng nhập: Hỗ trợ tạo tài khoản mới bằng Email/Mật khẩu hoặc Đăng nhập một chạm thông qua tài khoản Google / Facebook (OAuth 2.0).
+- Tra cứu danh mục sách: Xem danh sách sách với hiệu ứng khung xương tải trang (Skeleton Loading), lọc theo thể loại, tìm kiếm theo từ khóa.
+- Tìm kiếm bằng giọng nói (Voice Search AI): Tích hợp Web Speech API cho phép người dùng nói tên sách vào micro để hệ thống tự động nhận diện và lọc kết quả.
+- Trợ lý ảo thông minh (Gemini AI Chatbot): Tư vấn tìm sách, giải đáp quy định mượn trả và kiểm tra thông tin tài khoản bằng ngôn ngữ tự nhiên tiếng Việt.
+- Xem chi tiết sách: Hiển thị đầy đủ thông tin sách, ảnh bìa, số lượng còn lại trong kho và Tên Nhà Xuất Bản được tự động liên kết hiển thị trực quan (thay vì chỉ hiển thị mã NXB).
+- Đăng ký mượn sách: Chọn số lượng mượn (giới hạn tối đa 10 quyển), chọn ngày đến nhận và ngày hẹn trả.
+- Quản lý lịch sử mượn sách: Theo dõi danh sách các phiếu mượn theo thời gian thực.
+- Thao tác ngữ cảnh trên phiếu mượn:
+  + Đối với phiếu "Chờ duyệt": Cho phép chỉnh sửa số lượng hoặc hủy yêu cầu.
+  + Đối với phiếu "Đang mượn": Cho phép xin gia hạn (tuân thủ quy tắc 3 ngày) hoặc hẹn ngày mang sách đến trả.
+- Hệ thống Chuông thông báo (In-App Notification Bell): Tự động phát hiện và cảnh báo sách quá hạn hoặc sách sắp đến hạn trả (dưới 2 ngày), đi kèm hiệu ứng rung chuông sinh động và cơ chế lưu trữ trạng thái đã đọc bền vững qua mọi lần tải lại trang (F5).
+
+2.2. Phân hệ dành cho Thủ thư và Quản trị viên (Admin Web)
+- Đăng nhập an toàn: Sử dụng Mã số nhân viên (MSNV) và mật khẩu được mã hóa Bcrypt, cấp phát token JWT riêng biệt có phân vai trò (role claims).
+- Phân quyền người dùng (RBAC 3 cấp độ):
+  + Quản trị viên (Admin): Toàn quyền quản trị hệ thống, quản lý tài khoản nhân viên, quản lý tài khoản độc giả và xem Dashboard báo cáo.
+  + Nhân viên Quản lý sách: Quản lý danh mục Sách và danh mục Nhà xuất bản.
+  + Nhân viên Duyệt mượn: Tiếp nhận, duyệt mượn, duyệt gia hạn, xác nhận trả sách và theo dõi quá hạn.
+- Dashboard Thống kê thời gian thực: Cung cấp 4 thẻ số liệu tổng quan (Tổng sách, Tổng độc giả, Sách đang mượn, Sách quá hạn) và 3 biểu đồ Chart.js trực quan (Biểu đồ đường mượn/trả 6 tháng, Biểu đồ tròn trạng thái phiếu, Biểu đồ cột Top sách được mượn nhiều nhất).
+- Quản lý Sách: Thêm sách mới kèm tải ảnh bìa, chỉnh sửa thông tin, xóa sách, kiểm soát số lượng tồn kho.
+- Quản lý Nhà xuất bản: Thêm, sửa, xóa thông tin nhà xuất bản.
+- Quản lý Mượn/Trả sách: Danh sách phiếu mượn có lọc theo trạng thái, tìm kiếm theo tên độc giả/tên sách. Tích hợp Dropdown thao tác ngữ cảnh thông minh: Duyệt phiếu, Từ chối (nhập lý do), Duyệt gia hạn, Từ chối gia hạn, và Xác nhận trả sách.
+- Quản lý Độc giả: Xem hồ sơ, xem toàn bộ lịch sử mượn sách của từng độc giả, thực hiện khóa hoặc mở khóa tài khoản đối với độc giả vi phạm quy chế thư viện.
+- Quản lý Nhân viên: Thêm nhân viên mới, cập nhật chức vụ, xóa tài khoản (chặn không cho tự xóa tài khoản đang đăng nhập).
+
+3. Yêu cầu phi chức năng
+- Về tính bảo mật: Tách biệt hoàn toàn hai cổng giao diện thành 2 dự án Frontend độc lập để che giấu bề mặt tấn công của trang quản trị. Xác thực bằng JSON Web Token (JWT) có chữ ký số bí mật (Secret Key). Mật khẩu được băm bằng thuật toán Bcrypt với Salt round = 10.
+- Về tính toàn vẹn dữ liệu: Cấu hình 17 chỉ mục (Unique và Compound Indexes) trên CSDL MongoDB để loại bỏ 100% tình trạng trùng lặp mã nghiệp vụ (MaSach, MaDocGia, MSNV, MaNXB) ngay tại mức tầng dữ liệu.
+- Về hiệu năng: Tích hợp Redis Caching in-memory giúp tốc độ phản hồi danh sách sách và Dashboard giảm xuống chỉ còn 1 - 2ms.
+- Về tính khả dụng và độ tin cậy: Xây dựng kiến trúc tự phục hồi (Resilience Architecture) 3 lớp cho AI Chatbot, đảm bảo ứng dụng không bao giờ bị treo khi API bên ngoài quá tải. Triển khai PM2 tự khởi động lại dịch vụ nếu phát sinh sự cố.
+
+4. Công nghệ và môi trường phát triển hệ thống
+
+4.1. Kiến trúc MEVN Stack
+Hệ thống được xây dựng trên nền tảng kiến trúc MEVN Stack hiện đại:
+- M (MongoDB): Cơ sở dữ liệu NoSQL lưu trữ dưới dạng document BSON linh hoạt.
+- E (Express.js): Framework tối giản, mạnh mẽ chạy trên Node.js xử lý định tuyến và middleware API.
+- V (Vue 3): Framework JavaScript tiến bộ xây dựng giao diện người dùng theo mô hình Single Page Application (SPA).
+- N (Node.js): Môi trường thực thi JavaScript phía máy chủ với cơ chế non-blocking I/O hiệu năng cao.
+
+4.2. Môi trường Node.js và Express.js Framework
+Node.js phiên bản v20+ hoạt động theo mô hình hướng sự kiện (Event-driven) và đơn luồng bất đồng bộ (Single-threaded Event Loop), cho phép xử lý hàng nghìn kết nối đồng thời với lượng tài nguyên CPU và bộ nhớ cực thấp. Express.js đóng vai trò điều phối các Middleware kiểm tra tính hợp lệ của dữ liệu, xác thực quyền hạn người dùng trước khi chuyển giao tác vụ cho các Service xử lý.
+
+4.3. Hệ quản trị cơ sở dữ liệu MongoDB và Native Driver
+Đề tài sử dụng Native MongoDB Driver chính thức của MongoDB (phiên bản 6.x) thay vì sử dụng thư viện Mongoose ODM. Việc này giúp loại bỏ hoàn toàn các lớp trung gian (overhead) tiêu tốn bộ nhớ, cho phép nhà phát triển kiểm soát trực tiếp các câu lệnh truy vấn native, tối ưu hóa các toán tử nguyên tử ($inc, $set) và xây dựng các đường ống tổng hợp (Aggregation Pipeline) phức tạp với tốc độ xử lý nhanh nhất.
+
+4.4. Thư viện giao diện Vue 3 (Composition API) và Bootstrap 5
+Cả hai giao diện User Web và Admin Web đều được xây dựng bằng Vue 3 sử dụng phong cách lập trình hiện đại Composition API với cú pháp <script setup>. Mã nguồn được tổ chức thành các component độc lập, dễ tái sử dụng và kiểm thử. Giao diện được định hình bằng hệ thống lưới (Grid System) và các lớp tiện ích của Bootstrap 5, cam kết không sử dụng Tailwind CSS nhằm đảm bảo tính tùy biến linh hoạt và tính nhất quán với yêu cầu học phần.
+
+4.5. Hệ thống lưu trữ bộ đệm Redis In-memory Caching
+Redis đóng vai trò là một cơ sở dữ liệu khóa - giá trị (Key-Value) lưu trữ trực tiếp trên RAM. Hệ thống áp dụng Redis để lưu bộ đệm cho danh sách sách người dùng và dữ liệu thống kê Dashboard. Khi có sự thay đổi dữ liệu (Thêm, Sửa, Xóa sách hoặc Duyệt, Trả sách), cơ chế Cache Invalidation tự động xóa các khóa bộ đệm liên quan để đảm bảo dữ liệu hiển thị luôn chính xác tuyệt đối.
+
+4.6. Trí tuệ nhân tạo Gemini AI và API Web Speech
+Hệ thống tích hợp mô hình ngôn ngữ lớn thế hệ mới Google Gemini thông qua cơ chế Function Calling, cho phép AI truy vấn dữ liệu sách từ cơ sở dữ liệu để trả lời người dùng. Đồng thời, API Web Speech tích hợp sẵn trong trình duyệt được khai thác để cung cấp tính năng tìm kiếm bằng giọng nói không chạm (Voice Search).
+
+4.7. Máy chủ Web NGINX và Quản lý tiến trình PM2
+NGINX tiếp nhận các yêu cầu tại cổng 80 (Cổng độc giả) và cổng 8080 (Cổng quản trị), đóng vai trò Reverse Proxy phân luồng request và nén Gzip tĩnh. PM2 đóng vai trò Process Manager duy trì ứng dụng Node.js chạy ngầm liên tục, tự động khởi động lại khi có lỗi hoặc khi máy chủ vật lý khởi động lại.
+
+
+================================================================================
+CHƯƠNG III: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+================================================================================
+
+1. Phân tích chức năng và Sơ đồ Use Case
+
+1.1. Danh sách các tác nhân hệ thống (Actors)
+
+Bảng 1: Danh sách các Tác nhân trong hệ thống
+------------------------------------------------------------------------------------------------------------------------
+Tác nhân            Mô tả vai trò
+------------------------------------------------------------------------------------------------------------------------
+Khách vãng lai      Người dùng chưa đăng nhập hệ thống; có thể xem danh mục sách, tìm kiếm và hỏi đáp trợ lý ảo.
+Độc giả             Người dùng đã có tài khoản thành viên thư viện; có quyền đăng ký mượn sách, xin gia hạn, hẹn trả sách.
+Nhân viên QL Sách   Thủ thư chịu trách nhiệm quản lý kho sách, danh mục sách và các nhà xuất bản liên kết.
+Nhân viên Duyệt     Thủ thư phụ trách quầy giao dịch; thực hiện duyệt mượn, duyệt gia hạn, xác nhận trả và xử lý quá hạn.
+Quản trị viên       Người có quyền hạn cao nhất; quản trị tài khoản độc giả, phân quyền nhân viên và xem báo cáo tổng thể.
+------------------------------------------------------------------------------------------------------------------------
+
+1.2. Bảng đặc tả chi tiết các Use Case chính
+
+Bảng 2: Danh sách và mô tả các Use Case chính
+------------------------------------------------------------------------------------------------------------------------
+Mã UC   Tên Use Case                Tác nhân thực hiện              Mô tả tóm tắt
+------------------------------------------------------------------------------------------------------------------------
+UC01    Đăng ký tài khoản           Khách vãng lai                  Tạo tài khoản độc giả mới với email và mật khẩu.
+UC02    Đăng nhập hệ thống          Tất cả tác nhân                 Xác thực danh tính qua JWT hoặc Google/Facebook OAuth2.
+UC03    Đăng xuất                   Độc giả, Nhân viên, Admin       Hủy phiên làm việc và xóa token lưu trữ phía máy khách.
+UC04    Tra cứu và xem sách         Khách vãng lai, Độc giả         Xem danh sách sách, xem chi tiết sách, lọc thể loại.
+UC05    Tìm kiếm bằng giọng nói     Khách vãng lai, Độc giả         Nhận diện giọng nói qua Micro để tìm kiếm sách nhanh.
+UC06    Hỏi đáp với Trợ lý AI       Khách vãng lai, Độc giả         Trò chuyện với AI Chatbot để tra cứu thông tin thư viện.
+UC07    Đăng ký mượn sách           Độc giả                         Tạo phiếu mượn sách (kiểm tra hạn mức tối đa 10 quyển).
+UC08    Xem lịch sử mượn sách       Độc giả                         Theo dõi trạng thái các phiếu mượn cá nhân.
+UC09    Nhận chuông thông báo       Độc giả                         Nhận cảnh báo sách quá hạn hoặc sách sắp đến hạn trả.
+UC10    Xin gia hạn mượn sách       Độc giả                         Yêu cầu gia hạn thêm ngày (tuân thủ quy tắc 3 ngày).
+UC11    Hẹn ngày trả sách           Độc giả                         Gửi thông báo ngày dự kiến mang sách đến trả tại quầy.
+UC12    Hủy / Sửa phiếu mượn        Độc giả                         Chỉnh sửa số lượng hoặc hủy phiếu khi đang chờ duyệt.
+UC13    Quản lý Danh mục Sách       Nhân viên QL Sách, Admin        Thêm sách mới, tải ảnh bìa, sửa và xóa sách trong kho.
+UC14    Quản lý Nhà xuất bản        Nhân viên QL Sách, Admin        Thêm, sửa, xóa thông tin nhà xuất bản.
+UC15    Duyệt / Từ chối mượn sách   Nhân viên Duyệt, Admin          Kiểm tra tồn kho First-come First-served và trừ kho.
+UC16    Duyệt / Từ chối gia hạn     Nhân viên Duyệt, Admin          Thẩm định yêu cầu gia hạn và cộng thêm thời gian trả.
+UC17    Xác nhận nhận lại sách      Nhân viên Duyệt, Admin          Tiếp nhận sách vật lý tại quầy và hoàn lại kho sách.
+UC18    Theo dõi sách quá hạn       Nhân viên Duyệt, Admin          Kiểm tra danh sách vi phạm bằng cơ chế Lazy-check.
+UC19    Quản lý tài khoản Độc giả   Quản trị viên                   Xem hồ sơ, lịch sử mượn và khóa/mở khóa tài khoản.
+UC20    Quản lý Nhân viên & RBAC    Quản trị viên                   Thêm nhân viên, chỉ định chức vụ và phân quyền hệ thống.
+UC21    Xem Dashboard Thống kê      Nhân viên Duyệt, Admin          Xem các chỉ số KPI và biểu đồ Chart.js trực quan.
+------------------------------------------------------------------------------------------------------------------------
+
+1.3. Sơ đồ Use Case tổng quát
+
+[HÌNH 1: Sơ đồ Use Case tổng quát toàn bộ hệ thống Quản lý mượn sách]
+(Vị trí chèn hình: Người dùng thực hiện vẽ sơ đồ Use Case trên phần mềm StarUML theo hướng dẫn chi tiết tại mục 1.4 dưới đây, sau đó xuất ra file ảnh Hinh1_SoDoUseCase.png và chèn vào vị trí này trong bài báo cáo).
+
+1.4. Hướng dẫn chi tiết từng bước vẽ Sơ đồ Use Case bằng phần mềm StarUML trên máy tính
+
+Để có được hình vẽ sơ đồ Use Case chuyên nghiệp và đúng quy chuẩn UML nộp cho Giảng viên, sinh viên thực hiện thao tác trên phần mềm StarUML theo các bước sau:
+
+Bước 1: Khởi tạo mô hình Use Case Diagram
+- Mở phần mềm StarUML đã cài đặt trên máy tính.
+- Tại khung bên phải (Model Explorer), nhấp chuột phải vào mục "Model" (hoặc chọn menu Model trên thanh công cụ) -> chọn "Add Diagram" -> chọn "Use Case Diagram".
+- Đặt tên cho sơ đồ là "SoDoUseCaseTongQuat".
+
+Bước 2: Tạo Khung ranh giới hệ thống (System Boundary)
+- Tại thanh công cụ bên trái (Toolbox), chọn thẻ "Use Case".
+- Chọn công cụ "Boundary" (hoặc "System"), nhấp chuột vào giữa vùng làm việc và kéo dãn thành một khung chữ nhật lớn.
+- Đặt tên cho khung ranh giới là: "HỆ THỐNG QUẢN LÝ MƯỢN SÁCH ONLINE". Khung này thể hiện phạm vi bên trong của phần mềm.
+
+Bước 3: Khởi tạo các Tác nhân (Actors)
+- Chọn công cụ "Actor" trong Toolbox, nhấp chuột vào bên ngoài phía bên trái của khung Boundary để tạo các tác nhân phía người dùng:
+  + Đặt tên: "Khách vãng lai"
+  + Đặt tên: "Độc giả"
+- Nhấp chuột vào bên ngoài phía bên phải của khung Boundary để tạo các tác nhân phía quản trị:
+  + Đặt tên: "Nhân viên Quản lý sách"
+  + Đặt tên: "Nhân viên Duyệt mượn"
+  + Đặt tên: "Quản trị viên (Admin)"
+- Thiết lập quan hệ Kế thừa (Generalization): Chọn công cụ "Generalization" (mũi tên tam giác rỗng) trong Toolbox, kéo từ "Nhân viên Quản lý sách" về "Nhân viên", và từ "Admin" về "Nhân viên" để thể hiện tính chất kế thừa quyền hạn.
+
+Bước 4: Tạo các Use Case bên trong Khung Boundary
+- Chọn công cụ "Use Case" (hình elip) trong Toolbox, nhấp chuột vào bên trong khung Boundary để tạo các Use Case:
+  + Nhóm Độc giả: "Đăng ký", "Đăng nhập", "Tra cứu danh mục sách", "Tìm kiếm bằng giọng nói", "Trò chuyện với AI Chatbot", "Đăng ký mượn sách", "Xem lịch sử mượn", "Xin gia hạn mượn sách", "Hẹn ngày trả sách", "Nhận chuông thông báo".
+  + Nhóm Quản trị: "Quản lý Sách", "Quản lý Nhà xuất bản", "Duyệt yêu cầu mượn", "Duyệt yêu cầu gia hạn", "Xác nhận trả sách", "Quản lý tài khoản Độc giả", "Quản lý Nhân viên & Phân quyền", "Xem Dashboard Thống kê".
+
+Bước 5: Thiết lập các đường liên kết (Relationships)
+- Quan hệ Association: Chọn công cụ "Association" (đường thẳng nối liền), kéo từ Actor đến các Use Case tương ứng mà tác nhân đó được phép kích hoạt.
+- Quan hệ Include (Bắt buộc): Chọn công cụ "Include" (mũi tên nét đứt có chữ <<include>>):
+  + Kéo từ "Đăng ký mượn sách" -> <<include>> -> "Kiểm tra hạn mức 10 quyển".
+  + Kéo từ "Duyệt yêu cầu mượn" -> <<include>> -> "Kiểm tra tồn kho sách".
+  + Kéo từ "Xin gia hạn mượn sách" -> <<include>> -> "Kiểm tra quy tắc 3 ngày".
+- Quan hệ Extend (Mở rộng tùy chọn): Chọn công cụ "Extend" (mũi tên nét đứt có chữ <<extend>>):
+  + Kéo từ "Tìm kiếm bằng giọng nói" -> <<extend>> -> "Tra cứu danh mục sách".
+  + Kéo từ "Đăng nhập OAuth 2.0" -> <<extend>> -> "Đăng nhập".
+
+Bước 6: Xuất file hình ảnh chất lượng cao để chèn vào báo cáo
+- Nhấp vào khoảng trắng của sơ đồ để hoàn tất bố cục.
+- Vào menu: File -> chọn "Export Image as..." -> chọn định dạng "PNG (*.png)".
+- Chọn độ phân giải chuẩn, lưu tệp với tên "Hinh1_SoDoUseCase.png".
+- Mở tệp báo cáo bằng Microsoft Word, tại mục Hình 1, chọn Insert -> Picture -> chọn tệp "Hinh1_SoDoUseCase.png" vừa lưu để chèn vào báo cáo.
+
+
+2. Phân tích và Thiết kế Cơ sở dữ liệu
+
+2.1. Mô hình dữ liệu và Chiến lược Hybrid Identifier
+
+Cơ sở dữ liệu của đồ án được xây dựng dựa trên 5 bộ sưu tập chuẩn mực do Giảng viên đề ra: DOCGIA, NHANVIEN, SACH, NHAXUATBAN và THEODOIMUONSACH. Điểm nhấn kiến trúc cốt lõi của đề tài là việc áp dụng Chiến lược Định danh Lai (Hybrid Identifier Strategy):
+- Trường _id (BSON ObjectId 12-byte): Đóng vai trò Khóa chính vật lý. Tận dụng Clustered Index mặc định của MongoDB giúp tăng tốc tối đa các thao tác URL routing, foreign key nội bộ và phép nối dữ liệu ($lookup) đạt thời gian truy xuất cực nhanh (~0.1ms).
+- Các trường Mã nghiệp vụ (MaSach, MaDocGia, MSNV, MaNXB): Đóng vai trò Khóa logic phục vụ hiển thị trên giao diện người dùng, tra cứu thẻ thư viện và in ấn báo cáo. Để bảo vệ các khóa nghiệp vụ này, hệ thống thiết lập các chỉ mục duy nhất (Unique Index) nghiêm ngặt trên database engine.
+
+2.2. Sơ đồ Thực thể - Mối quan hệ (ERD)
+
+[HÌNH 2: Sơ đồ Thực thể - Mối quan hệ (ERD) Cơ sở dữ liệu MongoDB]
+(Hướng dẫn lấy hình: Sinh viên có thể sử dụng công cụ MongoDB Compass kết nối tới cơ sở dữ liệu thư viện tại mongodb://localhost:27017, vào tab Schema hoặc sử dụng StarUML/draw.io để vẽ sơ đồ 5 bảng: DOCGIA, SACH, NHAXUATBAN, NHANVIEN, THEODOIMUONSACH kèm các đường liên kết khóa ngoại MaDocGia, MaSach, MaNXB, MSNV, sau đó xuất ảnh PNG và chèn vào vị trí này).
+
+2.3. Cấu trúc chi tiết các Bộ sưu tập (Collections Schema)
+
+Bảng 3: Cấu trúc bộ sưu tập "DOCGIA"
+------------------------------------------------------------------------------------------------------------------------
+Tên thuộc tính      Kiểu dữ liệu    Ràng buộc               Mô tả chi tiết
+------------------------------------------------------------------------------------------------------------------------
+_id                 ObjectId        Primary Key, Clustered  Mã định danh nội bộ MongoDB (12 bytes)
+MaDocGia            String          Required, Unique Index  Mã số độc giả (ví dụ: DG001, DG_GG_1082...)
+HoLot               String          Required                Họ và tên đệm của độc giả
+Ten                 String          Required                Tên của độc giả
+NgaySinh            String          Optional                Ngày tháng năm sinh (định dạng YYYY-MM-DD)
+Phai                String          Optional                Giới tính của độc giả (Nam / Nữ)
+DiaChi              String          Optional                Địa chỉ cư trú của độc giả
+DienThoai           String          Optional                Số điện thoại liên hệ
+Email               String          Required, Sparse Unique Địa chỉ email dùng để đăng nhập hệ thống
+Password            String          Nullable                Mật khẩu băm Bcrypt (Null nếu đăng nhập qua OAuth2)
+TrangThaiTaiKhoan   String          Default: "BinhThuong"   Trạng thái tài khoản ("BinhThuong" / "BiKhoa")
+oauthProvider       String          Optional                Nhà cung cấp đăng nhập xã hội ("google" / "facebook")
+oauthId             String          Optional                Mã định danh người dùng do Google/Facebook cung cấp
+------------------------------------------------------------------------------------------------------------------------
+
+Bảng 4: Cấu trúc bộ sưu tập "NHANVIEN"
+------------------------------------------------------------------------------------------------------------------------
+Tên thuộc tính      Kiểu dữ liệu    Ràng buộc               Mô tả chi tiết
+------------------------------------------------------------------------------------------------------------------------
+_id                 ObjectId        Primary Key, Clustered  Mã định danh nội bộ MongoDB
+MSNV                String          Required, Unique Index  Mã số nhân viên (ví dụ: ADMIN001, NV002)
+HoTenNV             String          Required                Họ và tên đầy đủ của nhân viên
+Password            String          Required                Mật khẩu đăng nhập được băm an toàn bằng Bcrypt
+ChucVu              String          Required, Enum          Chức vụ phân quyền ("Admin", "NhanVienQuanLySach", "NhanVienDuyetMuon")
+DiaChi              String          Optional                Địa chỉ liên lạc của nhân viên
+SoDienThoai         String          Optional                Số điện thoại của nhân viên
+Email               String          Optional, Sparse Unique Email công vụ của nhân viên
+------------------------------------------------------------------------------------------------------------------------
+
+Bảng 5: Cấu trúc bộ sưu tập "SACH"
+------------------------------------------------------------------------------------------------------------------------
+Tên thuộc tính      Kiểu dữ liệu    Ràng buộc               Mô tả chi tiết
+------------------------------------------------------------------------------------------------------------------------
+_id                 ObjectId        Primary Key, Clustered  Mã định danh nội bộ MongoDB
+MaSach              String          Required, Unique Index  Mã định danh sách (ví dụ: SACH001, SACH002)
+TenSach             String          Required, Index         Tên tiêu đề cuốn sách
+DonGia              Number          Required                Đơn giá sách (giá trị bồi thường khi làm mất)
+SoQuyen             Number          Required, Min: 0        Tổng số quyển sách thư viện sở hữu
+SoQuyenConLai       Number          Required, Min: 0        Số quyển sách thực tế đang còn trong kho
+NamXuatBan          Number          Required                Năm xuất bản của cuốn sách
+MaNXB               String          Required, Index         Mã nhà xuất bản (Khóa ngoại tham chiếu NHAXUATBAN)
+NguonGoc_TacGia     String          Required                Tên tác giả hoặc cơ quan ban hành cuốn sách
+TacGia              String          Optional                Tên tác giả (trường mở rộng)
+TheLoai             String          Optional, Index         Thể loại sách (Khoa học, Lập trình, Văn học...)
+SoTrang             Number          Optional                Số lượng trang của cuốn sách
+MoTa                String          Optional                Tóm tắt nội dung cuốn sách
+NgonNgu             String          Optional, Default: "VN" Ngôn ngữ của sách (Tiếng Việt, Tiếng Anh...)
+HinhAnh             String          Optional                Đường dẫn tương đối của tệp ảnh bìa trong /uploads
+------------------------------------------------------------------------------------------------------------------------
+
+Bảng 6: Cấu trúc bộ sưu tập "NHAXUATBAN"
+------------------------------------------------------------------------------------------------------------------------
+Tên thuộc tính      Kiểu dữ liệu    Ràng buộc               Mô tả chi tiết
+------------------------------------------------------------------------------------------------------------------------
+_id                 ObjectId        Primary Key, Clustered  Mã định danh nội bộ MongoDB
+MaNXB               String          Required, Unique Index  Mã định danh nhà xuất bản (ví dụ: NXB01, NXB02)
+TenNXB              String          Required, Unique Index  Tên gọi đầy đủ của nhà xuất bản (ví dụ: NXB Giáo Dục)
+DiaChi              String          Optional                Địa chỉ trụ sở chính của nhà xuất bản
+------------------------------------------------------------------------------------------------------------------------
+
+Bảng 7: Cấu trúc bộ sưu tập "THEODOIMUONSACH"
+------------------------------------------------------------------------------------------------------------------------
+Tên thuộc tính      Kiểu dữ liệu    Ràng buộc               Mô tả chi tiết
+------------------------------------------------------------------------------------------------------------------------
+_id                 ObjectId        Primary Key, Clustered  Mã định danh nội bộ MongoDB
+MaDocGia            String          Required, Index         Mã độc giả mượn sách (tham chiếu DOCGIA)
+MaSach              String          Required, Index         Mã cuốn sách được mượn (tham chiếu SACH)
+SoLuong             Number          Required, Min: 1        Số lượng quyển mượn cho phiếu này
+NgayMuon            Date            Required                Ngày mượn sách (hoặc ngày dự kiến đến nhận)
+NgayHenTra          Date            Required, Index         Ngày bắt buộc phải hoàn trả sách cho thư viện
+NgayTra             Date            Optional                Ngày thực tế độc giả đã hoàn trả sách thành công
+NgayDuKienTra       Date            Optional                Ngày độc giả gửi thông báo xin hẹn mang sách trả
+TrangThai           String          Required, Index, Enum   Trạng thái phiếu: "chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "đã trả", "từ chối", "quá hạn"
+SoLanGiaHan         Number          Default: 0, Max: 2      Số lần phiếu mượn này đã được gia hạn thành công
+MaNhanVien          String          Optional                Mã nhân viên thực hiện thao tác duyệt mượn hoặc nhận trả
+GhiChu              String          Optional                Lý do từ chối mượn, từ chối gia hạn hoặc tình trạng sách
+------------------------------------------------------------------------------------------------------------------------
+
+2.4. Thiết kế 17 Chỉ mục (Indexes) và Ràng buộc toàn vẹn dữ liệu
+
+Bảng 8: Danh sách 17 Chỉ mục (Indexes) trên cơ sở dữ liệu MongoDB
+------------------------------------------------------------------------------------------------------------------------
+STT   Tên Collection      Tên Chỉ mục                   Loại Index          Mục đích kỹ thuật
+------------------------------------------------------------------------------------------------------------------------
+1     SACH                uniq_MaSach                   Unique              Ngăn chặn tuyệt đối việc trùng lặp Mã sách
+2     SACH                idx_TenSach                   Single field        Tăng tốc độ tìm kiếm sách theo tên
+3     SACH                idx_TheLoai                   Single field        Tăng tốc độ lọc sách theo thể loại
+4     SACH                idx_MaNXB                     Single field        Tối ưu hóa phép nối tự động tên NXB
+5     DOCGIA              uniq_MaDocGia                 Unique              Ngăn chặn trùng lặp Mã độc giả
+6     DOCGIA              uniq_Email                    Sparse Unique       Đảm bảo mỗi email chỉ đăng ký 1 tài khoản
+7     DOCGIA              idx_oauth                     Sparse              Tăng tốc đăng nhập liên kết Google/Facebook
+8     NHANVIEN            uniq_MSNV                     Unique              Ngăn chặn trùng lặp Mã số nhân viên
+9     NHANVIEN            uniq_EMAIL                    Sparse Unique       Đảm bảo tính duy nhất email nội bộ
+10    NHAXUATBAN          uniq_MaNXB                    Unique              Ngăn chặn trùng lặp Mã nhà xuất bản
+11    NHAXUATBAN          uniq_TenNXB                   Unique              Ngăn chặn việc nhập trùng tên NXB
+12    THEODOIMUONSACH     idx_muon_docgia_trangthai     Compound            Tối ưu hóa kiểm tra hạn mức mượn 10 quyển
+13    THEODOIMUONSACH     idx_muon_masach               Single field        Tối ưu thống kê số lượng sách đang mượn
+14    THEODOIMUONSACH     idx_muon_trangthai            Single field        Tăng tốc độ lọc danh sách phiếu mượn
+15    THEODOIMUONSACH     idx_muon_ngayhentra           Single field        Tối ưu hóa thuật toán Lazy-check quá hạn
+16    DANHGIA             idx_danhgia_sach_docgia       Compound            Đảm bảo mỗi người chỉ đánh giá sách 1 lần
+17    CHAT_HISTORY        idx_chat_docgia_time          Compound            Tăng tốc độ tải lịch sử trò chuyện AI
+------------------------------------------------------------------------------------------------------------------------
+
+
+================================================================================
+CHƯƠNG IV: THIẾT KẾ GIAO DIỆN VÀ CÁC TÍNH NĂNG NỔI BẬT
+================================================================================
+
+1. Giao diện Cổng Quản trị (Admin Web)
+
+1.1. Màn hình Đăng nhập và Kiểm soát phiên làm việc
+Màn hình đăng nhập được bảo vệ nghiêm ngặt. Khi nhân viên nhập Mã số nhân viên và mật khẩu, hệ thống gửi yêu cầu xác thực đến Backend. Khi thành công, token JWT được lưu an toàn tại máy khách và hệ thống tự động giải mã thông tin chức vụ để thiết lập thanh Sidebar phù hợp.
+
+[HÌNH 3: Màn hình Đăng nhập Quản trị viên và xác thực bảo vệ route]
+(Hướng dẫn lấy hình: Khởi động Admin-Web tại địa chỉ http://localhost:5174, mở màn hình đăng nhập, sử dụng tổ hợp phím Windows + Shift + S để chụp lại toàn bộ màn hình đăng nhập chỉn chu và chèn vào vị trí này).
+
+1.2. Màn hình Dashboard Thống kê thời gian thực với Chart.js
+Màn hình cung cấp bức tranh toàn cảnh về hoạt động của thư viện với 4 thẻ KPI nổi bật cùng 3 biểu đồ Chart.js tự động cập nhật:
+- Biểu đồ đường (Line Chart): Theo dõi xu hướng số lượt mượn và trả sách qua các tháng.
+- Biểu đồ tròn (Doughnut Chart): Trực quan hóa tỷ lệ phần trăm giữa các trạng thái phiếu mượn.
+- Biểu đồ cột (Bar Chart): Thống kê top 5 đầu sách có số lượt mượn cao nhất trong thư viện.
+
+[HÌNH 4: Dashboard Thống kê thời gian thực với các biểu đồ Chart.js]
+(Hướng dẫn lấy hình: Đăng nhập tài khoản ADMIN001 / Admin@123 tại http://localhost:5174, chuyển đến mục Dashboard, chụp ảnh màn hình hiển thị đầy đủ 4 thẻ số liệu và các biểu đồ Chart.js rồi chèn vào vị trí này).
+
+1.3. Màn hình Quản lý Danh mục Sách và Tải lên hình ảnh
+Bảng hiển thị danh sách sách kèm ảnh bìa thu nhỏ, đơn giá, số lượng tồn kho và tên Nhà xuất bản. Nút chức năng "Thêm sách mới" và "Sửa sách" mở hộp thoại Modal với cơ chế xác thực dữ liệu chặt chẽ từ VeeValidate và Yup.
+
+[HÌNH 5: Màn hình Quản lý Danh mục Sách và Modal nhập liệu]
+(Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Sách", bấm nút "Thêm sách mới" để mở hộp thoại Modal nhập liệu, chụp ảnh màn hình bảng danh sách và modal rồi chèn vào vị trí này).
+
+1.4. Màn hình Quản lý Nhà xuất bản
+Cho phép quản lý danh bạ các đối tác xuất bản sách của thư viện. Hệ thống có cơ chế kiểm tra toàn vẹn tham chiếu: ngăn chặn việc xóa một Nhà xuất bản nếu trong kho vẫn còn sách thuộc về nhà xuất bản đó.
+
+[HÌNH 6: Màn hình Quản lý Nhà xuất bản]
+(Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Nhà xuất bản", chụp ảnh bảng danh sách NXB và chèn vào vị trí này).
+
+1.5. Màn hình Quản lý Mượn Sách với Dropdown thao tác ngữ cảnh
+Bảng quản lý phiếu mượn được trang bị bộ lọc theo trạng thái và thanh tìm kiếm nhanh. Điểm đột phá về mặt trải nghiệm người dùng (UX) là việc áp dụng Dropdown Thao tác Ngữ cảnh:
+- Khi phiếu ở trạng thái "Chờ duyệt": Menu hiển thị 2 lựa chọn "Duyệt phiếu" và "Từ chối".
+- Khi phiếu ở trạng thái "Chờ gia hạn": Menu hiển thị "Duyệt gia hạn" và "Từ chối gia hạn".
+- Khi phiếu ở trạng thái "Đang mượn", "Đang chờ trả", "Quá hạn": Menu hiển thị "Xác nhận trả sách".
+- Khi phiếu ở trạng thái "Đã trả" hoặc "Từ chối": Ẩn thao tác để tránh nhầm lẫn.
+
+[HÌNH 7: Màn hình Quản lý Mượn Sách với Dropdown thao tác ngữ cảnh]
+(Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Mượn Sách", nhấp mở một dropdown thao tác tại một dòng phiếu mượn để thấy các tùy chọn ngữ cảnh thông minh, chụp ảnh màn hình và chèn vào đây).
+
+1.6. Màn hình Quản lý Độc giả và Khóa tài khoản vi phạm
+Cho phép Admin theo dõi danh sách toàn bộ độc giả, xem nhanh số lượng sách đang mượn. Admin có thể nhấp "Xem lịch sử" để kiểm tra toàn bộ nhật ký mượn trả của độc giả đó, hoặc bấm "Khóa tài khoản" nếu độc giả vi phạm quy định mượn sách.
+
+[HÌNH 8: Màn hình Quản lý Độc giả và Modal Khóa tài khoản]
+(Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Độc giả", mở Modal chi tiết độc giả hoặc Modal khóa tài khoản, chụp ảnh màn hình và chèn vào vị trí này).
+
+1.7. Màn hình Quản lý Nhân viên và Phân quyền RBAC 3 cấp độ
+Chức năng dành riêng cho Quản trị viên tối cao (Admin). Admin có thể thêm nhân viên mới và gán chức vụ tương ứng theo ma trận phân quyền hệ thống.
+
+Bảng 9: Bảng ma trận phân quyền hệ thống (RBAC Matrix)
+------------------------------------------------------------------------------------------------------------------------
+Chức năng hệ thống              Admin           Nhân viên QL Sách       Nhân viên Duyệt mượn
+------------------------------------------------------------------------------------------------------------------------
+Quản lý Danh mục Sách           Có quyền        Có quyền                Chỉ xem
+Quản lý Nhà xuất bản            Có quyền        Có quyền                Không có quyền
+Duyệt mượn / Trả sách           Có quyền        Không có quyền          Có quyền
+Quản lý Độc giả (Khóa/Mở)       Có quyền        Không có quyền          Không có quyền
+Quản lý Nhân viên & Gán quyền   Có quyền        Không có quyền          Không có quyền
+Xem Dashboard Thống kê          Có quyền        Không có quyền          Có quyền
+------------------------------------------------------------------------------------------------------------------------
+
+[HÌNH 9: Màn hình Quản lý Nhân viên và Phân quyền RBAC 3 vai trò]
+(Hướng dẫn lấy hình: Tại Admin Web, đăng nhập tài khoản Admin, vào menu "Quản lý Nhân viên", mở Modal phân quyền chức vụ cho nhân viên, chụp ảnh màn hình và chèn vào vị trí này).
+
+
+2. Giao diện Cổng Độc giả (User Web)
+
+2.1. Trang chủ Thư viện, Bộ lọc Thể loại và Tải dữ liệu Skeleton
+Trang chủ thư viện được thiết kế trang nhã theo chuẩn Bootstrap 5. Các thẻ sách (Book Cards) hiển thị bắt mắt với ảnh bìa, tên sách, tác giả và số quyển còn lại. Khi dữ liệu đang được tải từ máy chủ, hiệu ứng Skeleton Loading dạng khung xương chuyển động mượt mà giúp người dùng không có cảm giác chờ đợi sốt ruột.
+
+[HÌNH 10: Trang chủ Thư viện với Bộ lọc Thể loại và Tìm kiếm sách]
+(Hướng dẫn lấy hình: Khởi động User-Web tại http://localhost:5173, đứng tại trang chủ danh sách sách, chụp ảnh màn hình bao gồm thanh tìm kiếm, bộ lọc thể loại và lưới sách rồi chèn vào vị trí này).
+
+2.2. Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)
+Độc giả nhấp vào biểu tượng Micro trên thanh tìm kiếm. Trình duyệt sẽ lắng nghe giọng nói tiếng Việt, chuyển đổi thành văn bản trong thời gian thực và kích hoạt bộ lọc sách tức thì mà không cần chạm tay vào bàn phím.
+
+[HÌNH 11: Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)]
+(Hướng dẫn lấy hình: Tại User-Web, nhấp vào biểu tượng Micro trên thanh tìm kiếm để kích hoạt trạng thái lắng nghe có hiệu ứng viền chuyển động, nói một từ khóa rồi chụp ảnh màn hình chèn vào đây).
+
+2.3. Màn hình Chi tiết Sách hiển thị đầy đủ Tên Nhà Xuất Bản
+Trang chi tiết sách cung cấp đầy đủ thông tin: Năm xuất bản, Tác giả, Ngôn ngữ, Số trang, Mô tả tóm tắt nội dung và Tên Nhà Xuất Bản được tự động hiển thị tường minh (ví dụ: "Nhà Xuất Bản Trẻ" thay vì chỉ hiện mã "NXB01").
+
+[HÌNH 12: Màn hình Chi tiết Sách hiển thị đầy đủ Tên NXB và Modal Mượn sách]
+(Hướng dẫn lấy hình: Tại User-Web, nhấp vào một cuốn sách bất kỳ để vào trang chi tiết, bấm nút "Mượn sách" để mở hộp thoại Modal chọn số lượng và ngày trả, chụp ảnh màn hình và chèn vào vị trí này).
+
+2.4. Đăng ký Mượn sách và Cơ chế Kiểm soát Hạn mức 10 quyển
+Tại Modal mượn sách, độc giả chọn số lượng và chọn Ngày dự kiến đến thư viện lấy sách cùng Ngày hẹn trả sách. Hệ thống kiểm soát nghiêm ngặt: Tổng số lượng sách độc giả đang chờ duyệt + đã duyệt + đang mượn không bao giờ được vượt quá 10 quyển. Nếu vượt quá, hệ thống từ chối tạo phiếu và thông báo lý do rõ ràng.
+
+2.5. Đăng nhập truyền thống và Đăng nhập ủy quyền mạng xã hội OAuth 2.0
+Màn hình đăng nhập cung cấp biểu mẫu nhập Email/Mật khẩu truyền thống kết hợp 2 nút bấm Đăng nhập nhanh bằng tài khoản Google và Facebook. Hệ thống tự động liên kết tài khoản và cấp phát JWT token nội bộ an toàn.
+
+[HÌNH 13: Đăng nhập bằng tài khoản thông thường và Ủy quyền OAuth 2.0]
+(Hướng dẫn lấy hình: Tại User-Web, mở trang Đăng nhập, chụp ảnh màn hình biểu mẫu đăng nhập có đầy đủ nút Google, Facebook và chèn vào vị trí này).
+
+2.6. Trang Lịch sử Mượn sách, Hẹn trả sách và Xin Gia hạn mượn sách
+Độc giả có thể theo dõi tiến độ từng phiếu mượn. Tại cột thao tác:
+- Nút "Xin gia hạn": Cho phép xin gia hạn thêm +7 ngày hoặc +14 ngày nếu thỏa mãn quy tắc còn hạn ít nhất 3 ngày và chưa gia hạn quá 2 lần.
+- Nút "Hẹn trả sách": Cho phép chọn ngày dự kiến mang sách đến quầy trả.
+
+[HÌNH 14: Trang Lịch sử Mượn sách, Modal Xin gia hạn và Hẹn trả sách]
+(Hướng dẫn lấy hình: Tại User-Web, sau khi đăng nhập, vào mục "Lịch sử mượn", mở Modal xin gia hạn mượn sách, chụp ảnh màn hình hiển thị danh sách phiếu mượn và modal gia hạn rồi chèn vào vị trí này).
+
+2.7. Hệ thống Chuông Thông báo (In-App Notification Bell) với Deterministic ID
+Biểu tượng chuông trên thanh điều hướng tự động rung lên khi độc giả có phiếu mượn được duyệt hoặc sách sắp đến hạn trả. Nhấp vào chuông sẽ mở ra bảng danh sách thông báo chi tiết. Nhờ áp dụng thuật toán Deterministic Notification ID, khi độc giả nhấn F5 tải lại trang, trạng thái đã đọc được bảo toàn tuyệt đối, badge không bao giờ bị nhảy lại số.
+
+[HÌNH 15: Hệ thống Chuông Thông báo (In-App Bell) và trạng thái Đã đọc bền vững]
+(Hướng dẫn lấy hình: Tại User-Web, nhấp vào biểu tượng Chuông thông báo trên thanh điều hướng để mở danh sách thông báo thả xuống, chụp ảnh màn hình và chèn vào vị trí này).
+
+2.8. Trợ lý Ảo Gemini AI với Kiến trúc Tự phục hồi Resilience đa lớp
+Bong bóng Chatbot nổi ở góc dưới bên phải màn hình cho phép người dùng hỏi đáp trực tiếp. Hệ thống tích hợp kiến trúc 3 lớp: Tự động thử lại với Exponential Backoff khi API bận, Tự động chuyển xuống mô hình nhẹ hơn (Gemini 3.5 Flash Lite) khi mô hình chính quá tải, và Tự động xoay vòng API Key dự phòng.
+
+[HÌNH 16: Trợ lý Ảo Gemini AI với giao diện hội thoại tương tác trực tiếp]
+(Hướng dẫn lấy hình: Tại User-Web, nhấp mở khung chat AI ở góc phải màn hình, gửi một câu hỏi hỏi về sách công nghệ thông tin và nhận câu trả lời từ AI, chụp ảnh màn hình khung chat và chèn vào đây).
+
+
+================================================================================
+CHƯƠNG V: TRIỂN KHAI VÀ VẬN HÀNH HỆ THỐNG
+================================================================================
+
+1. Kiến trúc Triển khai Production chuẩn On-Premise / VPS
+
+Hệ thống được đóng gói và triển khai thực tế theo mô hình phân tầng chuẩn mực theo đúng yêu cầu học phần:
+- Cổng Độc giả (User Web): Được phục vụ qua cổng mạng tiêu chuẩn HTTP Port 80.
+- Cổng Quản trị (Admin Web): Được phục vụ độc lập tại HTTP Port 8080 để cô lập hoàn toàn bề mặt quản trị.
+- Máy chủ NGINX đóng vai trò Reverse Proxy tiếp nhận toàn bộ các kết nối từ bên ngoài:
+  + Phục vụ trực tiếp các tệp giao diện đã đóng gói tĩnh (dist/).
+  + Điều hướng toàn bộ các yêu cầu API (/api/*) và tài nguyên tải lên (/uploads/*) về cổng nội bộ 3000 của Node.js Backend.
+- Công cụ PM2 quản lý tiến trình máy chủ Backend Node.js chạy ngầm liên tục, tự động hồi phục khi có ngoại lệ ngoài ý muốn.
+
+[HÌNH 17: Sơ đồ Kiến trúc Triển khai NGINX Reverse Proxy và PM2]
+(Hướng dẫn vẽ hình: Sinh viên có thể sử dụng công cụ draw.io hoặc PowerPoint vẽ sơ đồ kiến trúc gồm: Client Browser -> NGINX (Port 80/8080) -> chia làm 2 nhánh: Vue dist (static files) và Reverse Proxy -> PM2 Node.js Backend (Port 3000) -> MongoDB & Redis, sau đó xuất file PNG và chèn vào đây).
+
+2. Cấu hình Máy chủ Web NGINX Reverse Proxy
+
+Tệp cấu hình nginx.conf thiết lập các cơ chế tối ưu hóa then chốt:
+- Giải quyết bài toán HTML5 History Mode của Vue Router: Sử dụng chỉ thị `try_files $uri $uri/ /index.html;` tại cả 2 cổng 80 và 8080, loại bỏ hoàn toàn lỗi HTTP 404 khi người dùng tải lại trang tại các định tuyến như /sach, /lich-su, /admin/muonsach.
+- Nén dữ liệu truyền tải Gzip: Giảm đến 65% dung lượng tệp JavaScript và CSS truyền qua đường truyền mạng.
+- Cấu hình Cache-Control tĩnh cho assets và thiết lập thời gian chờ proxy_read_timeout = 60s cho các phản hồi hội thoại của AI Chatbot.
+
+3. Quản lý Tiến trình Máy chủ Node.js với PM2
+
+Tiến trình Backend được khai báo trong tệp ecosystem.config.js với tên tiến trình "library-backend". PM2 giám sát ngưỡng bộ nhớ tối đa 500MB và tự động dọn dẹp bộ nhớ nếu có dấu hiệu rò rỉ, bảo đảm dịch vụ sẵn sàng phục vụ 24/7.
+
+4. Kiểm thử Tối ưu hóa Tốc độ với Bộ đệm Redis
+
+Hệ thống đã triển khai thực tế Redis Caching trên máy chủ. Kết quả kiểm thử trên công cụ Network Tab của trình duyệt cho thấy:
+- Khi chưa có cache: Thời gian phản hồi API lấy danh sách sách mất khoảng 45 - 80ms do phải truy vấn và ánh xạ dữ liệu trên MongoDB.
+- Khi có Redis Cache: Thời gian phản hồi giảm xuống chỉ còn 1 - 2ms (nhanh gấp 40 lần) do dữ liệu JSON được đọc trực tiếp từ bộ nhớ RAM.
+
+[HÌNH 18: Tốc độ phản hồi API đạt 1-2ms khi trúng Redis Cache trên Network Tab]
+(Hướng dẫn lấy hình: Mở trình duyệt Chrome, truy cập User-Web tại trang danh sách sách, nhấn phím F12 mở DevTools -> chuyển sang tab Network -> lọc Fetch/XHR -> tải lại trang và nhấp vào request /api/user/sach, chụp lại ảnh màn hình hiển thị thời gian phản hồi cực nhanh 1-2ms rồi chèn vào đây).
+
+
+================================================================================
+CHƯƠNG VI: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+================================================================================
+
+1. Đánh giá kết quả đạt được
+
+Trải qua quá trình nghiên cứu lý thuyết, phân tích thiết kế và hiện thực hóa mã nguồn, đề tài "Xây dựng website quản lý đăng ký mượn trả sách trực tuyến" đã hoàn thành 100% mục tiêu đề ra và đáp ứng trọn vẹn yêu cầu của học phần CT449:
+- Về mặt nghiệp vụ: Xây dựng trọn vẹn chu trình mượn - gia hạn - trả sách thông minh. Giải quyết triệt để bài toán Overbooking bằng nguyên tắc First-come First-served tại thời điểm duyệt; áp dụng quy tắc gia hạn chặt chẽ trước 3 ngày; tự động cập nhật quá hạn bằng cơ chế Lazy-check và tự động ánh xạ hiển thị đầy đủ Tên Nhà Xuất Bản.
+- Về mặt kiến trúc: Hiện thực hóa mô hình 1 Backend API tập trung phục vụ 2 Frontend Vue 3 SPA độc lập. Phân quyền RBAC 3 vai trò chặt chẽ ở cả tầng máy khách và máy chủ.
+- Về mặt kỹ thuật cơ sở dữ liệu: Làm chủ hoàn toàn Native MongoDB Driver, thiết lập 17 chỉ mục (Indexes) duy nhất và chỉ mục kết hợp, áp dụng thành công Chiến lược Hybrid Identifier tối ưu hóa hiệu năng.
+- Về mặt công nghệ mở rộng: Ứng dụng thành công Redis In-memory Caching tăng tốc độ truy xuất gấp 40 lần; tích hợp Trí tuệ nhân tạo Gemini AI Chatbot với kiến trúc tự phục hồi Resilience 3 lớp; tích hợp Tìm kiếm sách bằng giọng nói Voice Search và Đăng nhập ủy quyền OAuth 2.0 (Google/Facebook).
+- Về mặt triển khai vận hành: Hoàn thành cấu hình Production theo đúng quy cách giáo trình với máy chủ NGINX Reverse Proxy và quản lý tiến trình PM2, kèm theo bộ kịch bản tự động hóa start.bat và stop.bat ổn định trên môi trường Windows.
+
+2. Những ưu điểm nổi bật của đồ án
+
+- Giao diện người dùng sang trọng, hiện đại, thân thiện, ứng dụng Skeleton Loader và Toast Notifications phản hồi tức thì.
+- Mã nguồn sạch sẽ, chuyên nghiệp, tuân thủ tiêu chuẩn Zero Emoji in Code đảm bảo tính tương thích và văn phong học thuật cao nhất.
+- Hệ thống thông báo In-App Notification Bell áp dụng mã định danh bất biến (Deterministic ID) giải quyết dứt điểm lỗi nhảy lại badge khi F5 tải lại trang.
+- Khả năng chịu tải và tính sẵn sàng cao nhờ cơ chế Caching và tự động phục hồi tiến trình.
+
+3. Hạn chế của hệ thống
+
+Bên cạnh những kết quả nổi bật đã đạt được, hệ thống vẫn còn một số điểm hạn chế do giới hạn về mặt thời gian:
+- Chưa tích hợp cổng thanh toán trực tuyến (VNPAY, MoMo) để xử lý việc thu phí phạt trễ hạn tự động cho độc giả.
+- Cơ chế tìm kiếm hiện tại chủ yếu dựa trên đối sánh chuỗi Regex và chỉ mục văn bản đơn giản, chưa tích hợp công cụ Full-text Search chuyên dụng như Elasticsearch.
+
+4. Hướng phát triển trong tương lai
+
+- Xây dựng ứng dụng di động (Mobile App) cho độc giả bằng framework Flutter hoặc React Native kết nối chung vào hệ thống Backend API hiện tại.
+- Ứng dụng thuật toán Học máy (Machine Learning / Collaborative Filtering) phân tích hành vi đọc sách của độc giả để tự động đề xuất những cuốn sách phù hợp nhất.
+- Triển khai hệ thống Web Push Notification trên trình duyệt và gửi tin nhắn tự động qua Zalo/Email để nhắc nhở hạn trả sách trước 1 - 2 ngày cho độc giả.
+
+
+================================================================================
+TÀI LIỆU THAM KHẢO
+================================================================================
+
+1. Nguyễn Minh Trung (2024), Bài giảng học phần Phát triển ứng dụng Web (CT449), Trường Công nghệ Thông tin và Truyền thông, Đại học Cần Thơ.
+2. Vue.js Core Team (2024), Vue.js 3 Official Documentation: The Progressive JavaScript Framework, tài liệu trực tuyến truy cập tại https://vuejs.org/.
+3. Node.js Foundation (2024), Node.js v20.x Documentation & API Reference, tài liệu trực tuyến truy cập tại https://nodejs.org/.
+4. MongoDB Inc. (2024), MongoDB Node.js Native Driver Documentation (Version 6.x), tài liệu trực tuyến truy cập tại https://www.mongodb.com/docs/drivers/node/current/.
+5. Redis Ltd. (2024), Redis In-Memory Database Documentation & Best Practices, tài liệu trực tuyến truy cập tại https://redis.io/docs/.
+6. Google AI for Developers (2024), Gemini API Developer Guide: Function Calling & Structured Outputs, tài liệu trực tuyến truy cập tại https://ai.google.dev/docs.
+7. W3C Web Accessibility Initiative (2024), Web Speech API Specification, tài liệu trực tuyến truy cập tại https://wicg.github.io/speech-api/.
+8. Igor Sysoev (2024), NGINX Reverse Proxy and Load Balancing Administration Guide, tài liệu trực tuyến truy cập tại https://nginx.org/en/docs/.
+9. Keymetrics (2024), PM2 Advanced Production Process Management for Node.js, tài liệu trực tuyến truy cập tại https://pm2.keymetrics.io/.

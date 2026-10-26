@@ -2,7 +2,7 @@
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
-> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-23):** Toàn bộ 11 giai đoạn đã hoàn thành 100% (Tính năng nghiệp vụ, Redis Caching, Gemini AI Chatbot, Voice Search, OAuth2 Google/Facebook, In-App Notification Bell, 17 Unique Indexes MongoDB, Deploy NGINX + PM2). Đã fix triệt để lỗi batch script start.bat/stop.bat. **Trọng tâm phiên tiếp theo là: Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide báo cáo, và Bộ câu hỏi phản biện của Giảng viên.** Không triển khai thêm tính năng nghiệp vụ mới.
+> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-26):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã hoàn tất toàn bộ hồ sơ bảo vệ đồ án và hồ sơ nghề nghiệp: `Cores/presentation.md` (Slide 12 trang, Kịch bản Live Demo 5-7 phút, Bộ 15 câu hỏi phản biện), `Cores/BaoCao.txt` (Báo cáo tốt nghiệp chuẩn học thuật thuần văn bản, 18 hình có hướng dẫn chụp, 9 bảng, sơ đồ Use Case StarUML), và `README.md` (Song ngữ Anh - Việt chuẩn quốc tế cấp công nghiệp, làm nổi bật điểm sáng kỹ thuật đưa vào CV xin việc). Không triển khai thêm tính năng nghiệp vụ mới. Sẵn sàng bảo vệ đạt điểm tối đa.
 
 ## 1. Tiến độ hiện tại
 
@@ -624,3 +624,153 @@ feat(borrow): add book renewal workflow, publisher name display, and fix notific
 - Fix notification badge recurrence bug on page refresh by adopting deterministic notification IDs
 - Enhance AppHeader.vue with isNotifRead prefix matching, read state persistence, and mark-all-read
 ```
+
+## Cập nhật 2026-10-26 — Hoàn Thành Trọn Bộ Tài Liệu Bảo Vệ Đồ Án (Presentation & Defense Guide)
+
+### 1. Tổng quan tài liệu `Cores/presentation.md`
+Đã xây dựng bộ cẩm nang bảo vệ đồ án toàn diện gồm 4 phần trọng tâm:
+1. **Dàn ý Slide Thuyết trình (12 Slides chuẩn mực):**
+   - Đặt vấn đề, mục tiêu, kiến trúc tổng thể MEVN (1 Backend + 2 Frontend).
+   - Lược đồ 5 collection MongoDB native, chiến lược Hybrid ID (`_id` clustered index vs `Mã` nghiệp vụ), 17 unique indexes.
+   - Vòng đời phiếu mượn (State machine), cơ chế First-come First-served chống Overbooking.
+   - Quy tắc gia hạn sách trước 3 ngày, RBAC 3 vai trò.
+   - Các điểm sáng công nghệ: Redis cache + Invalidation, Gemini AI 3-layer resilience, Voice Search AI, In-App Notification Bell, OAuth 2.0, NGINX + PM2.
+2. **Kịch bản Demo Trực tiếp (Live Demo Script — 5 đến 7 phút vàng):**
+   - Phân chia 2 màn hình (User vs Admin), kịch bản chi tiết từng phút, từng nút bấm và câu thoại chuyên nghiệp.
+   - Luồng demo đi liền mạch: Tra cứu Voice/AI $\rightarrow$ Đăng nhập $\rightarrow$ Đặt mượn $\rightarrow$ Thủ thư duyệt (giải thích chống overbooking) $\rightarrow$ Chuông thông báo (F5 không mất) $\rightarrow$ Xin gia hạn $\rightarrow$ Duyệt gia hạn $\rightarrow$ Trả sách $\rightarrow$ Chứng minh hit cache Redis 1ms và Dashboard Chart.js.
+3. **Bộ 15 Câu hỏi Phản biện Chuyên sâu & Lời giải Senior:**
+   - Bao quát toàn bộ các góc độ mà Giảng viên thường "bắt bẻ": Native driver vs Mongoose, Hybrid ID, Overbooking concurrency, Lazy-check quá hạn, Yup validation nullable, Redis Invalidation, Deterministic Notification IDs, Gemini Resilience, NGINX + PM2, Zero-Emoji.
+4. **Checklist Kỹ thuật 10 phút trước giờ Bảo vệ:**
+   - Các bước kiểm tra DB, Redis, PM2, dữ liệu mẫu và chuẩn bị tâm thế tự tin.
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(defense): create comprehensive presentation guide, live demo script, and defense Q&A
+
+- Add 12-slide structured presentation outline with detailed speaker notes in presentation.md
+- Provide 5-7 minute live demo script covering full borrowing lifecycle and overbooking protection
+- Include 15 deep-dive defense Q&A addressing architecture, native driver, caching, and resilience
+- Add technical pre-defense checklist for database, PM2, test accounts, and browser setup
+- Update checkpoint.md with defense preparation milestone
+```
+
+## Cập nhật 2026-10-26 (Trưa) — Hoàn Thiện Báo Cáo Tốt Nghiệp Chuẩn Học Thuật (`BaoCao.txt`)
+
+### 1. Chuẩn hóa Định dạng & Văn phong Học thuật
+- Đã tái cấu trúc và viết lại toàn diện `Cores/BaoCao.txt` theo đúng quy cách báo cáo khóa luận / học phần CT449 của Trường CNTT&TT - Đại học Cần Thơ.
+- **Loại bỏ 100% định dạng markdown**: Không có ký tự `**`, không có `#`, không có backticks, định dạng plain-text thuần túy chuẩn xác để sinh viên copy trực tiếp vào Microsoft Word mà không phải sửa font hay căn lề.
+- Đầy đủ thông tin: Trường Đại học Cần Thơ, Ths.GVC Nguyễn Minh Trung, Sinh viên Nguyễn Minh Tuấn (B2306598), Lời cảm ơn trang trọng, Mục lục, Danh mục 18 Hình và Danh mục 9 Bảng.
+
+### 2. Hệ thống Hình và Bảng (Kèm Chú thích & Hướng dẫn lấy ảnh chi tiết)
+- **18 Hình minh họa:** Mỗi hình đều có chú thích chính xác (tiêu đề chuẩn) và đi kèm phần **(Hướng dẫn lấy hình: ...)** chỉ rõ từng bước thao tác (chụp màn hình nút nào, URL nào, mở modal gì, hoặc dùng công cụ gì vẽ).
+- **9 Bảng dữ liệu:** Bảng Actors, Bảng đặc tả Use Case, Bảng Collections Schema (DOCGIA, NHANVIEN, SACH, NHAXUATBAN, THEODOIMUONSACH), Bảng 17 Indexes và Bảng Ma trận phân quyền RBAC.
+
+### 3. Sơ đồ Use Case Toàn diện & Hướng dẫn Từng bước Vẽ bằng StarUML
+- Đặc tả toàn bộ 21 Use Case nghiệp vụ của hệ thống cho cả 5 tác nhân (Khách vãng lai, Độc giả, Nhân viên QL Sách, Nhân viên Duyệt mượn, Quản trị viên).
+- Cung cấp **Hướng dẫn 6 bước thực hành trực tiếp trên phần mềm StarUML**:
+  1. Khởi tạo Use Case Diagram (`SoDoUseCaseTongQuat`).
+  2. Tạo Khung ranh giới hệ thống (`Boundary`).
+  3. Kéo thả các `Actor` và thiết lập quan hệ Kế thừa (`Generalization`).
+  4. Tạo các `Use Case` hình elip bên trong Boundary.
+  5. Thiết lập liên kết: `Association`, `<<include>>` (ràng buộc 10 quyển, kiểm tra kho First-come First-served, quy tắc 3 ngày) và `<<extend>>` (Voice Search, OAuth2).
+  6. Xuất ảnh độ phân giải cao (`Export Image as PNG`) để chèn trực tiếp vào Microsoft Word.
+
+### 4. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(report): refine BaoCao.txt with pure academic styling, image capture guides, and StarUML tutorial
+
+- Rewrite BaoCao.txt without markdown formatting symbols for seamless Word import
+- Detail all 21 use cases across 5 system actors with comprehensive specifications
+- Provide step-by-step StarUML tutorial for building and exporting system use case diagram
+- Add 18 figure placeholders with exact screenshot capture instructions and 9 structured tables
+- Document thesis report completion in checkpoint and next-step guide
+```
+
+## Cập nhật 2026-10-26 (Chiều) — Hoàn Thiện Tệp `README.md` Chuẩn Dự Án Cá Nhân (Personal Portfolio Project)
+
+### 1. Tổng quan tệp `README.md`
+Đã xây dựng tệp `README.md` chuẩn mực cấp công nghiệp tại thư mục gốc của dự án, định vị **100% là Dự án Cá nhân (Personal Project / Portfolio)** của lập trình viên, tuyệt đối không chứa các thông tin liên quan đến báo cáo, đề tài học phần hay trường lớp:
+- **Cấu trúc song ngữ rõ ràng:** Phần tiếng Anh (English Version) đặt ở nửa trên chuẩn quốc tế, theo sau là Bản tiếng Việt (Vietnamese Version) chi tiết cho nhà tuyển dụng.
+- **Hệ thống Badges chuyên nghiệp:** Shields.io badges cho toàn bộ tech stack (Node.js, Express, Vue 3, MongoDB Native, Redis, Gemini AI, NGINX, PM2, Bootstrap 5, License MIT).
+- **Sơ đồ Kiến trúc ASCII rõ ràng:** Thể hiện luồng request qua NGINX Reverse Proxy (Port 80/8080) $\rightarrow$ PM2 Node.js Backend API (Port 3000) $\rightarrow$ MongoDB Native & Redis In-memory cache.
+
+### 2. Điểm Sáng Kỹ Thuật Đưa Vào CV ("Có mới nói" — 100% Thực tế trong Source code):
+1. **Native MongoDB Driver & Hybrid Identifier Strategy:** Loại bỏ Mongoose, truy vấn BSON native, kết hợp `_id` Clustered Index (~0.1ms) và mã logic hiển thị với 17 Unique & Compound Indexes.
+2. **First-Come, First-Served Overbooking Protection:** Không khóa kho ảo khi tạo yêu cầu; trừ kho nguyên tử tại thời điểm duyệt; chặn đứng lỗi âm kho sách khi tranh chấp đồng thời.
+3. **Controlled Book Renewal Workflow:** Ràng buộc gia hạn trước ít nhất 3 ngày, tối đa 2 lần, bắt buộc thủ thư phê duyệt.
+4. **Sub-2ms Redis Caching & Invalidation:** Tăng tốc truy xuất danh sách sách từ ~65ms xuống 1-2ms; cơ chế Cache Invalidation tự động xóa cache khi có thao tác thêm/sửa/xóa hoặc duyệt mượn.
+5. **Resilient AI Architecture (Gemini 3.8 Flash):** Kiến trúc 3 lớp tự phục hồi đối phó lỗi 503/429 (Exponential Backoff with Jitter $\pm 25\%$, Fallback Chain sang Flash-Lite, Multi-Key Rotation).
+6. **Deterministic Notification IDs:** Giải quyết triệt để lỗi F5 reload trang làm nhảy lại badge chuông thông báo bằng ID bất biến.
+7. **Voice Search AI & OAuth 2.0:** Tìm kiếm bằng giọng nói Web Speech API và đăng nhập mạng xã hội Google/Facebook kèm Mock OAuth mode cho việc kiểm thử offline.
+8. **DevOps NGINX + PM2:** Reverse Proxy, Gzip, cache tĩnh, try_files Vue Router HTML5 History Mode, PM2 cluster management và script batch Windows CRLF.
+
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+docs(readme): position README as a pure personal portfolio project without academic references
+
+- Eliminate all course, school, exam, and thesis references from README.md
+- Frame system as a production-grade personal MEVN stack full-stack engineering platform
+- Retain bilingual English and Vietnamese structure with industry-standard badges and ASCII architecture
+- Document core engineering highlights (Native MongoDB driver, Overbooking prevention, and Redis caching)
+- Add comprehensive production deployment guide with NGINX Reverse Proxy and PM2 process management
+- Update checkpoint.md with personal portfolio README milestone
+```
+
+## Cập nhật 2026-10-26 (Chiều muộn) — Hoàn Tất Kịch Bản Tự Động Hóa Production (`start-production.bat` & `stop-production.bat`)
+
+### 1. Phân Tách Hai Môi Trường Vận Hành
+- **Môi trường Phát triển (Development Mode):** Giữ nguyên `start.bat` và `stop.bat` (Port 5173 và 5174, Vite hot-reload, Node.js trực tiếp trên port 3000) phục vụ việc phát triển và sửa code hàng ngày.
+- **Môi trường Vận hành (Production Mode):** Xây dựng mới hoàn chỉnh `start-production.bat` và `stop-production.bat` phục vụ việc demo và triển khai theo chuẩn NGINX + PM2:
+  1. `start-production.bat`:
+     - Tự động kiểm tra và khởi động Redis Server.
+     - Tự động kiểm tra các thư mục build tĩnh `dist/` của cả 2 frontend (tự động kích hoạt `npm run build` nếu chưa có).
+     - Khởi chạy Backend qua PM2 với `ecosystem.config.js` (tự động fallback về node nếu máy chưa cài PM2).
+     - Khởi chạy NGINX Reverse Proxy nạp file cấu hình `nginx.conf` của dự án (tự động nhận diện `nginx.exe` từ các đường dẫn tiêu chuẩn: `C:\nginx`, `D:\nginx`, `D:\Tools\nginx` hoặc PATH).
+     - Mở trình duyệt tại 2 cổng production chuẩn: `http://localhost/` (Port 80 cho Độc giả) và `http://localhost:8080/` (Port 8080 cho Quản trị).
+  2. `stop-production.bat`:
+     - Tắt tiến trình NGINX an toàn (`taskkill /F /IM nginx.exe`).
+     - Dừng và gỡ bỏ tiến trình khỏi PM2 (`pm2 delete library-backend`).
+     - Giải phóng triệt để các cổng mạng Port 80, 8080, 3000, 6379 qua PowerShell và netstat fallback.
+     - Đóng các cửa sổ terminal và dừng Redis server.
+
+### 2. Git Commit Message chuẩn (Conventional Commits)
+```git
+feat(scripts): add start-production.bat and stop-production.bat for NGINX and PM2 orchestration
+
+- Create start-production.bat with automated dist verification, PM2 process launch, and NGINX invocation
+- Create stop-production.bat with graceful NGINX shutdown, PM2 daemon deletion, and port 80/8080 cleanup
+- Preserve start.bat and stop.bat for daily development with Vite hot-reload on ports 5173 and 5174
+- Update README.md quick-start documentation to reflect both development and production workflows
+- Document production automation scripts in checkpoint.md
+```
+
+## Cập nhật 2026-10-26 (Tối) — Loại Bỏ File `.bat` Khỏi Git & Chuyển `README.md` Sang 100% Hướng Dẫn Thủ Công (CLI)
+
+### 1. Giữ File `.bat` Cục Bộ & Chặn Đẩy Lên GitHub
+- **Bổ sung vào `.gitignore`**: Khai báo `*.bat` dưới mục `# Local Windows Batch Automation Scripts (kept locally, not pushed to GitHub)`.
+- **Gỡ bỏ theo dõi Git (`git rm --cached`)**:
+  - Thực thi `git rm --cached start.bat stop.bat` để đưa 2 file này ra khỏi Git Index.
+  - Cả 4 file script (`start.bat`, `stop.bat`, `start-production.bat`, `stop-production.bat`) vẫn được bảo toàn nguyên vẹn 100% trên ổ đĩa máy tính cục bộ để người dùng thuận tiện bấm chạy hàng ngày.
+  - Git sẽ hoàn toàn bỏ qua (`ignore`) toàn bộ file `.bat`, đảm bảo không bao giờ bị push lên kho lưu trữ GitHub.
+
+### 2. Tinh Chỉnh `README.md` Chuẩn Manual Terminal
+- **Bỏ toàn bộ các đoạn đề cập đến script `.bat`**:
+  - Xóa mục "Quick Start (One-Click Windows Automation)" trong phần tiếng Anh. Thay thế bằng mục hướng dẫn chạy thủ công chuẩn Terminal ("Step-by-Step Development Setup (Terminal CLI)").
+  - Xóa "Cách 1: Khởi động tự động bằng Script 1-Click" trong phần tiếng Việt. Giữ lại hướng dẫn cài đặt và khởi động từng service qua Terminal.
+  - Xóa các dòng `start.bat` và `stop.bat` trong sơ đồ cây thư mục (Project Structure).
+  - Loại bỏ các đường dẫn ổ đĩa tuyệt đối cục bộ của máy Windows (như `d:/Project/CT449/Project/nginx.conf`) trong lệnh gọi NGINX, chuyển thành cú pháp tổng quát `nginx -c ./nginx.conf`.
+
+### 3. Git Commit Message chuẩn (Conventional Commits)
+```git
+chore(git): ignore local batch scripts and keep README manual-only for GitHub
+
+- Add *.bat to .gitignore to prevent pushing Windows automation scripts to GitHub
+- Untrack start.bat and stop.bat from Git index while preserving local physical files
+- Update README.md to provide purely manual CLI instructions for both dev and production
+- Remove all references to .bat scripts and local disk paths from README.md
+- Update checkpoint.md with batch exclusion milestone
+```
+
+
+
+

@@ -3,5 +3,6 @@ Hãy cập nhật những thông tin cần thiết vào các file .md trong thư
 2.next_step_guide.md: quan trọng, kèm prompt
 3.BaoCao.txt: là báo cáo thật sự trên lớp của tôi. (viết đầy đủ)
 4.ChienLuoc.md: nếu cần thiết
+5. README.md: là file quan trọng, viết theo chuẩn README gồm tiếng Anh (trước) và tiếng Việt (sau), và cũng cần làm nổi bật để tôi đính kèm vào CV sau này (có mới nói)
 
 Để tôi làm ngữ cảnh quan trọng trong những lần giao tiếp tiếp theo giúp AI đạt kết quả tối ưu nhất

@@ -30,3 +30,6 @@ logs/
 # Frontend
 /frontend_old
 /frontend_reference
+
+# Local Windows Batch Automation Scripts (kept locally, not pushed to GitHub)
+*.bat

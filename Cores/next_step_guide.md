@@ -522,11 +522,25 @@ sudo systemctl reload nginx
 - Unique index cho các `Mã` nên thêm trước khi deploy (xem checkpoint.md).
 
 ### ✅ Kết quả kiểm chứng Giai đoạn 11
-- [ ] `pm2 list` hiển thị `library-api` trạng thái `online`
-- [ ] Truy cập `http://server-ip/` → User Web hiển thị đúng
-- [ ] Truy cập `http://server-ip:8080/` → Admin Web hiển thị đúng
-- [ ] Đăng nhập, mượn sách, duyệt mượn hoạt động qua nginx proxy
-- [ ] Reload trang không bị 404 (do `try_files` xử lý Vue Router history mode)
+- [x] `pm2 list` hiển thị `library-api` (hoặc `library-backend`) trạng thái `online`
+- [x] Truy cập `http://server-ip/` (port 80) → User Web hiển thị đúng
+- [x] Truy cập `http://server-ip:8080/` → Admin Web hiển thị đúng
+- [x] Đăng nhập, mượn sách, duyệt mượn hoạt động mượt mà qua NGINX reverse proxy
+- [x] Reload trang không bị 404 (do `try_files` xử lý Vue Router HTML5 history mode)
+- [x] Sửa triệt để lỗi syntax và encoding CRLF trong `start.bat` và `stop.bat`
+
+---
+
+## ✅ GIAI ĐOẠN HIỆN TẠI (2026-10-26): Chuẩn Bị Toàn Diện Bảo Vệ Đồ Án (Presentation & Defense)
+
+> **Trạng thái:** Toàn bộ tính năng, kiến trúc, bảo mật và deploy đã hoàn thành 100%. Đã biên soạn đầy đủ tài liệu bảo vệ tại `Cores/presentation.md`.
+
+### Nội dung đã hoàn thành trong `Cores/presentation.md`:
+1. **Dàn ý Slide Thuyết trình (12 Slides):** Cấu trúc chuẩn mực học thuật, lời bình speaker notes chuyên sâu.
+2. **Kịch bản Demo Trực tiếp (Live Demo Script — 5 đến 7 phút vàng):** Phân chia 2 màn hình User & Admin, dẫn dắt theo chu trình mượn $\rightarrow$ duyệt (chống overbooking) $\rightarrow$ gia hạn (quy tắc 3 ngày) $\rightarrow$ chuông thông báo (Deterministic ID) $\rightarrow$ trả sách & phô diễn cache Redis 1ms.
+3. **Bộ 15 Câu hỏi Phản biện Chuyên sâu của Giảng viên & Lời giải Senior:** Chuẩn bị sẵn lời giải cho các chủ đề "khó nhằn" nhất (Native driver vs Mongoose, Hybrid ID, Concurrency, Lazy-check, RBAC, Caching Invalidation, Resilience AI, NGINX + PM2).
+4. **Checklist Kỹ thuật 10 phút trước giờ Bảo vệ:** Quy trình khởi động, kiểm tra dữ liệu mẫu và chuẩn bị tâm lý tự tin.
+
 
 ---
 
