@@ -1,0 +1,417 @@
+{
+  "info": {
+    "_postman_id": "ct449-library-management-api",
+    "name": "CT449 - He Thong Quan Ly Muon Sach (MEVN Stack)",
+    "description": "Bo suu tap API kiem thu toan dien danh cho Do an hoc phan CT449 - Dai hoc Can Tho (MEVN Stack)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loanId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. User Authentication",
+      "item": [
+        {
+          "name": "Register Reader",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Email\": \"docgia.test@ct449.com\",\n  \"MatKhau\": \"DocGia@12345\",\n  \"HoLot\": \"Nguyen Van\",\n  \"Ten\": \"An\",\n  \"DienThoai\": \"0912345678\",\n  \"DiaChi\": \"Can Tho\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "user", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login Reader",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('userToken', jsonData.token);",
+                  "    console.log('Set userToken successfully!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Email\": \"docgia.test@ct449.com\",\n  \"MatKhau\": \"DocGia@12345\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "user", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Mock Google OAuth Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('userToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user/auth/mock-oauth", "host": ["{{baseUrl}}"], "path": ["api", "user", "auth", "mock-oauth"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Public Books",
+      "item": [
+        {
+          "name": "Get All Books (Public / Redis Cache)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (Array.isArray(jsonData) && jsonData.length > 0) {",
+                  "    pm.collectionVariables.set('bookId', jsonData[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user/sach", "host": ["{{baseUrl}}"], "path": ["api", "user", "sach"] }
+          }
+        },
+        {
+          "name": "Get Book Detail (Lookup Tên NXB)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user/sach/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["api", "user", "sach", "{{bookId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. User Profile & Wishlist",
+      "item": [
+        {
+          "name": "Get Reader Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/user/profile", "host": ["{{baseUrl}}"], "path": ["api", "user", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"DiaChi\": \"Dai hoc Can Tho, Khu 2, Duong 3/2\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/profile", "host": ["{{baseUrl}}"], "path": ["api", "user", "profile"] }
+          }
+        },
+        {
+          "name": "Toggle Wishlist (Yeu Thich)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/user/yeuthich/{{bookId}}/toggle", "host": ["{{baseUrl}}"], "path": ["api", "user", "yeuthich", "{{bookId}}", "toggle"] }
+          }
+        },
+        {
+          "name": "Get My Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/user/yeuthich", "host": ["{{baseUrl}}"], "path": ["api", "user", "yeuthich"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. User Borrow Lifecycle",
+      "item": [
+        {
+          "name": "Create Borrow Request (Cho Duyet - Chua Tru Kho)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = (jsonData.data && jsonData.data._id) || jsonData._id;",
+                  "if (id) {",
+                  "    pm.collectionVariables.set('loanId', id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sachId\": \"{{bookId}}\",\n  \"soLuong\": 1,\n  \"ngayMuon\": \"2026-10-28\",\n  \"ngayTra\": \"2026-11-17\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/muon", "host": ["{{baseUrl}}"], "path": ["api", "user", "muon"] }
+          }
+        },
+        {
+          "name": "Get Reader Borrow History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/user/muon/lich-su", "host": ["{{baseUrl}}"], "path": ["api", "user", "muon", "lich-su"] }
+          }
+        },
+        {
+          "name": "Request Extension (Xin Gia Han +7 Ngay)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"soNgayGiaHan\": 7\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/muon/{{loanId}}/gia-han", "host": ["{{baseUrl}}"], "path": ["api", "user", "muon", "{{loanId}}", "gia-han"] }
+          }
+        },
+        {
+          "name": "Request Return (Hen Tra Sach)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/user/muon/{{loanId}}/request-return", "host": ["{{baseUrl}}"], "path": ["api", "user", "muon", "{{loanId}}", "request-return"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Admin Authentication",
+      "item": [
+        {
+          "name": "Admin Login (ADMIN001)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('adminToken', jsonData.token);",
+                  "    console.log('Set adminToken successfully!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MSNV\": \"ADMIN001\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "admin", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Admin Books & Publishers",
+      "item": [
+        {
+          "name": "Get Publishers (NXB)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/nxb", "host": ["{{baseUrl}}"], "path": ["api", "admin", "nxb"] }
+          }
+        },
+        {
+          "name": "Create Publisher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaNXB\": \"NXB_DHCT\",\n  \"TenNXB\": \"Nha Xuat Ban Dai Hoc Can Tho\",\n  \"DiaChi\": \"Can Tho\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/nxb", "host": ["{{baseUrl}}"], "path": ["api", "admin", "nxb"] }
+          }
+        },
+        {
+          "name": "Get Admin Books",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/sach", "host": ["{{baseUrl}}"], "path": ["api", "admin", "sach"] }
+          }
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaSach\": \"SACH_TEST_01\",\n  \"TenSach\": \"Lap Trinh Web Voi MEVN Stack\",\n  \"DonGia\": 150000,\n  \"SoQuyen\": 5,\n  \"NamXuatBan\": 2026,\n  \"MaNXB\": \"NXB01\",\n  \"TacGia\": \"Nguyen Minh Tuan\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/sach", "host": ["{{baseUrl}}"], "path": ["api", "admin", "sach"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Admin Borrow Operations (Overbooking)",
+      "item": [
+        {
+          "name": "Get All Borrow Records",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach"] }
+          }
+        },
+        {
+          "name": "Approve Borrow (Duyet Phieu - Tru Kho Nguyen Tu)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach/{{loanId}}/approve", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach", "{{loanId}}", "approve"] }
+          }
+        },
+        {
+          "name": "Handover Book (Giao Sach -> Dang Muon)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach/{{loanId}}/handover", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach", "{{loanId}}", "handover"] }
+          }
+        },
+        {
+          "name": "Approve Extension (Duyet Gia Han)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach/{{loanId}}/approve-extend", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach", "{{loanId}}", "approve-extend"] }
+          }
+        },
+        {
+          "name": "Confirm Return (Xac Nhan Tra - Hoan Kho)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach/{{loanId}}/confirm-return", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach", "{{loanId}}", "confirm-return"] }
+          }
+        },
+        {
+          "name": "Reject Borrow (Tu Choi Phieu)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lyDo\": \"Kho da het sach\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/muonsach/{{loanId}}/reject", "host": ["{{baseUrl}}"], "path": ["api", "admin", "muonsach", "{{loanId}}", "reject"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Admin Staff & Readers",
+      "item": [
+        {
+          "name": "Get Staff List (Khong lo Password)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/nhanvien", "host": ["{{baseUrl}}"], "path": ["api", "admin", "nhanvien"] }
+          }
+        },
+        {
+          "name": "Get Readers List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/docgia", "host": ["{{baseUrl}}"], "path": ["api", "admin", "docgia"] }
+          }
+        },
+        {
+          "name": "Get Dashboard Stats (KPIs)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["api", "admin", "dashboard", "stats"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -33,14 +33,15 @@ exports.updateProfile = async (req, res, next) => {
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
         const result = await docGiaService.update(req.user._id, req.body);
+        const updatedUser = result?.value || result;
 
-        if (!result || !result.value) {
+        if (!updatedUser || (!updatedUser._id && !result)) {
             return next(new ApiError(404, "Không tìm thấy độc giả để cập nhật"));
         }
 
-        const updatedUser = result.value;
         delete updatedUser.MatKhau;
         delete updatedUser.password;
+        delete updatedUser.Password;
 
         return res.status(200).json({
             message: "Cập nhật hồ sơ thành công",

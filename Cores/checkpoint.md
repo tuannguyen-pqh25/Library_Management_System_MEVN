@@ -2,7 +2,7 @@
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
-> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-26):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã hoàn tất toàn bộ hồ sơ bảo vệ đồ án và hồ sơ nghề nghiệp: `Cores/presentation.md` (Slide 12 trang, Kịch bản Live Demo 5-7 phút, Bộ 15 câu hỏi phản biện), `Cores/BaoCao.txt` (Báo cáo tốt nghiệp chuẩn học thuật thuần văn bản, 18 hình có hướng dẫn chụp, 9 bảng, sơ đồ Use Case StarUML), và `README.md` (Song ngữ Anh - Việt chuẩn quốc tế cấp công nghiệp, làm nổi bật điểm sáng kỹ thuật đưa vào CV xin việc). Không triển khai thêm tính năng nghiệp vụ mới. Sẵn sàng bảo vệ đạt điểm tối đa.
+> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-28):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã gỡ bỏ Chatbot AI theo yêu cầu. Đã hoàn thiện toàn bộ thư mục `tests/` với 6 tài liệu kịch bản chuẩn hóa (`01` đến `06`), bộ Postman Collection v2.1 (40+ endpoints), và bộ kiểm thử tự động `tests/run-api-tests.js` đạt **44/44 PASS (100%)** trong 1.15s kèm 1-click batch runner `run-tests.bat`. Sẵn sàng bảo vệ đạt điểm tối đa.
 
 ## 1. Tiến độ hiện tại
 
@@ -920,6 +920,57 @@ feat(auth): integrate dedicated Google Cloud project ASALib and synchronize all 
 - Reaffirm 6-chapter structure in BaoCao.txt with Chapter V (Deployment and Operations)
 - Fully synchronize documentation across BaoCao.txt, next_step_guide.md, Chienluoc.md, and checkpoint.md
 ```
+
+## Cập nhật 2026-10-28 — Xây Dựng Bộ Kiểm Thử Tự Động Toàn Diện (44/44 PASS 100%), Gỡ Bỏ Hoàn Toàn Chatbot AI & Tối Ưu Hóa Quy Trình Test 1-Click
+
+### 1. Gỡ bỏ hoàn toàn Chatbot AI theo yêu cầu
+- **Frontend (`user-web/src/App.vue`)**: Gỡ bỏ hoàn toàn component `<ChatWidget />`, thẻ import và style liên quan. Giao diện người dùng trở nên tinh gọn, sạch sẽ, tải trang nhanh hơn.
+- **Backend (`BACKEND/app.js`)**: Gỡ bỏ import `chatbotRouter` và mount route `/api/chatbot`. Toàn bộ hệ thống không còn phụ thuộc vào API Gemini hay các biến môi trường AI không ổn định.
+- **Lý do**: Tính năng Chatbot gây chậm trang, trải nghiệm phản hồi chưa thực tế đối với ứng dụng thư viện thực tế, loại bỏ giúp hệ thống tập trung 100% vào nghiệp vụ cốt lõi và tối ưu hóa hiệu năng.
+
+### 2. Xây dựng Trọn Bộ Kịch Bản & Công Cụ Kiểm Thử trong Thư Mục `tests/`
+Đã xây dựng hệ sinh thái kiểm thử hoàn chỉnh với 6 tài liệu đặc tả chuẩn công nghệ phần mềm:
+1. `tests/README.md`: Hướng dẫn tổng quan các phương pháp kiểm thử (tự động, Postman, thủ công).
+2. `tests/01_KICH_BAN_KIEM_THU_TONG_THE.md`: Danh mục 60+ Test Cases chuẩn hóa (TC_ID, Điều kiện, Bước thực hiện, Kết quả mong đợi, Ưu tiên P1/P2/P3).
+3. `tests/02_KICH_BAN_USER_WEB.md`: Kịch bản kiểm thử E2E chi tiết phía Độc giả (9 modules: Auth, Mượn giới hạn 10 cuốn, Chuông thông báo, Gia hạn 3 ngày, Profile, Voice Search).
+4. `tests/03_KICH_BAN_ADMIN_WEB.md`: Kịch bản kiểm thử E2E chi tiết phía Quản trị (10 modules: RBAC 3 vai trò, CRUD Sách/NXB, Duyệt mượn/trả, Chống Overbooking nguyên tử, Khóa độc giả).
+5. `tests/04_MA_TRAN_PHAN_QUYEN_RBAC.md`: Bảng ma trận phân quyền chi tiết cho 5 đối tượng tác nhân trên 35+ API endpoints và router guards.
+6. `tests/05_KIEM_THU_NANG_CAO_REDIS_AI.md`: Kịch bản kiểm thử chuyên sâu: Redis Cache Hit 1-2ms, Invalidation, Voice Search Web Speech API và Mock OAuth.
+7. `tests/06_CHECKLIST_KIEM_THU_5PHUT_BAO_VE.md`: Bảng checklist 10 bước kiểm thử nhanh 5 phút vàng trước Hội đồng bảo vệ.
+8. `tests/postman_collection.json`: Bộ sưu tập Postman v2.1 với 40+ endpoints kèm test scripts tự động trích xuất JWT Token.
+
+### 3. Tự Động Hóa Bộ Kiểm Thử API Liên Hoàn (`tests/run-api-tests.js`)
+- Xây dựng công cụ kiểm thử tích hợp tự động độc lập bằng Node.js thuần (không cần cài thêm framework nặng nề).
+- Bao phủ toàn diện 9 nhóm kiểm thử với **44 ca kiểm thử liên hoàn**:
+  - Nhóm 0: Healthcheck kết nối máy chủ port 3000.
+  - Nhóm 1: Public APIs dành cho khách vãng lai.
+  - Nhóm 2: Đăng ký, đăng nhập JWT, chống trùng email, profile, Google Mock OAuth.
+  - Nhóm 3: Admin Auth & Phân quyền RBAC 3 cấp (Admin, QL Sách, Duyệt Mượn) - kiểm tra chặn chéo 403 Forbidden.
+  - Nhóm 4: CRUD Nhà xuất bản và Sách kho = 1.
+  - Nhóm 5: Tương tác Độc giả (Wishlist và kiểm tra chặn đánh giá khi chưa mượn sách).
+  - Nhóm 6: Quy trình mượn - trả & Chống Overbooking nguyên tử (2 user tranh chấp 1 sách $\rightarrow$ User 2 bị chặn 400), giao sách, gia hạn (+7 ngày), trả sách và hoàn kho = 1, đánh giá 5 sao sau khi mượn thành công.
+  - Nhóm 7: Khóa tài khoản độc giả vi phạm $\rightarrow$ Chặn mượn sách mới $\rightarrow$ Mở khóa tài khoản.
+  - Nhóm 8: Thống kê KPI Dashboard Quản trị.
+- **Kết quả thực nghiệm**: Đạt **44 / 44 PASS (100.0%)** chỉ trong **1.15 giây**!
+
+### 4. Tinh Chỉnh Xử Lý Nghiệp Vụ & Batch Script 1-Click
+- **`danhgia.controller.js`**: Bổ sung xử lý trả về mã lỗi HTTP `400 Bad Request` với thông báo rõ ràng khi độc giả chưa mượn sách mà gửi đánh giá (thay vì văng lỗi máy chủ 500 unhandled).
+- **`tests/run-tests.bat`**: Sửa triệt để lỗi cú pháp batch script của Windows CMD (loại bỏ nested parenthesis và ký tự đặc biệt gây crash), thiết lập bảng mã `chcp 65001` (UTF-8), giữ cửa sổ luôn mở với `pause` để người dùng quan sát trọn vẹn kết quả.
+- **`BACKEND/package.json`**: Cập nhật lệnh `"test": "node ../tests/run-api-tests.js"` giúp chạy kiểm thử nhanh bằng lệnh tiêu chuẩn `npm test`.
+
+### 5. Git Commit Message chuẩn (Conventional Commits)
+```git
+test(core): build automated integration test suite with 100% pass rate and purge AI chatbot
+
+- Remove ChatWidget component from user-web and unmount /api/chatbot in backend
+- Add comprehensive test suite in tests/ directory (01 to 06 guides and Postman collection)
+- Implement run-api-tests.js covering 44 sequential integration test cases with 100% pass rate
+- Fix run-tests.bat for crash-free 1-click execution on Windows with UTF-8 encoding
+- Gracefully handle pre-borrow review restriction with HTTP 400 in danhgia.controller.js
+- Map npm test in BACKEND/package.json to the automated test suite runner
+- Update checkpoint.md and documentation with automated testing milestone
+```
+
 
 
 

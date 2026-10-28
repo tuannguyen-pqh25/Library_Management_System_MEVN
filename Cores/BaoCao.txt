@@ -64,7 +64,7 @@ CHƯƠNG II: ĐẶC TẢ YÊU CẦU HỆ THỐNG
    4.3. Hệ quản trị cơ sở dữ liệu MongoDB và Native Driver
    4.4. Thư viện giao diện Vue 3 (Composition API) và Bootstrap 5
    4.5. Hệ thống lưu trữ bộ đệm Redis In-memory Caching
-   4.6. Trí tuệ nhân tạo Gemini AI và API Web Speech
+   4.6. Công nghệ Kiểm thử Tự động và API Nhận dạng Giọng nói Web Speech
    4.7. Máy chủ Web NGINX và Quản lý tiến trình PM2
 
 CHƯƠNG III: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
@@ -105,7 +105,7 @@ CHƯƠNG IV: THIẾT KẾ GIAO DIỆN VÀ CÁC TÍNH NĂNG NỔI BẬT
    2.5. Đăng nhập truyền thống và Đăng nhập ủy quyền mạng xã hội OAuth 2.0
    2.6. Trang Lịch sử Mượn sách, Hẹn trả sách và Xin Gia hạn mượn sách
    2.7. Hệ thống Chuông Thông báo (In-App Notification Bell) với Deterministic ID
-   2.8. Trợ lý Ảo Gemini AI với Kiến trúc Tự phục hồi Resilience đa lớp
+   2.8. Bộ Kiểm thử Tự động Toàn diện (Automated Integration Testing) với 44 Test Cases
 
 CHƯƠNG V: TRIỂN KHAI VÀ VẬN HÀNH HỆ THỐNG
 1. Kiến trúc Triển khai Production chuẩn On-Premise / VPS
@@ -141,7 +141,7 @@ Hình 12: Màn hình Chi tiết Sách hiển thị đầy đủ Tên NXB và Mod
 Hình 13: Đăng nhập bằng tài khoản thông thường và Ủy quyền OAuth 2.0
 Hình 14: Trang Lịch sử Mượn sách, Modal Xin gia hạn và Hẹn trả sách
 Hình 15: Hệ thống Chuông Thông báo (In-App Bell) và trạng thái Đã đọc bền vững
-Hình 16: Trợ lý Ảo Gemini AI với giao diện hội thoại tương tác trực tiếp
+Hình 16: Báo cáo kết quả bộ kiểm thử tự động toàn diện đạt 100% (44/44 PASS)
 Hình 17: Sơ đồ Kiến trúc Triển khai NGINX Reverse Proxy và PM2
 Hình 18: Tốc độ phản hồi API đạt 1-2ms khi trúng Redis Cache trên Network Tab
 
@@ -332,8 +332,8 @@ Cả hai giao diện User Web và Admin Web đều được xây dựng bằng V
 4.5. Hệ thống lưu trữ bộ đệm Redis In-memory Caching
 Redis đóng vai trò là một cơ sở dữ liệu khóa - giá trị (Key-Value) lưu trữ trực tiếp trên RAM. Hệ thống áp dụng Redis để lưu bộ đệm cho danh sách sách người dùng và dữ liệu thống kê Dashboard. Khi có sự thay đổi dữ liệu (Thêm, Sửa, Xóa sách hoặc Duyệt, Trả sách), cơ chế Cache Invalidation tự động xóa các khóa bộ đệm liên quan để đảm bảo dữ liệu hiển thị luôn chính xác tuyệt đối.
 
-4.6. Trí tuệ nhân tạo Gemini AI và API Web Speech
-Hệ thống tích hợp mô hình ngôn ngữ lớn thế hệ mới Google Gemini thông qua cơ chế Function Calling, cho phép AI truy vấn dữ liệu sách từ cơ sở dữ liệu để trả lời người dùng. Đồng thời, API Web Speech tích hợp sẵn trong trình duyệt được khai thác để cung cấp tính năng tìm kiếm bằng giọng nói không chạm (Voice Search).
+4.6. Công nghệ Kiểm thử Tự động và API Nhận dạng Giọng nói Web Speech
+Hệ thống xây dựng một bộ kiểm thử tích hợp tự động độc lập bằng Node.js thuần (không lệ thuộc vào framework kiểm thử cồng kềnh), cho phép kiểm tra liên hoàn toàn bộ 44 kịch bản API từ xác thực, phân quyền RBAC 3 cấp, chống Overbooking nguyên tử đến mượn/trả sách. Đồng thời, API Web Speech tích hợp sẵn trong trình duyệt được khai thác để cung cấp tính năng tìm kiếm bằng giọng nói không chạm (Voice Search).
 
 4.7. Máy chủ Web NGINX và Quản lý tiến trình PM2
 NGINX tiếp nhận các yêu cầu tại cổng 80 (Cổng độc giả) và cổng 8080 (Cổng quản trị), đóng vai trò Reverse Proxy phân luồng request và nén Gzip tĩnh. PM2 đóng vai trò Process Manager duy trì ứng dụng Node.js chạy ngầm liên tục, tự động khởi động lại khi có lỗi hoặc khi máy chủ vật lý khởi động lại.
@@ -361,7 +361,7 @@ STT   Tên use case                Diễn giải
 3     Đăng xuất                   Thoát khỏi tài khoản thành viên ra khỏi hệ thống và xóa bỏ phiên làm việc.
 4     Xem chi tiết sách           Độc giả và khách vãng lai có thể xem toàn bộ sách trên website, xem chi tiết tác giả, NXB và tồn kho.
 5     Tìm kiếm sách               Người dùng có thể tìm kiếm các cuốn sách theo từ khóa bất kỳ hoặc bằng giọng nói (Voice Search).
-6     Hỏi đáp Trợ lý AI           Trò chuyện với AI Chatbot để tra cứu nội quy mượn trả và gợi ý đầu sách phù hợp.
+6     Yêu thích & Đánh giá sách   Độc giả có thể lưu sách vào danh sách yêu thích và viết nhận xét, đánh giá 5 sao sau khi mượn.
 7     Đăng ký mượn sách           Độc giả có thể đăng ký mượn các cuốn sách mong muốn vào phiếu mượn trực tuyến (tối đa 10 quyển).
 8     Quản lý lịch sử mượn        Độc giả theo dõi các cuốn sách đang mượn, đã trả, hẹn ngày trả và xin gia hạn mượn sách.
 9     Nhận chuông thông báo       Độc giả nhận thông báo tức thời khi phiếu mượn được duyệt, sách sắp đến hạn hoặc quá hạn trả.
@@ -399,7 +399,7 @@ STT   Điểm bắt đầu (Kéo từ đâu)          Điểm kết thúc (Thả
 5     Actor "Khách vãng lai"             Use Case "Đăng nhập"               Association (Đường thẳng)      Khách vãng lai đăng nhập vào hệ thống.
 6     Actor "Khách vãng lai"             Use Case "Xem chi tiết sách"       Association (Đường thẳng)      Khách vãng lai xem danh mục và thông tin sách.
 7     Actor "Khách vãng lai"             Use Case "Tìm kiếm sách"           Association (Đường thẳng)      Khách vãng lai tra cứu sách theo từ khóa.
-8     Actor "Khách vãng lai"             Use Case "Hỏi đáp Trợ lý AI"       Association (Đường thẳng)      Khách vãng lai trò chuyện hỏi đáp với AI Chatbot.
+8     Actor "Độc giả"                    Use Case "Yêu thích & Đánh giá"    Association (Đường thẳng)      Độc giả lưu sách yêu thích và viết đánh giá sách.
 9     Actor "Độc giả"                    Use Case "Đăng ký mượn sách"       Association (Đường thẳng)      Độc giả chọn sách và gửi yêu cầu mượn.
 10    Use Case "Đăng ký mượn sách"       Use Case "Kiểm tra hạn mức & Kho"  Include (Nét đứt <<include>>)  Mượn sách bắt buộc phải kiểm tra hạn mức 10 quyển và kho tồn.
 11    Actor "Độc giả"                    Use Case "Quản lý lịch sử mượn"    Association (Đường thẳng)      Độc giả theo dõi danh sách sách đang mượn và đã trả.
@@ -423,7 +423,7 @@ Bảng 1.2: Danh sách các Tác nhân trong hệ thống
 ------------------------------------------------------------------------------------------------------------------------
 Tác nhân            Mô tả vai trò
 ------------------------------------------------------------------------------------------------------------------------
-Khách vãng lai      Người dùng chưa đăng nhập hệ thống; có thể xem danh mục sách, tìm kiếm và hỏi đáp trợ lý ảo.
+Khách vãng lai      Người dùng chưa đăng nhập hệ thống; có thể xem danh mục sách, tìm kiếm và xem chi tiết sách.
 Độc giả             Người dùng đã có tài khoản thành viên thư viện; có quyền đăng ký mượn sách, xin gia hạn, hẹn trả sách.
 Nhân viên QL Sách   Thủ thư chịu trách nhiệm quản lý kho sách, danh mục sách và các nhà xuất bản liên kết.
 Nhân viên Duyệt     Thủ thư phụ trách quầy giao dịch; thực hiện duyệt mượn, duyệt gia hạn, xác nhận trả và xử lý quá hạn.
@@ -942,11 +942,11 @@ Biểu tượng chuông trên thanh điều hướng tự động rung lên khi 
 [HÌNH 15: Hệ thống Chuông Thông báo (In-App Bell) và trạng thái Đã đọc bền vững]
 (Hướng dẫn lấy hình: Tại User-Web, nhấp vào biểu tượng Chuông thông báo trên thanh điều hướng để mở danh sách thông báo thả xuống, chụp ảnh màn hình và chèn vào vị trí này).
 
-2.8. Trợ lý Ảo Gemini AI với Kiến trúc Tự phục hồi Resilience đa lớp
-Bong bóng Chatbot nổi ở góc dưới bên phải màn hình cho phép người dùng hỏi đáp trực tiếp. Hệ thống tích hợp kiến trúc 3 lớp: Tự động thử lại với Exponential Backoff khi API bận, Tự động chuyển xuống mô hình nhẹ hơn (Gemini 3.5 Flash Lite) khi mô hình chính quá tải, và Tự động xoay vòng API Key dự phòng.
+2.8. Bộ Kiểm thử Tự động Toàn diện (Automated Integration Testing) với 44 Test Cases
+Nhằm bảo đảm chất lượng phần mềm đạt chuẩn công nghiệp, dự án phát triển công cụ kiểm thử tích hợp tự động (run-api-tests.js) ánh xạ 1-1 với 60+ kịch bản kiểm thử trong tài liệu đặc tả. Bộ kiểm thử bao phủ toàn diện 9 nhóm nghiệp vụ: Healthcheck máy chủ, Public APIs, Đăng ký/Đăng nhập JWT, Phân quyền RBAC 3 cấp (Admin, QL Sách, Duyệt Mượn) chặn chéo mã lỗi 403, Chống Overbooking nguyên tử (ngăn chặn âm kho khi 2 user cùng mượn 1 sách), Gia hạn hợp lệ, Hoàn trả tồn kho và Khóa tài khoản vi phạm. Kết quả thực thi đạt 100% (44/44 PASS) chỉ trong 1.15 giây.
 
-[HÌNH 16: Trợ lý Ảo Gemini AI với giao diện hội thoại tương tác trực tiếp]
-(Hướng dẫn lấy hình: Tại User-Web, nhấp mở khung chat AI ở góc phải màn hình, gửi một câu hỏi hỏi về sách công nghệ thông tin và nhận câu trả lời từ AI, chụp ảnh màn hình khung chat và chèn vào đây).
+[HÌNH 16: Báo cáo kết quả bộ kiểm thử tự động toàn diện đạt 100% (44/44 PASS)]
+(Hướng dẫn lấy hình: Chạy file run-tests.bat hoặc chạy lệnh "node tests/run-api-tests.js" tại Terminal, sử dụng tổ hợp phím Windows + Shift + S để chụp lại toàn bộ màn hình Báo cáo kết quả kiểm thử tổng hợp màu xanh lá 44/44 PASS và chèn vào vị trí này).
 
 
 ================================================================================
@@ -971,7 +971,7 @@ Hệ thống được đóng gói và triển khai thực tế theo mô hình ph
 Tệp cấu hình nginx.conf thiết lập các cơ chế tối ưu hóa then chốt:
 - Giải quyết bài toán HTML5 History Mode của Vue Router: Sử dụng chỉ thị `try_files $uri $uri/ /index.html;` tại cả 2 cổng 80 và 8080, loại bỏ hoàn toàn lỗi HTTP 404 khi người dùng tải lại trang tại các định tuyến như /sach, /lich-su, /admin/muonsach.
 - Nén dữ liệu truyền tải Gzip: Giảm đến 65% dung lượng tệp JavaScript và CSS truyền qua đường truyền mạng.
-- Cấu hình Cache-Control tĩnh cho assets và thiết lập thời gian chờ proxy_read_timeout = 60s cho các phản hồi hội thoại của AI Chatbot.
+- Cấu hình Cache-Control tĩnh cho assets và thiết lập thời gian chờ proxy_read_timeout = 60s cho các tác vụ xử lý báo cáo và kiểm thử đồng thời.
 
 3. Quản lý Tiến trình Máy chủ Node.js với PM2
 

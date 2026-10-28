@@ -6,7 +6,7 @@
 > **Stack cốt lõi:** MongoDB + Express.js + Vue 3 + Node.js (KHÔNG thay đổi).
 > **CSDL:** Giữ nguyên 100% tên bảng và tên thuộc tính đã thiết kế trong `Cores/Chienluoc.md`; đối chiếu mã nguồn khi tài liệu lịch sử khác hiện trạng.
 > **Frontend:** Vue 3 (Composition API) là chính, Bootstrap 5 là phụ trợ layout.
-> **Trạng thái hiện tại (2026-10-26):** Dự án HOÀN THÀNH 100% tất cả 11 giai đoạn (Bao gồm Deploy NGINX + PM2). Đã hoàn tất chuẩn hóa xác thực: Loại bỏ hoàn toàn Facebook OAuth, tích hợp Google OAuth 2.0 độc lập với Google Cloud Project `ASALib` (Client ID: 229912325455). Báo cáo `BaoCao.txt` đã hoàn thiện trọn vẹn 6 chương học thuật (bao gồm Sơ đồ Use Case tổng quát, Bảng đặc tả 6 ca sử dụng, Hướng dẫn kéo nối StarUML, và Chương V Triển khai NGINX/PM2/Redis). Hồ sơ đồ án đã sẵn sàng cho khâu bảo vệ và đóng gói CV. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
+> **Trạng thái hiện tại (2026-10-28):** Dự án HOÀN THÀNH 100% tất cả 11 giai đoạn nghiệp vụ, kỹ thuật và triển khai (NGINX + PM2). Đã gỡ bỏ hoàn toàn Chatbot AI để hệ thống tinh gọn, tối ưu. Đã xây dựng hoàn thiện thư mục `tests/` với 6 tài liệu kịch bản chuẩn hóa (`01` đến `06`), bộ Postman Collection v2.1 (40+ endpoints), và bộ kiểm thử API tự động liên hoàn `tests/run-api-tests.js` đạt **44/44 PASS (100.0%)** trong 1.15s kèm batch runner `run-tests.bat` và lệnh `npm test`. Sẵn sàng bảo vệ đạt điểm tối đa. `Cores/checkpoint.md` là nhật ký mới nhất và đầy đủ nhất.
 
 ---
 
@@ -15,17 +15,18 @@
 > **Hướng dẫn cho bạn:** Bất cứ khi nào bạn mở một phiên chat mới với AI (Claude, ChatGPT, Gemini, v.v.), hãy copy nội dung trong khối code bên dưới và gửi cho AI. Điều này giúp AI ngay lập tức nắm bắt toàn bộ ngữ cảnh, nguyên tắc code và không làm sai lệch kiến trúc.
 
 ```text
-Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449 - Đại học Cần Thơ) — đã HOÀN THÀNH 100% tính năng, nghiệp vụ mượn/gia hạn/trả, Google OAuth 2.0 (Project ASALib), Deploy (NGINX + PM2) và hoàn tất Báo cáo học thuật 6 chương (BaoCao.txt). Hiện tại đang ở giai đoạn Chuẩn bị bảo vệ đồ án, kiểm thử và đóng gói portfolio.
+Đóng vai là một Senior Full-Stack Developer (MEVN Stack). Chúng ta đang làm dự án Quản Lý Mượn Sách (Học phần CT449 - Đại học Cần Thơ) — đã HOÀN THÀNH 100% tính năng, nghiệp vụ mượn/gia hạn/trả, Google OAuth 2.0 (Project ASALib), Deploy (NGINX + PM2), Báo cáo học thuật 6 chương (BaoCao.txt) và Bộ kiểm thử tự động toàn diện đạt 44/44 PASS (100% trong 1.15s). Đã gỡ bỏ hoàn toàn Chatbot AI. Hiện tại đang ở giai đoạn chuẩn bị bảo vệ đồ án và đóng gói portfolio CV.
 
 [YÊU CẦU CỐT LÕI - TUYỆT ĐỐI KHÔNG ĐƯỢC VI PHẠM]
 1. Tech stack: MongoDB (native driver, KHÔNG Mongoose), Express.js, Vue 3 (Composition API), Node.js.
 2. Kiến trúc: 1 Backend API dùng chung (port 3000), 2 Frontend độc lập (`frontend/user-web` port 5173 và `frontend/admin-web` port 5174).
 3. Cơ sở dữ liệu: Giữ nguyên 100% tên bảng và tên thuộc tính. Service layer dùng camelCase (TenSach, DonGia). KHÔNG đổi ngược lại VIẾT HOA.
    - Các field mở rộng (SoTrang, MoTa, NgonNgu, TheLoai, HinhAnh, TacGia) KHÔNG có trong CSDL thầy → KHÔNG đặt là required trong Yup.
-4. Giao diện: Vue 3 core logic + Bootstrap 5 layout. TUYỆT ĐỐI KHÔNG DÙNG TAILWIND.
+4. Giao diện: Vue 3 core logic + Bootstrap 5 layout. TUYỆT ĐỐI KHÔNG DÙNG TAILWIND. ĐÃ BỎ CHATBOT AI.
 5. Hạn mức mượn: 10 quyển tổng cộng/độc giả. Phiếu chờ duyệt chưa trừ kho; trừ kho lúc Admin duyệt bằng thao tác nguyên tử chống Overbooking.
 6. Nghiệp vụ Gia hạn: Sách phải ở trạng thái "đang mượn", chưa quá hạn, gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, mỗi lần +7 hoặc +14 ngày) và phải được Thủ thư duyệt ("chờ gia hạn" -> "đang mượn").
 7. Xác thực OAuth: Sử dụng duy nhất Google OAuth 2.0 (Google Cloud Project ASALib, Client ID: 229912325455). Đã loại bỏ hoàn toàn Facebook OAuth.
+8. Kiểm thử tự động: Thư mục `tests/` với 6 tài liệu đặc tả và script `run-api-tests.js` (44/44 PASS trong 1.15s), chạy bằng `run-tests.bat` hoặc `npm test` trong BACKEND.
 
 [CẢNH BÁO LỖI ĐÃ GẶP - ĐỌC TRƯỚC KHI CODE]
 - app.js route order: Route prefix rộng (có middleware) PHẢI mount SAU route cụ thể. Sai thứ tự → 401.
@@ -34,6 +35,7 @@
 - camelCase nhất quán: Controller và Vue component PHẢI dùng camelCase (ngayMuon, trangThai), không dùng VIẾT HOA.
 - PORT: BACKEND chạy port 3000. Hai frontend http-common.js gọi localhost:3000 (DEV) hoặc /api qua NGINX (PROD).
 - Notification Deterministic IDs: notifId không được gắn timestamp động (new Date().toISOString()), phải dùng ID bất biến (vd: `${item._id}_approved`, `${item._id}_ext_approved_${count}`) để tránh badge hiện lại khi F5.
+- Đánh giá sách: Độc giả phải mượn sách được duyệt thì mới được gửi đánh giá (chặn 400 nếu chưa mượn).
 
 [QUYẾT ĐỊNH KIẾN TRÚC ĐÃ THỐNG NHẤT — KHÔNG THAY ĐỔI]
 - _id (ObjectId): URL routing, aggregate $lookup, FK nội bộ. Nhanh nhất (clustered index ~0.1ms).
@@ -41,28 +43,28 @@
 - Tên NXB: Luôn được join/lookup hiển thị dưới dạng Tên NXB (TenNXB) thay vì chỉ để Mã NXB.
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
-[TRẠNG THÁI DỰ ÁN — 2026-10-26]
-- ✅ Hoàn thành: 11 giai đoạn + RBAC 3 vai trò + E2E mượn/trả/gia hạn 3 ngày + Tên NXB + Dashboard Chart.js + Redis Cache 1-2ms + Gemini AI Chatbot + Voice Search AI + Google OAuth 2.0 (ASALib) + In-App Notification Bell Deterministic ID + 17 Indexes + NGINX & PM2 + Báo cáo BaoCao.txt chuẩn 6 chương.
-- 🔄 Tiếp theo: Chụp ảnh minh họa giao diện cho BaoCao.txt, luyện tập bảo vệ đồ án theo `Cores/presentation.md`.
+[TRẠNG THÁI DỰ ÁN — 2026-10-28]
+- ✅ Hoàn thành: 11 giai đoạn + RBAC 3 vai trò + E2E mượn/trả/gia hạn 3 ngày + Tên NXB + Dashboard Chart.js + Redis Cache 1-2ms + Voice Search AI + Google OAuth 2.0 (ASALib) + In-App Notification Bell Deterministic ID + 17 Indexes + NGINX & PM2 + Báo cáo BaoCao.txt chuẩn 6 chương + Bộ kiểm thử tự động 44/44 PASS (100% trong 1.15s). Đã gỡ bỏ Chatbot AI.
+- 🔄 Tiếp theo: Chụp ảnh minh họa giao diện cho BaoCao.txt, luyện tập bảo vệ đồ án theo `Cores/presentation.md` và `tests/06_CHECKLIST_KIEM_THU_5PHUT_BAO_VE.md`.
 
 [HÀNH ĐỘNG ĐẦU TIÊN CỦA BẠN]
 1. Đọc Cores/checkpoint.md để biết trạng thái mới nhất.
-2. Hỗ trợ người dùng chuẩn bị bảo vệ đồ án: giải đáp thắc mắc kỹ thuật, luyện tập trả lời câu hỏi phản biện, hướng dẫn lấy số liệu/ảnh minh họa cho báo cáo.
-3. KHÔNG tự ý thay đổi kiến trúc hoặc triển khai thêm tính năng không cần thiết.
+2. Hỗ trợ người dùng chuẩn bị bảo vệ đồ án: giải đáp thắc mắc kỹ thuật, luyện tập trả lời câu hỏi phản biện, trình diễn bộ kiểm thử tự động trước Hội đồng.
+3. KHÔNG tự ý thay đổi kiến trúc hoặc thêm tính năng ngoài phạm vi.
 ```
 
 ---
 
 ## 📌 BỘ PROMPT MẪU CHO CÁC BƯỚC TIẾP THEO
 
-### Prompt 1: Hướng dẫn chụp 18 hình ảnh thực tế để hoàn thiện bài Báo cáo
-> *"Hãy hướng dẫn chi tiết từng bước cho tôi để chụp đủ 18 hình ảnh minh họa thực tế trên giao diện hệ thống (từ Sơ đồ StarUML, các màn hình User Web, Admin Web đến Network Tab Redis Cache) theo đúng các vị trí ghi chú trong `Cores/BaoCao.txt` để tôi dán vào file Word nộp cho Giảng viên."*
+### Prompt 1: Hướng dẫn chụp ảnh thực tế để hoàn thiện bài Báo cáo
+> *"Hãy hướng dẫn chi tiết từng bước cho tôi để chụp đủ các hình ảnh minh họa thực tế trên giao diện hệ thống (từ Sơ đồ StarUML, các màn hình User Web, Admin Web, Network Tab Redis Cache đến Màn hình Báo cáo Kiểm thử Tự động 44/44 PASS) theo đúng các vị trí ghi chú trong `Cores/BaoCao.txt` để tôi dán vào file Word nộp cho Giảng viên."*
 
 ### Prompt 2: Luyện tập kịch bản bảo vệ đồ án và phản biện trước Hội đồng
-> *"Dựa vào tài liệu `Cores/presentation.md` và `Cores/BaoCao.txt`, hãy đóng vai Giảng viên chấm thi vấn đáp tôi về các điểm sáng kỹ thuật (Chống Overbooking nguyên tử, Chiến lược Hybrid Identifier, Redis Invalidation, Resilience AI Chatbot, Deterministic Notification ID và Cấu hình NGINX/PM2) và đánh giá câu trả lời của tôi."*
+> *"Dựa vào tài liệu `Cores/presentation.md`, `tests/06_CHECKLIST_KIEM_THU_5PHUT_BAO_VE.md` và `Cores/BaoCao.txt`, hãy đóng vai Giảng viên chấm thi vấn đáp tôi về các điểm sáng kỹ thuật (Chống Overbooking nguyên tử, Chiến lược Hybrid Identifier, Redis Invalidation, Bộ kiểm thử tự động 44 ca liên hoàn, Deterministic Notification ID và Cấu hình NGINX/PM2) và đánh giá câu trả lời của tôi."*
 
-### Prompt 3: Kiểm thử hoàn chỉnh luồng Google OAuth 2.0
-> *"Hãy hướng dẫn tôi kiểm thử toàn diện luồng đăng nhập Google OAuth 2.0 vừa cấu hình với project ASALib, cách kiểm tra dữ liệu độc giả mới được sinh ra trong collection DOCGIA và cách đối soát token JWT."*
+### Prompt 3: Hướng dẫn trình diễn Live Demo bộ kiểm thử tự động 44/44 PASS
+> *"Hãy hướng dẫn tôi cách vừa thuyết minh vừa nhấp đúp file run-tests.bat để trình chiếu màn hình kiểm thử tự động 44 ca API pass 100% trong 1-2 giây gây ấn tượng mạnh với Hội đồng chấm thi."*
 
 
 ---

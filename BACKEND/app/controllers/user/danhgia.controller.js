@@ -50,6 +50,9 @@ exports.upsert = async (req, res, next) => {
         const result = await getService().upsert(docGiaId, sachId, req.body);
         res.json(result);
     } catch (error) {
+        if (error.message && error.message.includes("Bạn phải mượn sách")) {
+            return res.status(400).json({ message: error.message });
+        }
         next(error);
     }
 };

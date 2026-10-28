@@ -34,11 +34,11 @@ Dự án xây dựng **hệ thống quản lý mượn sách trực tuyến** g�
 
 Nguyên tắc xuyên suốt: **giữ nguyên 100% tên bảng và tên thuộc tính đã cho** trong lược đồ `QuanLyMuonSach`; mọi mở rộng đều là **bảng mới** hoặc **thuộc tính bổ sung** (không sửa/xóa thuộc tính gốc), được đánh dấu rõ ràng là "phần mở rộng — có thể triển khai sau".
 
-## 0.1. Trạng thái thực tế mới nhất (2026-10-24)
+## 0.1. Trạng thái thực tế mới nhất (2026-10-28)
 
 Tính đến thời điểm hiện tại, toàn bộ 11 giai đoạn phát triển đã hoàn thành 100%:
 
-- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao, và Trợ lý ảo Gemini AI Chatbot (Resilience Architecture) kết hợp Voice Search Web Speech API. Tích hợp Chuông thông báo In-App Notification Bell, Action Dropdowns ngữ cảnh và 17 Unique/Compound Indexes MongoDB.
+- **Giai đoạn 1–10:** Hoàn thành toàn diện các phân hệ: Xác thực đa tầng (JWT + Passport OAuth 2.0 Google với project `ASALib`), CRUD Sách/NXB/Độc giả/Nhân viên, Nghiệp vụ Mượn - Trả đa trạng thái (Lazy-check quá hạn, chống Overbooking, hạn mức 10 quyển), Phân quyền RBAC 3 vai trò, Dashboard Chart.js, Redis Caching tốc độ cao (1-2ms), và Voice Search Web Speech API. Tích hợp Chuông thông báo In-App Notification Bell (Deterministic ID), Action Dropdowns ngữ cảnh và 17 Unique/Compound Indexes MongoDB.
 - **Hoàn thiện Nghiệp vụ Nâng cao (2026-10-24):**
   - **Quy trình Gia hạn Mượn Sách (Book Renewal):** Độc giả có thể xin gia hạn trước hạn trả ít nhất 3 ngày (tối đa 2 lần, +7 hoặc +14 ngày kèm lý do). Trạng thái chuyển sang "Chờ gia hạn" và phải được Thủ thư thẩm định phê duyệt hoặc từ chối có lý do.
   - **Trải nghiệm Tra cứu NXB:** Tự động lookup/mapping để hiển thị trực quan Tên Nhà Xuất Bản (`TenNXB`) thay cho mã số kỹ thuật trên mọi màn hình chi tiết.
@@ -47,10 +47,14 @@ Tính đến thời điểm hiện tại, toàn bộ 11 giai đoạn phát tri�
   - Máy chủ Web NGINX (Port 80 cho User Web, Port 8080 cho Admin Web, Reverse Proxy `/api/` và `/uploads/` về Node.js Port 3000, hỗ trợ Vue Router HTML5 History Mode và Gzip).
   - Quản lý tiến trình Backend Node.js qua PM2 (`ecosystem.config.js`).
   - Đóng gói Production (`.env.production`, `npm run build` thành công xuất sắc cho cả 2 Frontend).
-  - Sửa triệt để lỗi cú pháp và chuẩn hóa CRLF cho các file scripts `start.bat` / `stop.bat`.
+- **Giai đoạn Đảm bảo Chất lượng & Kiểm thử Tự động (2026-10-28):**
+  - **Gỡ bỏ hoàn toàn Chatbot AI:** Tinh gọn mã nguồn frontend và backend, loại bỏ sự phụ thuộc không ổn định vào bên thứ ba.
+  - **Bộ kiểm thử tự động toàn diện (`tests/`):** Xây dựng 6 tài liệu đặc tả chuẩn hóa (`01` đến `06`), Postman Collection v2.1 (40+ endpoints) và script Node.js liên hoàn `tests/run-api-tests.js`.
+  - **Kết quả thực nghiệm:** Đạt **44/44 PASS (100.0%)** chỉ trong **1.15 giây**, kiểm chứng tự động toàn bộ 9 nhóm nghiệp vụ (RBAC 3 cấp, Overbooking nguyên tử, Mượn/Gia hạn/Trả sách, Ràng buộc đánh giá, Khóa độc giả).
+  - **Tối ưu vận hành:** Cung cấp file batch 1-click `tests/run-tests.bat` và ánh xạ lệnh `npm test` trong `BACKEND/package.json`.
 - **Kế hoạch tiếp theo:** Chuẩn bị kịch bản bảo vệ đồ án (Defense Script), Slide thuyết trình và Bộ câu hỏi phản biện của Giảng viên.
 
-> Lưu ý cho các phiên làm việc tiếp theo: Toàn bộ tính năng và cấu hình triển khai đã hoàn tất 100%. Không tự ý thêm tính năng nghiệp vụ mới. Chỉ tập trung hỗ trợ chuẩn bị bảo vệ đồ án và giải đáp kỹ thuật.
+> Lưu ý cho các phiên làm việc tiếp theo: Toàn bộ tính năng, kiểm thử tự động và cấu hình triển khai đã hoàn tất 100%. Không tự ý thêm tính năng nghiệp vụ mới. Chỉ tập trung hỗ trợ chuẩn bị bảo vệ đồ án và giải đáp kỹ thuật.
 
 ---
 

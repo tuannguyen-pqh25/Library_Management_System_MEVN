@@ -30,7 +30,6 @@ const userDanhGiaRouter = require("./app/routes/user/danhgia.route");
 
 const docgiaRouter = require("./app/routes/docgia.route");
 const muonsachRouter = require("./app/routes/muonsach.route");
-const chatbotRouter = require("./app/routes/chatbot.route");
 const { verifyAdminToken } = require("./app/middlewares/auth");
 const requireRole = require("./app/middlewares/requireRole");
 
@@ -55,7 +54,6 @@ app.use("/api/user", userProfileRouter);              // Profile (có verifyToke
 // Các route chưa migrate (tạm giữ)
 app.use("/api/docgia", docgiaRouter);
 app.use("/api/muonsach", muonsachRouter);
-app.use("/api/chatbot", chatbotRouter);
 
 
 // Xử lý lỗi 404
