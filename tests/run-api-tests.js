@@ -239,6 +239,15 @@ async function main() {
     if (!testState.user1Id) {
       testState.user1Id = res.data.docGia?._id || res.data.data?._id || res.data.user?._id;
     }
+
+    // Xác thực bổ sung: Đăng nhập thành công bằng Số điện thoại (Email hoặc Số điện thoại)
+    const resPhone = await api('/api/user/auth/login', {
+      method: 'POST',
+      body: { identifier: '0912345678', Password: testPassword },
+    });
+    if (resPhone.status !== 200 || !resPhone.data?.token) {
+      throw new Error(`Đăng nhập qua số điện thoại thất bại: Status ${resPhone.status}`);
+    }
   });
 
   await assertTest('TC_AUTH_U05', 'Chặn đăng nhập khi sai mật khẩu (Kỳ vọng trả về 401/400)', async () => {
@@ -695,6 +704,12 @@ async function main() {
     const res = await api('/api/admin/dashboard/stats', { token: testState.adminToken });
     if (res.status !== 200 || typeof res.data !== 'object') {
       throw new Error(`Status ${res.status}`);
+    }
+
+    // Xác thực bổ sung: Lọc thống kê theo khoảng thời gian linh hoạt (7d, 14d, 1m, 3m, 6m)
+    const resRange = await api('/api/admin/dashboard/stats?range=7d', { token: testState.adminToken });
+    if (resRange.status !== 200 || resRange.data?.range !== '7d') {
+      throw new Error(`Lọc thống kê Dashboard thất bại: Status ${resRange.status}`);
     }
   });
 

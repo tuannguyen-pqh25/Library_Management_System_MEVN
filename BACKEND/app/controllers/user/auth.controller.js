@@ -38,16 +38,18 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     const ip = req.headers["x-test-user"] || req.ip;
-    const { Email, Password } = req.body || {};
+    const identifier = req.body?.identifier ?? req.body?.Email ?? req.body?.email ?? req.body?.DienThoai;
+    const Password = req.body?.Password ?? req.body?.password;
 
-    if (!Email || !Password) {
-        return next(new ApiError(400, "Email và mật khẩu là bắt buộc"));
+    if (!identifier || !Password) {
+        return next(new ApiError(400, "Email/Số điện thoại và mật khẩu là bắt buộc"));
     }
 
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
         const docGia = await docGiaService.login({
-            Email,
+            identifier,
+            Email: identifier,
             Password,
         }, ip);
 

@@ -25,9 +25,9 @@
           <form @submit.prevent="handleLogin">
             <BaseInput
               v-model="form.Email"
-              label="Email"
-              type="email"
-              placeholder="example@gmail.com"
+              label="Email hoặc Số điện thoại"
+              type="text"
+              placeholder="example@gmail.com hoặc 09xxxxxxxx"
               required
             />
 

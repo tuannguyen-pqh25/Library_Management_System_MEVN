@@ -12,7 +12,8 @@ class AuthService {
 
   async login(payload) {
     const response = await http.post('/user/auth/login', {
-      Email: payload.Email,
+      Email: payload.Email ?? payload.identifier,
+      identifier: payload.identifier ?? payload.Email,
       Password: payload.Password,
     })
 

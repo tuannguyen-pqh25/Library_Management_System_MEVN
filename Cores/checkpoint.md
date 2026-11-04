@@ -1,4 +1,4 @@
-﻿# KIỂM TRA TRẠNG THÁI DỰ ÁN (CHECKPOINT)
+# KIỂM TRA TRẠNG THÁI DỰ ÁN (CHECKPOINT)
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
@@ -6,14 +6,38 @@
 
 - **Git Commit Message đề xuất:**
   ```text
-  docs(report): standardize Chapters 2 & 3 with 3-tier use case diagrams and 12-field specification tables
+  feat(dashboard): add dynamic time range selector for borrowing analytics (7d, 14d, 1m, 3m, 6m)
 
-  - Chapter 2 Section 1: Consolidated into pure problem domain analysis (zero subsections, no self-praise).
-  - Chapter 3 Section 1: Integrated 3-tier Use Case diagrams (General, Member, Admin) matching faculty template.
-  - Section 1.4: Added scientific justification comparing coarse-grained admin vs fine-grained RBAC (NIST SP 800-53) & atomic overbooking prevention.
-  - Section 1.5: Reformatted all core Use Case specification tables to standard 12-field layout (Images 4 & 5).
-  - Synchronized Table of Contents, List of Figures (Figures 1-20), and List of Tables (Tables 1-9).
+  - Support query param ?range= in admin dashboard controller with daily and monthly aggregations
+  - Add interactive time range pill button group to StaffDashboard.vue line chart
+  - Auto-generate continuous day/month labels with zero-filled missing periods
+  - Invalidate all dashboard range caches automatically on mutations via Redis del
+  - Expand TC_DASH_01 in run-api-tests.js to verify custom time range filtering
+  - Update checkpoint.md and next_step_guide.md following session workflow protocol
   ```
+
+- **Đã bổ sung / sửa trong phiên 2026-11-04 (Mở rộng Bộ lọc Thời gian Dashboard Quản trị 7d, 14d, 1m, 3m, 6m):**
+  - **Backend Controller ([dashboard.controller.js](file:///d:/Project/CT449/Project/BACKEND/app/controllers/admin/dashboard.controller.js)):** Tiếp nhận query param `?range=` với 5 mốc thời gian: `7d` (7 ngày), `14d` (14 ngày), `1m` (1 tháng / 30 ngày), `3m` (3 tháng), `6m` (6 tháng). Tự động phân tách chiến lược gom nhóm theo ngày (`%Y-%m-%d`) cho các mốc ngắn và theo tháng (`%Y-%m`) cho các mốc dài.
+  - **Redis Invalidation ([redis.util.js](file:///d:/Project/CT449/Project/BACKEND/app/utils/redis.util.js)):** Khi có thao tác thay đổi trạng thái mượn trả hoặc sách, lệnh `del("admin:dashboard:stats")` tự động gọi `clearMatch("admin:dashboard:stats*")` để dọn sạch toàn bộ bộ đệm của cả 5 khoảng thời gian.
+  - **Frontend Service ([dashboard.service.js](file:///d:/Project/CT449/Project/frontend/admin-web/src/services/dashboard.service.js)):** Hàm `getStats(range)` truyền tham số `range` lên API.
+  - **Frontend View ([StaffDashboard.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/StaffDashboard.vue)):**
+    + Tích hợp nhóm nút bấm chuyển đổi nhanh 5 mốc (`7 ngày`, `14 ngày`, `1 tháng`, `3 tháng`, `6 tháng`) ngay trên tiêu đề Biểu đồ Hoạt Động Mượn Sách.
+    + Hàm `buildLineChart` tự động sinh đầy đủ các mốc thời gian (bù đắp số 0 cho những ngày/tháng không phát sinh lượt mượn), gắn nhãn hiển thị trực quan (`DD/MM` hoặc `T{M}/{YYYY}`).
+    + Chuyển đổi mượt mà không gây giật lag toàn trang.
+  - **Bộ kiểm thử ([run-api-tests.js](file:///d:/Project/CT449/Project/tests/run-api-tests.js)):** Mở rộng `TC_DASH_01` kiểm tra API trả về dữ liệu đúng chuẩn cho cả truy vấn mặc định và lọc theo khoảng thời gian (`?range=7d`).
+
+- **Đã bổ sung / sửa trong phiên 2026-11-04 (Hỗ trợ Đăng nhập Độc giả Linh hoạt bằng Email hoặc Số điện thoại):**
+  - **Backend Service ([docgia.service.js](file:///d:/Project/CT449/Project/BACKEND/app/services/docgia.service.js)):** Nâng cấp hàm `login` nhận `identifier`, cho phép tìm độc giả qua `$or: [{ Email: identifier }, { Email: identifier.toLowerCase() }, { DienThoai: identifier }, { MaDocGia: identifier }]`.
+  - **Backend Controller ([auth.controller.js](file:///d:/Project/CT449/Project/BACKEND/app/controllers/user/auth.controller.js)):** Tiếp nhận linh hoạt trường `identifier`, `Email` hoặc `DienThoai` từ `req.body`.
+  - **Chỉ mục MongoDB ([indexes.util.js](file:///d:/Project/CT449/Project/BACKEND/app/utils/indexes.util.js)):** Bổ sung chỉ mục `idx_DienThoai` trên bộ sưu tập `DOCGIA` để tối ưu hóa truy vấn đăng nhập theo số điện thoại (~0.1ms).
+  - **Frontend User Web ([LoginUser.vue](file:///d:/Project/CT449/Project/frontend/user-web/src/views/LoginUser.vue) & [auth.service.js](file:///d:/Project/CT449/Project/frontend/user-web/src/services/auth.service.js)):** Đổi nhãn ô nhập thành "Email hoặc Số điện thoại", đổi kiểu `type="text"`, placeholder `"example@gmail.com hoặc 09xxxxxxxx"`, truyền cả `Email` và `identifier`.
+  - **Bộ kiểm thử tự động ([run-api-tests.js](file:///d:/Project/CT449/Project/tests/run-api-tests.js)):** Mở rộng `TC_AUTH_U04` xác minh đăng nhập thành công bằng cả Email và Số điện thoại (`0912345678`).
+
+- **Đã bổ sung / sửa trong phiên 2026-11-04 (Đồng bộ Password MongoDB, Redis RESP2 & CRLF Batch Scripts):**
+  - **Chuẩn hóa trường Password:** Đồng bộ 100% bản ghi độc giả trong bộ sưu tập `DOCGIA` và nhân viên `NHANVIEN` sử dụng duy nhất một trường `Password` (băm Bcrypt salt 10). Gỡ bỏ hoàn toàn các trường dữ liệu lịch sử `MatKhau`, `password`, `username`.
+  - **Tinh gọn DocGiaService.login:** Loại bỏ mảng fallback, xác thực trực tiếp `Password` qua Bcrypt, ẩn thuộc tính nhạy cảm trước khi trả response.
+  - **Redis Windows 5.0.14 (RESP2):** Bổ sung cấu hình `RESP: 2` và lắng nghe sự kiện `ready` trong `redis.util.js` ngăn chặn thư viện Node Redis gửi lệnh bắt tay RESP3 (`HELLO 3`) gây crash hoặc ngắt kết nối đột ngột trên Windows.
+  - **Chuẩn hóa ký tự xuống dòng CRLF:** Chuyển đổi toàn bộ `start-production.bat`, `start.bat`, `stop-production.bat`, `stop.bat` sang định dạng Windows CRLF giải quyết triệt để lỗi parse lệnh của trình thông dịch CMD.
 
 - **Đã bổ sung / sửa trong phiên 2026-11-04 (Chuẩn hóa Báo cáo Học thuật Chương II & Chương III theo Sơ đồ & Bảng mẫu chuẩn):**
   - **Chương II Mục 1:** Hợp nhất toàn bộ thành một mục liền mạch duy nhất "1. Mô tả bài toán nghiệp vụ thư viện thực tế", xóa bỏ các mục con 1.1, 1.2, 1.3 và loại bỏ hoàn toàn việc mô tả hệ thống phần mềm tại đây. Tập trung phân tích chuyên sâu bối cảnh vận hành thủ công, bất đối xứng thông tin, xung đột tài nguyên kho, thất thoát quá hạn và phát biểu bài toán khoa học.

@@ -54,7 +54,14 @@ class RedisUtil {
     async del(key) {
         if (!this.client) return;
         try {
-            await this.client.del(key);
+            if (key.includes("*")) {
+                await this.clearMatch(key);
+            } else {
+                await this.client.del(key);
+                if (key === "admin:dashboard:stats") {
+                    await this.clearMatch("admin:dashboard:stats*");
+                }
+            }
         } catch (error) {
             console.error("Redis Del Error:", error);
         }

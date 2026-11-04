@@ -6,8 +6,8 @@ class DashboardService {
    * GET /api/admin/dashboard/stats
    * Trả về toàn bộ thống kê dashboard: tongQuan, chiTietTrangThai, topSach, muonTheoThang
    */
-  getStats() {
-    return http.get("/dashboard/stats");
+  getStats(range = "6m") {
+    return http.get("/dashboard/stats", { params: { range } });
   }
 }
 

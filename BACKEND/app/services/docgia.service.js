@@ -69,25 +69,27 @@ class DocGiaService {
     }
 
     /**
-     * Đăng nhập độc giả.
-     * @param {object} payload Chứa Email và Password
+     * Đăng nhập độc giả (hỗ trợ Email hoặc Số điện thoại hoặc Mã độc giả).
+     * @param {object} payload Chứa identifier (Email / DienThoai / MaDocGia) và Password
      * @returns {object} Thông tin độc giả (đã bỏ password)
      */
     async login(payload, ip) {
-        const email = payload.Email ?? payload.email;
+        const rawIdentifier = payload.identifier ?? payload.Email ?? payload.email ?? payload.DienThoai ?? payload.dienThoai;
         const password = payload.Password ?? payload.password;
 
-        if (!email || !password) {
+        if (!rawIdentifier || !password) {
             throw {
                 status: 400,
-                message: "Email và mật khẩu là bắt buộc",
+                message: "Email/Số điện thoại và mật khẩu là bắt buộc",
             };
         }
 
+        const identifier = String(rawIdentifier).trim();
+
         try {
-            const lockedValue = await redis.get(`login_lock:${email}:${ip}`);
+            const lockedValue = await redis.get(`login_lock:${identifier}:${ip}`);
             if (lockedValue) {
-                const ttl = await redis.ttl(`login_lock:${email}:${ip}`);
+                const ttl = await redis.ttl(`login_lock:${identifier}:${ip}`);
                 throw {
                     status: 423,
                     message: `Tài khoản bị khóa. Thử lại sau ${ttl} giây`,
@@ -99,7 +101,14 @@ class DocGiaService {
             }
         }
 
-        const docgia = await this.DocGia.findOne({ Email: email });
+        const docgia = await this.DocGia.findOne({
+            $or: [
+                { Email: identifier },
+                { Email: identifier.toLowerCase() },
+                { DienThoai: identifier },
+                { MaDocGia: identifier },
+            ],
+        });
         if (!docgia || !docgia.Password) {
             throw {
                 status: 401,

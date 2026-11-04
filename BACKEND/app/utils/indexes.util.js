@@ -46,6 +46,12 @@ const INDEX_DEFINITIONS = [
     },
     {
         collection: "DOCGIA",
+        spec: { DienThoai: 1 },
+        options: { sparse: true, name: "idx_DienThoai" },
+        description: "Tối ưu tìm kiếm và đăng nhập theo Số điện thoại"
+    },
+    {
+        collection: "DOCGIA",
         spec: { oauthProvider: 1, oauthId: 1 },
         options: { sparse: true, name: "idx_oauth" },
         description: "Tối ưu định danh đăng nhập OAuth 2.0 (Google)"

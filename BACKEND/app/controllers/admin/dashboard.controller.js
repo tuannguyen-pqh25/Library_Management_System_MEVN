@@ -8,7 +8,9 @@ const Redis = require("../../utils/redis.util");
  */
 exports.getStats = async (req, res, next) => {
     try {
-        const cacheKey = "admin:dashboard:stats";
+        const validRanges = ["7d", "14d", "1m", "3m", "6m"];
+        const range = validRanges.includes(req.query.range) ? req.query.range : "6m";
+        const cacheKey = `admin:dashboard:stats:${range}`;
         const cachedData = await Redis.get(cacheKey);
 
         if (cachedData) {
@@ -25,6 +27,37 @@ exports.getStats = async (req, res, next) => {
             { trangThai: { $in: ["đang mượn", "đã duyệt"] }, ngayTra: { $lt: today } },
             { $set: { trangThai: "quá hạn" } }
         );
+
+        // Tính ngày bắt đầu và nhóm thống kê dựa trên range (7d, 14d, 1m, 3m, 6m)
+        const now = new Date();
+        let startDateStr = "";
+        let isDayGroup = false;
+
+        if (range === "7d") {
+            isDayGroup = true;
+            const d = new Date(now.getTime() - 6 * 86400000);
+            startDateStr = d.toISOString().split("T")[0];
+        } else if (range === "14d") {
+            isDayGroup = true;
+            const d = new Date(now.getTime() - 13 * 86400000);
+            startDateStr = d.toISOString().split("T")[0];
+        } else if (range === "1m") {
+            isDayGroup = true;
+            const d = new Date(now.getTime() - 29 * 86400000);
+            startDateStr = d.toISOString().split("T")[0];
+        } else if (range === "3m") {
+            isDayGroup = false;
+            const d = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+            startDateStr = d.toISOString().split("T")[0];
+        } else {
+            // default: 6m
+            isDayGroup = false;
+            const d = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+            startDateStr = d.toISOString().split("T")[0];
+        }
+
+        const dateSubstrLen = isDayGroup ? 10 : 7;
+        const dateFormatStr = isDayGroup ? "%Y-%m-%d" : "%Y-%m";
 
         // --- Chạy song song các aggregation ---
         const [
@@ -90,27 +123,23 @@ exports.getStats = async (req, res, next) => {
                 },
             ]).toArray(),
 
-            // Mượn/trả theo 6 tháng gần nhất
+            // Mượn/trả theo khoảng thời gian được chọn
             MuonSach.aggregate([
                 {
                     $match: {
-                        ngayMuon: {
-                            $gte: new Date(new Date().setMonth(new Date().getMonth() - 5))
-                                .toISOString()
-                                .split("T")[0],
-                        },
+                        ngayMuon: { $gte: startDateStr },
                         trangThai: { $nin: ["chờ duyệt", "từ chối"] },
                     },
                 },
                 {
                     $addFields: {
-                        thangStr: {
+                        periodStr: {
                             $cond: {
                                 if: { $eq: [{ $type: "$ngayMuon" }, "string"] },
-                                then: { $substr: ["$ngayMuon", 0, 7] }, // "YYYY-MM"
+                                then: { $substr: ["$ngayMuon", 0, dateSubstrLen] },
                                 else: {
                                     $dateToString: {
-                                        format: "%Y-%m",
+                                        format: dateFormatStr,
                                         date: "$ngayMuon",
                                     },
                                 },
@@ -120,7 +149,7 @@ exports.getStats = async (req, res, next) => {
                 },
                 {
                     $group: {
-                        _id: "$thangStr",
+                        _id: "$periodStr",
                         soPhieuMuon: { $sum: 1 },
                         soSachMuon: { $sum: "$soLuong" },
                     },
@@ -165,6 +194,9 @@ exports.getStats = async (req, res, next) => {
             chiTietTrangThai: statsFormatted,
             topSach,
             muonTheoThang,
+            hoatDongMuon: muonTheoThang,
+            range,
+            isDayGroup,
         };
 
         await Redis.set(cacheKey, responseData, 300);

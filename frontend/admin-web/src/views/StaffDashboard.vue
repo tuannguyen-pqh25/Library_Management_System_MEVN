@@ -106,12 +106,25 @@
           <!-- Line Chart: Mượn theo tháng -->
           <div class="col-12 col-lg-8">
             <div class="chart-card h-100">
-              <div class="chart-card-header">
+              <div class="chart-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                   <h6 class="chart-title mb-0">
-                    <i class="fas fa-chart-area me-2 text-primary"></i>Hoạt Động Mượn Sách (6 tháng)
+                    <i class="fas fa-chart-area me-2 text-primary"></i>Hoạt Động Mượn Sách
                   </h6>
-                  <p class="chart-subtitle mb-0">Số phiếu mượn và số quyển sách mượn mỗi tháng</p>
+                  <p class="chart-subtitle mb-0">Số phiếu mượn và số quyển sách mượn ({{ activeRangeLabel }})</p>
+                </div>
+                <div class="time-range-group btn-group btn-group-sm" role="group" aria-label="Khoảng thời gian thống kê">
+                  <button
+                    v-for="opt in RANGE_OPTIONS"
+                    :key="opt.value"
+                    type="button"
+                    class="btn btn-sm"
+                    :class="selectedRange === opt.value ? 'btn-primary fw-semibold' : 'btn-outline-secondary'"
+                    :disabled="loadingRange"
+                    @click="onSelectRange(opt.value)"
+                  >
+                    {{ opt.label }}
+                  </button>
                 </div>
               </div>
               <div class="chart-body" style="height: 260px;">
@@ -296,6 +309,22 @@ const error = ref(null)
 const stats = ref({})
 const lastUpdated = ref('')
 
+// ========== Time range options ==========
+const RANGE_OPTIONS = [
+  { value: '7d', label: '7 ngày' },
+  { value: '14d', label: '14 ngày' },
+  { value: '1m', label: '1 tháng' },
+  { value: '3m', label: '3 tháng' },
+  { value: '6m', label: '6 tháng' },
+]
+const selectedRange = ref('6m')
+const loadingRange = ref(false)
+
+const activeRangeLabel = computed(() => {
+  const found = RANGE_OPTIONS.find(o => o.value === selectedRange.value)
+  return found ? found.label : '6 tháng'
+})
+
 // ========== Status detail config ==========
 const STATUS_CONFIG = [
   { key: 'chờ duyệt',     label: 'Chờ Duyệt',       color: '#f59e0b' },
@@ -336,28 +365,70 @@ function destroyCharts() {
   if (barChart) { barChart.destroy(); barChart = null }
 }
 
-function buildLineChart(data) {
+function buildLineChart(data, range = selectedRange.value) {
   if (!lineChartRef.value) return
   const ctx = lineChartRef.value.getContext('2d')
 
-  // Tạo danh sách 6 tháng gần nhất
-  const months = []
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date()
-    d.setMonth(d.getMonth() - i)
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  const periods = []
+  const labels = []
+
+  if (range === '7d') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const p = d.toISOString().split('T')[0]
+      periods.push(p)
+      const parts = p.split('-')
+      labels.push(`${parseInt(parts[2])}/${parseInt(parts[1])}`)
+    }
+  } else if (range === '14d') {
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const p = d.toISOString().split('T')[0]
+      periods.push(p)
+      const parts = p.split('-')
+      labels.push(`${parseInt(parts[2])}/${parseInt(parts[1])}`)
+    }
+  } else if (range === '1m') {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const p = d.toISOString().split('T')[0]
+      periods.push(p)
+      const parts = p.split('-')
+      labels.push(`${parseInt(parts[2])}/${parseInt(parts[1])}`)
+    }
+  } else if (range === '3m') {
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date()
+      d.setMonth(d.getMonth() - i)
+      const p = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      periods.push(p)
+      const parts = p.split('-')
+      labels.push(`T${parseInt(parts[1])}/${parts[0]}`)
+    }
+  } else {
+    // 6m
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date()
+      d.setMonth(d.getMonth() - i)
+      const p = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      periods.push(p)
+      const parts = p.split('-')
+      labels.push(`T${parseInt(parts[1])}/${parts[0]}`)
+    }
   }
 
   const labelMap = {}
-  ;(data || []).forEach(row => { labelMap[row._id] = row })
-
-  const phieuData = months.map(m => labelMap[m]?.soPhieuMuon || 0)
-  const quyenData = months.map(m => labelMap[m]?.soSachMuon || 0)
-
-  const labels = months.map(m => {
-    const [y, mo] = m.split('-')
-    return `T${parseInt(mo)}/${y}`
+  ;(data || []).forEach(row => {
+    if (row && row._id) {
+      labelMap[row._id] = row
+    }
   })
+
+  const phieuData = periods.map(p => labelMap[p]?.soPhieuMuon || 0)
+  const quyenData = periods.map(p => labelMap[p]?.soSachMuon || 0)
 
   lineChart = new Chart(ctx, {
     type: 'line',
@@ -370,9 +441,9 @@ function buildLineChart(data) {
           borderColor: '#6366f1',
           backgroundColor: 'rgba(99,102,241,0.12)',
           borderWidth: 2.5,
-          pointRadius: 4,
+          pointRadius: range === '1m' ? 2 : 4,
           pointHoverRadius: 6,
-          tension: 0.4,
+          tension: 0.35,
           fill: true,
         },
         {
@@ -381,9 +452,9 @@ function buildLineChart(data) {
           borderColor: '#10b981',
           backgroundColor: 'rgba(16,185,129,0.08)',
           borderWidth: 2.5,
-          pointRadius: 4,
+          pointRadius: range === '1m' ? 2 : 4,
           pointHoverRadius: 6,
-          tension: 0.4,
+          tension: 0.35,
           fill: true,
         },
       ],
@@ -396,7 +467,13 @@ function buildLineChart(data) {
         tooltip: { mode: 'index', intersect: false },
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 11 },
+            maxTicksLimit: range === '1m' ? 10 : 15,
+          },
+        },
         y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
       },
     },
@@ -551,7 +628,7 @@ const fetchStats = async () => {
   destroyCharts()
 
   try {
-    const res = await DashboardService.getStats()
+    const res = await DashboardService.getStats(selectedRange.value)
     stats.value = res.data
 
     const now = new Date()
@@ -560,12 +637,32 @@ const fetchStats = async () => {
     loading.value = false
     await nextTick()
 
-    buildLineChart(stats.value.muonTheoThang)
+    buildLineChart(stats.value.hoatDongMuon || stats.value.muonTheoThang, selectedRange.value)
     buildDoughnutChart()
     buildBarChart(stats.value.topSach)
   } catch (err) {
     loading.value = false
     error.value = err.response?.data?.message || err.message || 'Lỗi không xác định'
+  }
+}
+
+const onSelectRange = async (rangeVal) => {
+  if (selectedRange.value === rangeVal || loadingRange.value) return
+  selectedRange.value = rangeVal
+  loadingRange.value = true
+  try {
+    const res = await DashboardService.getStats(rangeVal)
+    stats.value = res.data
+    if (lineChart) {
+      lineChart.destroy()
+      lineChart = null
+    }
+    await nextTick()
+    buildLineChart(res.data.hoatDongMuon || res.data.muonTheoThang, rangeVal)
+  } catch (err) {
+    console.error('Lỗi lọc theo thời gian:', err)
+  } finally {
+    loadingRange.value = false
   }
 }
 
@@ -646,6 +743,12 @@ onBeforeUnmount(destroyCharts)
   font-size: 0.72rem;
   color: #9ca3af;
   margin-top: 2px;
+}
+.time-range-group .btn {
+  font-size: 0.75rem;
+  padding: 0.22rem 0.55rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
 }
 .chart-body {
   flex: 1;
