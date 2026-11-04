@@ -9,20 +9,24 @@ class RedisUtil {
         try {
             this.client = createClient({
                 url,
+                RESP: 2, // Tuong thich voi Redis 5.x tren Windows (khong ho tro RESP3 / lenh HELLO)
                 socket: {
-                    connectTimeout: 1500,
+                    connectTimeout: 5000,
                     reconnectStrategy: false,
                 },
             });
 
             this.client.on("error", (err) => {
-                this.client = null; // Vô hiệu hóa cache nếu lỗi
+                if (!this.client?.isReady) {
+                    this.client = null;
+                }
             });
-            this.client.on("connect", () => console.log("Redis connected successfully."));
+            this.client.on("ready", () => console.log("Redis connected successfully and ready (Port 6379)."));
 
             await this.client.connect();
         } catch (error) {
-            console.log("Khong tim thay Redis server (port 6379). He thong tu dong chuyen sang che do fallback (bo qua Cache, hoat dong binh thuong).");
+            console.log("Khong the ket noi Redis server (port 6379):", error.message || error);
+            console.log("He thong tu dong chuyen sang che do fallback (bo qua Cache, hoat dong binh thuong).");
             this.client = null;
         }
     }

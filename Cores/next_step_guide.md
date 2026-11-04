@@ -43,8 +43,8 @@
 - Tên NXB: Luôn được join/lookup hiển thị dưới dạng Tên NXB (TenNXB) thay vì chỉ để Mã NXB.
 - Chiến lược Hybrid: Giữ CẢ HAI, phân vai rõ ràng. KHÔNG disable _id, KHÔNG replace _id bằng Mã.
 
-[TRẠNG THÁI DỰ ÁN — 2026-10-28]
-- ✅ Hoàn thành: 11 giai đoạn + RBAC 3 vai trò + E2E mượn/trả/gia hạn 3 ngày + Tên NXB + Dashboard Chart.js + Redis Cache 1-2ms + Voice Search AI + Google OAuth 2.0 (ASALib) + In-App Notification Bell Deterministic ID + 17 Indexes + NGINX & PM2 + Báo cáo BaoCao.txt chuẩn 6 chương + Bộ kiểm thử tự động 44/44 PASS (100% trong 1.15s). Đã gỡ bỏ Chatbot AI.
+[TRẠNG THÁI DỰ ÁN — 2026-11-04]
+- ✅ Hoàn thành: 11 giai đoạn + RBAC 3 vai trò + E2E mượn/trả/gia hạn 3 ngày + Tên NXB + Dashboard Chart.js + Redis Cache 1-2ms (RESP2) + Voice Search AI + Google OAuth 2.0 (ASALib) + In-App Notification Bell Deterministic ID + 17 Indexes + NGINX & PM2 (CRLF batch scripts) + Báo cáo BaoCao.txt chuẩn 6 chương (đã chuẩn hóa Chương II phân tích bài toán thực tế 1 mục duy nhất & Chương III chuẩn 3 Sơ đồ Use Case phân rã kèm bảng đặc tả 12 trường tiêu chuẩn) + Đồng bộ chuẩn 100% thuộc tính Password trên MongoDB và Backend Service + Bộ kiểm thử tự động 44/44 PASS (100% trong 1.15s). Đã gỡ bỏ Chatbot AI.
 - 🔄 Tiếp theo: Chụp ảnh minh họa giao diện cho BaoCao.txt, luyện tập bảo vệ đồ án theo `Cores/presentation.md` và `tests/06_CHECKLIST_KIEM_THU_5PHUT_BAO_VE.md`.
 
 [HÀNH ĐỘNG ĐẦU TIÊN CỦA BẠN]

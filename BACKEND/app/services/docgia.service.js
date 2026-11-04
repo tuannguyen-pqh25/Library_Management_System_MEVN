@@ -75,7 +75,7 @@ class DocGiaService {
      */
     async login(payload, ip) {
         const email = payload.Email ?? payload.email;
-        const password = payload.Password ?? payload.password ?? payload.MatKhau;
+        const password = payload.Password ?? payload.password;
 
         if (!email || !password) {
             throw {
@@ -100,7 +100,7 @@ class DocGiaService {
         }
 
         const docgia = await this.DocGia.findOne({ Email: email });
-        if (!docgia) {
+        if (!docgia || !docgia.Password) {
             throw {
                 status: 401,
                 message: "Email hoặc mật khẩu không đúng",
@@ -114,8 +114,7 @@ class DocGiaService {
             };
         }
 
-        const hash = docgia.Password;
-        const isMatch = await bcrypt.compare(password, hash);
+        const isMatch = await bcrypt.compare(password, docgia.Password);
 
         if (!isMatch) {
             throw {

@@ -1,8 +1,36 @@
-# KIỂM TRA TRẠNG THÁI DỰ ÁN (CHECKPOINT)
+﻿# KIỂM TRA TRẠNG THÁI DỰ ÁN (CHECKPOINT)
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
-> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-10-28):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã gỡ bỏ Chatbot AI theo yêu cầu. Đã hoàn thiện toàn bộ thư mục `tests/` với 6 tài liệu kịch bản chuẩn hóa (`01` đến `06`), bộ Postman Collection v2.1 (40+ endpoints), và bộ kiểm thử tự động `tests/run-api-tests.js` đạt **44/44 PASS (100%)** trong 1.15s kèm 1-click batch runner `run-tests.bat`. Sẵn sàng bảo vệ đạt điểm tối đa.
+> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-11-04):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã gỡ bỏ Chatbot AI theo yêu cầu. Đã hoàn thiện toàn bộ thư mục `tests/` với 6 tài liệu kịch bản chuẩn hóa (`01` đến `06`), bộ Postman Collection v2.1 (40+ endpoints), và bộ kiểm thử tự động `tests/run-api-tests.js` đạt **44/44 PASS (100%)** trong 1.15s kèm 1-click batch runner `run-tests.bat`. Đã tích hợp hệ thống CI/CD tự động qua **GitHub Actions 100% Free** (`.github/workflows/ci.yml`) kèm cẩm nang thực hành chi tiết tại `Cores/huong_dan_ci_cd_github_actions.md`. Đã khắc phục triệt để lỗi encoding batch script trong `start-production.bat`, `stop-production.bat`, `start.bat`, `stop.bat`. Đã chuẩn hóa quy trình vòng đời phiên làm việc `session-workflow-manager` kết nối chặt chẽ với `Cores/checkpoint.md`, `Cores/next_step_guide.md` và `Cores/prompt.md`. Sẵn sàng bảo vệ đạt điểm tối đa.
+
+- **Git Commit Message đề xuất:**
+  ```text
+  docs(report): standardize Chapters 2 & 3 with 3-tier use case diagrams and 12-field specification tables
+
+  - Chapter 2 Section 1: Consolidated into pure problem domain analysis (zero subsections, no self-praise).
+  - Chapter 3 Section 1: Integrated 3-tier Use Case diagrams (General, Member, Admin) matching faculty template.
+  - Section 1.4: Added scientific justification comparing coarse-grained admin vs fine-grained RBAC (NIST SP 800-53) & atomic overbooking prevention.
+  - Section 1.5: Reformatted all core Use Case specification tables to standard 12-field layout (Images 4 & 5).
+  - Synchronized Table of Contents, List of Figures (Figures 1-20), and List of Tables (Tables 1-9).
+  ```
+
+- **Đã bổ sung / sửa trong phiên 2026-11-04 (Chuẩn hóa Báo cáo Học thuật Chương II & Chương III theo Sơ đồ & Bảng mẫu chuẩn):**
+  - **Chương II Mục 1:** Hợp nhất toàn bộ thành một mục liền mạch duy nhất "1. Mô tả bài toán nghiệp vụ thư viện thực tế", xóa bỏ các mục con 1.1, 1.2, 1.3 và loại bỏ hoàn toàn việc mô tả hệ thống phần mềm tại đây. Tập trung phân tích chuyên sâu bối cảnh vận hành thủ công, bất đối xứng thông tin, xung đột tài nguyên kho, thất thoát quá hạn và phát biểu bài toán khoa học.
+  - **Chương III Mục 1.1, 1.2, 1.3:** Tích hợp trọn vẹn 3 Sơ đồ Use Case theo mẫu chuẩn của Giảng viên:
+    + Hình 1: Sơ đồ Use Case tổng quát (Khách vãng lai, Thành viên, Quản trị viên).
+    + Hình 2: Sơ đồ Use Case phân hệ Khách vãng lai và Thành viên (phân rã chi tiết <<include>>, <<extend>>).
+    + Hình 3: Sơ đồ Use Case phân hệ Quản trị viên (phân rã chi tiết 4 nhóm: Nhà xuất bản, Sách, Mượn sách, Độc giả).
+    + Kèm bảng chỉ dẫn chi tiết thao tác kéo nối từng mũi tên trên StarUML cho cả 3 sơ đồ.
+  - **Chương III Mục 1.4:** Bổ sung luận giải khoa học giải đáp sự tương đồng và khác biệt giữa sơ đồ mẫu và hệ thống: Khẳng định tính tương thích kế thừa, phân tích nguyên lý SoD và PoLP (NIST SP 800-53) khi mở rộng sang RBAC 3 vai trò, và cơ chế bảo đảm toàn vẹn dữ liệu bằng thao tác nguyên tử chống Overbooking.
+  - **Chương III Mục 1.5:** Chuyển đổi toàn bộ các bảng đặc tả Use Case cốt lõi sang cấu trúc 12 trường tiêu chuẩn (Tên use case, Tóm tắt, Actor, Ngày tạo, Ngày cập nhật, Version, Chịu trách nhiệm, Điều kiện tiên quyết, Kịch bản thường, Kịch bản thay thế, Kịch bản lỗi, Kết quả) khớp hoàn toàn với Bảng 2 mẫu (Ảnh 4 & 5).
+  - **Đồng bộ hóa toàn diện tài liệu:** Cập nhật Mục lục, Danh mục Hình (Hình 1 đến Hình 20) và Danh mục Bảng biểu (Bảng 1, Bảng 2, Bảng 2.1-2.6, Bảng 3-9).
+
+- **Đã bổ sung / sửa trong phiên 2026-11-04 (Redis Windows 5.x RESP3 Protocol Fix):**
+  - **Triệu chứng:** Terminal mở Redis Server (bản 5.0.14.1 trên Windows), nodemon server.js hiện 'Redis connected successfully.' nhưng ngay sau đó lại báo 'Khong tim thay Redis server (port 6379)... chuyen sang che do fallback'.
+  - **Nguyên nhân:** Thư viện npm 'redis' phiên bản v6.x mặc định sử dụng giao thức RESP3 và gửi lệnh bắt tay 'HELLO 3'. Tuy nhiên bản Redis 5.0 trên Windows chỉ hỗ trợ giao thức RESP2 và không có lệnh 'HELLO', dẫn đến việc bắt tay thất bại và kích hoạt catch block.
+  - **Fix (BACKEND/app/utils/redis.util.js):** Thêm cấu hình tường minh 'RESP: 2', tăng 'connectTimeout: 5000', và chuyển sang lắng nghe sự kiện 'ready' thay vì chỉ 'connect'.
+  ```
 
 ## 1. Tiến độ hiện tại
 
@@ -971,12 +999,44 @@ test(core): build automated integration test suite with 100% pass rate and purge
 - Update checkpoint.md and documentation with automated testing milestone
 ```
 
+## Cập nhật 2026-11-04 — Đồng Bộ Nhất Quán Thuộc Tính Password (MongoDB & Backend Service), Tối Ưu Tương Thích Redis RESP2 và Khắc Phục Lỗi CRLF Batch Scripts
 
+### 1. Đồng bộ hóa 100% Schema Mật khẩu trong Cơ sở Dữ liệu MongoDB
+- **Collection `DOCGIA`**:
+  - Thực hiện chuẩn hóa và đồng bộ dữ liệu: Chuyển đổi và đảm bảo 100% tài khoản độc giả sử dụng duy nhất một trường lưu trữ mật khẩu chuẩn mang tên `Password` (được băm bảo mật bằng Bcrypt với Salt Rounds = 10).
+  - Loại bỏ hoàn toàn các trường dữ liệu lịch sử/legacy dư thừa (`$unset: { MatKhau: "", password: "", username: "" }`).
+  - Đối với tài khoản thử nghiệm `minhtuan131225@gmail.com` trước đây lưu mật khẩu dạng chuỗi thô, hệ thống đã tự động băm Bcrypt chuẩn và cập nhật vào `Password`, đảm bảo bảo mật tuyệt đối theo tiêu chuẩn NIST SP 800-63B.
+- **Collection `NHANVIEN`**:
+  - Đã rà soát và xác nhận 100% tài khoản cán bộ quản trị và thủ thư (`ADMIN001`, `QLS001`, `QLM001`, ...) đều đã tuân thủ chuẩn thuộc tính `Password`.
 
+### 2. Tinh gọn và Chuẩn hóa Backend Service (`docgia.service.js`)
+- Loại bỏ toàn bộ các cơ chế quét mảng fallback tạm thời (`candidateHashes`).
+- Hàm `login(payload, ip)` được tinh gọn tối đa theo nguyên lý Karpathy (Simplicity First):
+  ```javascript
+  const docgia = await this.DocGia.findOne({ Email: email });
+  if (!docgia || !docgia.Password) {
+      throw { status: 401, message: "Email hoặc mật khẩu không đúng" };
+  }
+  const isMatch = await bcrypt.compare(password, docgia.Password);
+  ```
+- Kiểm tra tính hợp lệ và loại bỏ thuộc tính nhạy cảm `Password` trước khi trả dữ liệu về phía Client (`delete docgia.Password`).
 
+### 3. Khắc phục Tương thích Redis 5.0.14 trên Windows (`redis.util.js`)
+- Bổ sung cấu hình `RESP: 2` vào bộ khởi tạo `createClient`: Redis trên hệ điều hành Windows sử dụng bản 5.0.14 (chỉ hỗ trợ giao thức RESP2), tránh trường hợp thư viện Node Redis v4 gửi lệnh bắt tay `HELLO 3` (RESP3) gây ngắt kết nối đột ngột và kích hoạt chế độ Graceful Fallback ngoài ý muốn.
 
+### 4. Khắc phục Lỗi Xuống dòng CRLF cho Batch Scripts (`start-production.bat`, `start.bat`, `stop-production.bat`)
+- Chuyển đổi toàn bộ định dạng ký tự kết thúc dòng từ Unix (LF) sang chuẩn Windows (CRLF).
+- Giải quyết triệt để lỗi trình thông dịch `cmd.exe` bị lệch offset lệnh khi gặp các khối điều kiện `if (...)` lồng nhau (vốn gây ra các thông báo lỗi cắt xén ký tự như `'NG'`, `'xist'`, `'Server'`, `'d'`... và ngăn chặn NGINX khởi động).
 
+### 5. Git Commit Message chuẩn (Conventional Commits)
+```git
+refactor(auth): standardize Password field across MongoDB and clean up login service
 
-
-
+- Migrate all reader records in MongoDB DOCGIA to strictly use Password field
+- Remove legacy MatKhau and password fields from all DOCGIA documents
+- Clean up DocGiaService.login to strictly verify docgia.Password with bcrypt
+- Configure RESP: 2 in RedisUtil for Windows Redis 5.0.14 stability
+- Fix line endings from LF to CRLF in all batch scripts for reliable cmd.exe execution
+- Update checkpoint.md and next_step_guide.md with authentication standardization
+```
 

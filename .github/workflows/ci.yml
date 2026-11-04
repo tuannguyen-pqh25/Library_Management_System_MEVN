@@ -1,0 +1,141 @@
+name: CT449 MEVN CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  # ============================================================================
+  # 1. BUILD FRONTENDS (user-web & admin-web)
+  # ============================================================================
+  build-frontends:
+    name: Build Frontends (Vue 3 + Vite)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/user-web/package-lock.json
+            frontend/admin-web/package-lock.json
+
+      # Build User Web (Port 5173 / Prod 80)
+      - name: Install & Build User Web
+        run: |
+          cd frontend/user-web
+          npm install
+          npm run build
+
+      # Build Admin Web (Port 5174 / Prod 8080)
+      - name: Install & Build Admin Web
+        run: |
+          cd frontend/admin-web
+          npm install
+          npm run build
+
+      - name: Upload Frontend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-bundles
+          path: |
+            frontend/user-web/dist
+            frontend/admin-web/dist
+          retention-days: 7
+
+  # ============================================================================
+  # 2. TEST BACKEND & RUN 44 AUTOMATED INTEGRATION TESTS
+  # ============================================================================
+  test-backend:
+    name: Backend API Integration Tests (44 Cases)
+    runs-on: ubuntu-latest
+
+    # Khởi tạo Service Containers miễn phí (MongoDB 6 & Redis 6)
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:6.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: BACKEND/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: |
+          cd BACKEND
+          npm install
+
+      - name: Configure CI Environment Variables
+        run: |
+          cat << 'EOF' > BACKEND/.env
+          PORT=3000
+          MONGODB_URI=mongodb://127.0.0.1:27017/QuanLyMuonSach
+          REDIS_URL=redis://127.0.0.1:6379
+          REDIS_CACHE_DURATION=3600
+          JWT_SECRET=ci_cd_super_secret_jwt_key_ct449_2026
+          JWT_EXPIRES_IN=1d
+          GOOGLE_CLIENT_ID=ci_dummy_client_id
+          GOOGLE_CLIENT_SECRET=ci_dummy_client_secret
+          GOOGLE_CALLBACK_URL=http://localhost:3000/api/user/auth/google/callback
+          OAUTH_CLIENT_REDIRECT_URL=http://localhost:5173/oauth-callback
+          EOF
+
+      - name: Seed Database (Admin & Initial Books)
+        run: |
+          cd BACKEND
+          echo "--> Seeding Admin Account (ADMIN001)..."
+          node seed.js
+          echo "--> Seeding Publishers and Books..."
+          node seedData.js
+          echo "--> Initializing Database Indexes..."
+          node createIndexes.js
+
+      - name: Start Backend Server in Background
+        run: |
+          cd BACKEND
+          PORT=3000 node server.js &
+          echo "Waiting for Backend Server to be healthy on port 3000..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/api/user/sach > /dev/null; then
+              echo "Backend is ready and responding!"
+              break
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 1
+          done
+
+      - name: Run 44 Automated Integration Tests
+        run: |
+          echo "Starting CT449 Automated Test Suite..."
+          TEST_API_URL=http://localhost:3000 node tests/run-api-tests.js
