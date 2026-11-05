@@ -685,7 +685,7 @@ async function main() {
     }
   });
 
-  await assertTest('TC_MNG_03', 'Admin mở khóa tài khoản Độc giả 2 (Trở lại BinhThuong)', async () => {
+  await assertTest('TC_MNG_03', 'Admin mở khóa & xóa tài khoản Độc giả 2 (DELETE /api/admin/docgia/:id)', async () => {
     const res = await api(`/api/admin/docgia/${testState.user2Id}/status`, {
       method: 'PUT',
       token: testState.adminToken,
@@ -693,6 +693,15 @@ async function main() {
     });
     if (res.status !== 200) {
       throw new Error(`Status ${res.status}`);
+    }
+
+    // Xác thực Admin xóa tài khoản độc giả hợp lệ (không vướng sách đang mượn)
+    const delRes = await api(`/api/admin/docgia/${testState.user2Id}`, {
+      method: 'DELETE',
+      token: testState.adminToken,
+    });
+    if (delRes.status !== 200) {
+      throw new Error(`Xóa độc giả thất bại: Status ${delRes.status}`);
     }
   });
 

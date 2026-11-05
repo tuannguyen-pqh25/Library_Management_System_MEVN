@@ -24,4 +24,7 @@ router.get("/:id/history", docgia.getBorrowHistory);
 // PUT /api/admin/docgia/:id/reset-password — Đặt lại mật khẩu về mặc định
 router.put("/:id/reset-password", docgia.resetPassword);
 
+// DELETE /api/admin/docgia/:id — Xóa tài khoản độc giả
+router.delete("/:id", docgia.delete);
+
 module.exports = router;

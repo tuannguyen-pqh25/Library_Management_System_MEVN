@@ -175,45 +175,72 @@ const clearSearch = () => {
   fetchBooks()
 }
 
+let voiceRecognitionInstance = null
+
 const startVoiceSearch = () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
   if (!SpeechRecognition) {
-    showToast('Trình duyệt của bạn không hỗ trợ tìm kiếm bằng giọng nói (Yêu cầu Chrome/Edge/Safari mới nhất).', 'error')
+    showToast('Trình duyệt của bạn không hỗ trợ tìm kiếm bằng giọng nói (Yêu cầu Google Chrome hoặc Microsoft Edge).', 'error')
     return
   }
 
-  const recognition = new SpeechRecognition()
-  recognition.lang = 'vi-VN'
-  recognition.interimResults = false
-  recognition.maxAlternatives = 1
-
-  recognition.onstart = () => {
-    isListening.value = true
-    showToast('Đang lắng nghe... Vui lòng nói tên sách.', 'success')
-  }
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript
-    searchText.value = transcript
-    toast.value.show = false // Ẩn thông báo đang lắng nghe
-    fetchBooks() // Tự động tìm kiếm ngay khi nhận diện xong
-  }
-
-  recognition.onerror = (event) => {
-    console.error('Lỗi nhận diện giọng nói:', event.error)
-    if (event.error === 'not-allowed') {
-      showToast('Vui lòng cấp quyền sử dụng Micro trên trình duyệt để tìm kiếm.', 'error')
-    } else if (event.error !== 'aborted') {
-      showToast('Không thể nhận diện giọng nói. Vui lòng thử lại.', 'error')
+  // Nếu đang nghe, bấm lại để dừng
+  if (isListening.value) {
+    if (voiceRecognitionInstance) {
+      try { voiceRecognitionInstance.stop() } catch (e) { /* ignore */ }
     }
     isListening.value = false
+    return
   }
 
-  recognition.onend = () => {
+  try {
+    if (voiceRecognitionInstance) {
+      try { voiceRecognitionInstance.abort() } catch (e) { /* ignore */ }
+    }
+
+    voiceRecognitionInstance = new SpeechRecognition()
+    voiceRecognitionInstance.lang = 'vi-VN'
+    voiceRecognitionInstance.interimResults = false
+    voiceRecognitionInstance.maxAlternatives = 1
+
+    voiceRecognitionInstance.onstart = () => {
+      isListening.value = true
+      showToast('Đang lắng nghe... Vui lòng nói tên sách.', 'success')
+    }
+
+    voiceRecognitionInstance.onresult = (event) => {
+      if (event.results && event.results[0] && event.results[0][0]) {
+        const transcript = event.results[0][0].transcript
+        searchText.value = transcript
+        toast.value.show = false
+        fetchBooks()
+      }
+    }
+
+    voiceRecognitionInstance.onerror = (event) => {
+      console.warn('Lỗi nhận diện giọng nói:', event.error)
+      isListening.value = false
+      if (event.error === 'not-allowed') {
+        showToast('Vui lòng cấp quyền Micro trên trình duyệt (nhấp biểu tượng ổ khóa cạnh URL và chọn Cho phép).', 'error')
+      } else if (event.error === 'network') {
+        showToast('Lỗi kết nối mạng đến Google Speech API. Vui lòng kiểm tra lại kết nối Internet.', 'error')
+      } else if (event.error === 'no-speech') {
+        showToast('Chưa phát hiện thấy giọng nói. Vui lòng thử lại và nói rõ hơn.', 'error')
+      } else if (event.error !== 'aborted') {
+        showToast(`Không thể nhận diện giọng nói (${event.error}). Vui lòng thử lại.`, 'error')
+      }
+    }
+
+    voiceRecognitionInstance.onend = () => {
+      isListening.value = false
+    }
+
+    voiceRecognitionInstance.start()
+  } catch (err) {
+    console.error('Không thể kích hoạt Micro:', err)
     isListening.value = false
+    showToast('Không thể kích hoạt Micro: ' + (err.message || 'Lỗi không xác định'), 'error')
   }
-
-  recognition.start()
 }
 
 const formatPrice = (price) => {

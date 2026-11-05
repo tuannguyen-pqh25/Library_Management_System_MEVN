@@ -957,14 +957,22 @@ Bảng quản lý phiếu mượn được trang bị bộ lọc theo trạng th
 [HÌNH 9: Màn hình Quản lý Mượn Sách với Dropdown thao tác ngữ cảnh]
 (Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Mượn Sách", nhấp mở một dropdown thao tác tại một dòng phiếu mượn để thấy các tùy chọn ngữ cảnh thông minh, chụp ảnh màn hình và chèn vào đây).
 
-1.6. Màn hình Quản lý Độc giả và Khóa tài khoản vi phạm
-Cho phép Admin theo dõi danh sách toàn bộ độc giả, xem nhanh số lượng sách đang mượn. Admin có thể nhấp "Xem lịch sử" để kiểm tra toàn bộ nhật ký mượn trả của độc giả đó, hoặc bấm "Khóa tài khoản" nếu độc giả vi phạm quy định mượn sách.
+1.6. Màn hình Quản lý Độc giả, Khóa tài khoản và Xóa an toàn có kiểm tra ràng buộc
+Cho phép Quản trị viên theo dõi toàn diện danh mục độc giả, thống kê số lượng sách đang mượn theo thời gian thực. Hệ thống cung cấp các chức năng quản trị chuyên sâu:
+- Xem chi tiết hồ sơ độc giả và nhật ký lịch sử mượn trả toàn diện.
+- Khóa / Mở khóa tài khoản: Tạm dừng quyền đăng nhập và mượn sách đối với tài khoản vi phạm nội quy thư viện.
+- Xóa tài khoản độc giả có kiểm tra toàn vẹn (Integrity Constraint Validation): Khi nhận lệnh xóa, hệ thống tự động kiểm tra trên bảng THEODOIMUONSACH đối với các trạng thái lưu thông (chờ duyệt, đã duyệt, đang mượn, đang chờ trả, quá hạn, chờ gia hạn). Nếu phát hiện độc giả đang giữ sách hoặc có phiếu mượn chưa hoàn tất, hệ thống từ chối xóa và trả về thông báo lỗi 400 nhằm ngăn chặn hoàn toàn nguy cơ thất thoát sách và mồ côi dữ liệu.
+- Thao tác hàng loạt (Bulk Actions): Quản trị viên có thể chọn nhiều độc giả qua checkbox để thực hiện Khóa hàng loạt, Mở khóa hàng loạt, hoặc Xóa hàng loạt an toàn.
 
 [HÌNH 10: Màn hình Quản lý Độc giả và Modal Khóa tài khoản]
 (Hướng dẫn lấy hình: Tại Admin Web, vào menu "Quản lý Độc giả", mở Modal chi tiết độc giả hoặc Modal khóa tài khoản, chụp ảnh màn hình và chèn vào vị trí này).
 
 1.7. Màn hình Quản lý Nhân viên và Phân quyền RBAC 3 cấp độ
-Chức năng dành riêng cho Quản trị viên tối cao (Admin). Admin có thể thêm nhân viên mới và gán chức vụ tương ứng theo ma trận phân quyền hệ thống.
+Chức năng dành riêng cho Quản trị viên tối cao (Admin). Toàn bộ thao tác tạo mới và cập nhật thông tin nhân viên được thiết kế dưới dạng hộp thoại Bootstrap Modal trực quan:
+- Biểu mẫu Modal tập trung: Quản trị viên nhập họ tên, email, lựa chọn chức vụ theo ma trận RBAC và mật khẩu mà không làm gián đoạn hoặc xô lệch bố cục bảng danh sách.
+- Kiểm soát hiển thị mật khẩu (Password Eye Toggle): Cung cấp nút ẩn/hiện mật khẩu dạng biểu tượng con mắt (eye icon) giúp người dùng kiểm tra trực quan ký tự mật khẩu trước khi lưu.
+- Thao tác xóa và xóa hàng loạt an toàn: Hỗ trợ chọn nhiều nhân viên để xóa hàng loạt; đồng thời tự động vô hiệu hóa checkbox và nút xóa đối với tài khoản quản trị viên đang trong phiên đăng nhập hiện hành để phòng ngừa rủi ro tự xóa tài khoản của chính mình.
+- Chuẩn hóa Phân trang và Tùy chọn Kích thước Trang (Pagination & Page Size Selector): Toàn bộ 5 màn hình quản trị nghiệp vụ (Quản lý Sách, Quản lý Mượn Sách, Quản lý Độc Giả, Quản lý Nhân Viên và Quản lý Nhà Xuất Bản) đều được tích hợp đồng bộ bộ chọn số dòng hiển thị linh hoạt với các ngưỡng định chuẩn: 10, 20, 50, 100 dòng/trang. Khi người dùng thay đổi số lượng bản ghi hiển thị, hệ thống lập tức tính toán lại tổng số trang và tự động điều hướng về trang đầu tiên (@change="currentPage = 1"), đảm bảo chỉ số phân trang phản ánh chính xác và loại trừ hiện tượng lệch dữ liệu.
 
 Bảng 9: Bảng ma trận phân quyền hệ thống (RBAC Matrix)
 ------------------------------------------------------------------------------------------------------------------------
@@ -984,14 +992,20 @@ Xem Dashboard Thống kê          Có quyền        Không có quyền        
 
 2. Giao diện Cổng Độc giả (User Web)
 
-2.1. Trang chủ Thư viện, Bộ lọc Thể loại và Tải dữ liệu Skeleton
-Trang chủ thư viện được thiết kế trang nhã theo chuẩn Bootstrap 5. Các thẻ sách (Book Cards) hiển thị bắt mắt với ảnh bìa, tên sách, tác giả và số quyển còn lại. Khi dữ liệu đang được tải từ máy chủ, hiệu ứng Skeleton Loading dạng khung xương chuyển động mượt mà giúp người dùng không có cảm giác chờ đợi sốt ruột.
+2.1. Trang chủ Thư viện, Bộ lọc Thể loại và Hiển thị Sách Mới Cập Nhật Thời Gian Thực
+Trang chủ thư viện được thiết kế theo chuẩn Bootstrap 5 với hiệu ứng Skeleton Loading mượt mà trong quá trình nạp dữ liệu. Đặc biệt, khu vực "Sách mới cập nhật" được kiến trúc vận hành thời gian thực (real-time):
+- Cơ chế tem thời gian kép: Mỗi cuốn sách trong CSDL MongoDB được quản lý bởi hai thuộc tính ISO 8601 là createdAt và updatedAt, tự động ghi nhận khi tạo mới hoặc hiệu chỉnh thông tin sách.
+- Vô hiệu hóa bộ đệm tức thời: Ngay khi nhân viên cập nhật thông tin hoặc thêm sách mới, hệ thống tự động xóa bộ đệm danh mục qua cơ chế Redis clearMatch("user:sach:*").
+- Thuật toán sắp xếp hỗn hợp (Hybrid Sorting): Frontend sắp xếp ưu tiên dựa trên Math.max(updatedAt, createdAt) mới nhất; đồng thời tích hợp giải thuật phân rã 4 byte đầu của MongoDB ObjectId để trích xuất timestamp gốc đối với các bản ghi sách cũ. Đảm bảo mọi cuốn sách mới thêm hoặc mới sửa đều được hiển thị lập tức ở đầu trang chủ độc giả.
 
 [HÌNH 12: Trang chủ Thư viện với Bộ lọc Thể loại và Tìm kiếm sách]
 (Hướng dẫn lấy hình: Khởi động User-Web tại http://localhost:5173, đứng tại trang chủ danh sách sách, chụp ảnh màn hình bao gồm thanh tìm kiếm, bộ lọc thể loại và lưới sách rồi chèn vào vị trí này).
 
 2.2. Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)
-Độc giả nhấp vào biểu tượng Micro trên thanh tìm kiếm. Trình duyệt sẽ lắng nghe giọng nói tiếng Việt, chuyển đổi thành văn bản trong thời gian thực và kích hoạt bộ lọc sách tức thì mà không cần chạm tay vào bàn phím.
+Tính năng tìm kiếm bằng giọng nói được triển khai trên cả hai phân hệ Cổng Độc giả và Cổng Quản trị dựa trên chuẩn giao diện Web Speech API (đặc tả W3C) với cấu hình nhận diện ngôn ngữ tiếng Việt (vi-VN):
+- Kiến trúc quản lý vòng đời Instance (Clean Instance Lifecycle): Khắc phục triệt để hiện tượng xung đột trạng thái DOMException (InvalidStateError) thường gặp trên trình duyệt Chromium bằng giải thuật tự động giải phóng phiên thu âm trước đó (phương thức abort) và tái tạo đối tượng SpeechRecognition mới cho từng phiên truy vấn.
+- Cơ chế chẩn đoán quyền truy cập và phân loại mã lỗi (Multi-tier Error Diagnostic): Khi phát hiện quyền truy cập thiết bị thu âm bị từ chối (mã lỗi not-allowed), giao diện tự động kích hoạt thông điệp điều hướng người dùng cấu hình quyền Micro trên thanh địa chỉ của trình duyệt; phân định rõ lỗi gián đoạn kết nối máy chủ dịch vụ nhận diện đám mây (mã lỗi network) và lọc bỏ ngoại lệ không nhận dạng âm thanh (no-speech) nhằm duy trì trải nghiệm người dùng liền mạch.
+- Thao tác chuyển đổi trạng thái hai chiều (Bi-directional Toggle): Cho phép người dùng nhấp kích hoạt lắng nghe và nhấp lại để ngắt phiên ghi âm tức thời. Sau khi chuyển đổi thành công giọng nói thành chuỗi văn bản, hệ thống tự động gán dữ liệu vào trường tìm kiếm và kích hoạt hàm lọc sách mà không cần thao tác bàn phím.
 
 [HÌNH 13: Tính năng Tìm kiếm bằng Giọng nói (Voice Search AI)]
 (Hướng dẫn lấy hình: Tại User-Web, nhấp vào biểu tượng Micro trên thanh tìm kiếm để kích hoạt trạng thái lắng nghe có hiệu ứng viền chuyển động, nói một từ khóa rồi chụp ảnh màn hình chèn vào đây).

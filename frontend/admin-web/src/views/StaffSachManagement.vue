@@ -64,10 +64,23 @@
 
       <!-- Grid -->
       <div v-else>
-        <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2 flex-wrap gap-2">
           <small class="text-muted-custom fw-semibold">
             Hiển thị {{ paginatedBooks.length }} trên tổng số {{ filteredBooks.length }} sách
           </small>
+          <div class="d-flex align-items-center gap-2">
+            <label class="text-muted-custom fw-semibold small text-nowrap">Hiển thị:</label>
+            <select
+              class="form-select form-select-sm w-auto bg-light border-0 fw-bold text-primary shadow-none cursor-pointer rounded-pill px-3"
+              v-model="itemsPerPage"
+              @change="currentPage = 1"
+            >
+              <option :value="10">10 dòng</option>
+              <option :value="20">20 dòng</option>
+              <option :value="50">50 dòng</option>
+              <option :value="100">100 dòng</option>
+            </select>
+          </div>
         </div>
         <div class="row g-4">
           <div
@@ -429,13 +442,13 @@ const books = ref([])
 const searchText = ref("")
 const filterStock = ref("all")
 const currentPage = ref(1)
-const itemsPerPage = ref(8)
+const itemsPerPage = ref(10)
 const selectedBook = ref(null)
 const isEdit = ref(false)
 const notificationMessage = ref("")
 
 const publishers = ref([])
-const categories = ["Khoa học", "Văn học", "Văn học Việt Nam", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa", "Truyện tranh"]
+const categories = ["Khoa học", "Văn học", "Văn học Việt Nam", "Công nghệ thông tin", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa", "Truyện tranh"]
 
 const formData = ref({
   TenSach: "",
@@ -628,20 +641,23 @@ const openImageUploader = () => {
 }
 
 const handleFileSelect = async (event) => {
-  const file = event.target.files[0]
+  const file = event.target.files?.[0]
   if (!file) return
 
   if (!file.type.startsWith('image/')) {
-    alert('Chỉ chấp nhận file ảnh!')
+    alert('Chỉ chấp nhận file ảnh (JPG, PNG, WEBP...)!')
+    if (event.target) event.target.value = ''
     return
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Kích thước file không được vượt quá 5MB!')
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Kích thước file không được vượt quá 10MB!')
+    if (event.target) event.target.value = ''
     return
   }
 
   uploadingImage.value = true
+  if (uploadAbortController) uploadAbortController.abort()
   uploadAbortController = new AbortController()
 
   try {
@@ -651,23 +667,38 @@ const handleFileSelect = async (event) => {
       const dataUrl = e.target.result
       try {
         const response = await SachService.uploadImage(dataUrl, uploadAbortController.signal)
-        imageUrl.value = response.data?.data?.url || response.data?.url
+        const returnedUrl = response.data?.data?.url || response.data?.url
+        if (returnedUrl) {
+          imageUrl.value = returnedUrl
+          formData.value.HinhAnh = returnedUrl
+        } else {
+          throw new Error('Máy chủ không trả về URL ảnh hợp lệ')
+        }
       } catch (uploadError) {
-        if (uploadError.name !== 'AbortError') {
+        if (uploadError.name !== 'AbortError' && uploadError.code !== 'ERR_CANCELED') {
           console.error('Upload failed:', uploadError)
-          alert('Tải ảnh lên thất bại!')
+          const errorMsg = uploadError.response?.data?.message || (uploadError.response?.status === 502 ? 'Không thể kết nối đến máy chủ Backend (Port 3000 bị tắt hoặc gián đoạn).' : uploadError.message || 'Lỗi mạng')
+          alert(`Tải ảnh lên thất bại: ${errorMsg}`)
         }
       } finally {
         uploadingImage.value = false
         uploadAbortController = null
+        if (event.target) event.target.value = ''
       }
+    }
+    reader.onerror = () => {
+      alert('Không thể đọc dữ liệu file ảnh!')
+      uploadingImage.value = false
+      uploadAbortController = null
+      if (event.target) event.target.value = ''
     }
     reader.readAsDataURL(compressedFile)
   } catch (error) {
     console.error('File processing failed:', error)
-    alert('Lỗi xử lý ảnh!')
+    alert(`Lỗi xử lý ảnh: ${error.message || error}`)
     uploadingImage.value = false
     uploadAbortController = null
+    if (event.target) event.target.value = ''
   }
 }
 
@@ -677,23 +708,32 @@ const compressImage = (file) => {
     const ctx = canvas.getContext('2d')
     const img = new Image()
     img.onload = () => {
-      const maxDimension = 1200
-      let { width, height } = img
-      if (width > height) {
-        if (width > maxDimension) {
-          height = (height * maxDimension) / width
-          width = maxDimension
+      try {
+        const maxDimension = 1200
+        let { width, height } = img
+        if (width > height) {
+          if (width > maxDimension) {
+            height = (height * maxDimension) / width
+            width = maxDimension
+          }
+        } else {
+          if (height > maxDimension) {
+            width = (width * maxDimension) / height
+            height = maxDimension
+          }
         }
-      } else {
-        if (height > maxDimension) {
-          width = (width * maxDimension) / height
-          height = maxDimension
-        }
+        canvas.width = width
+        canvas.height = height
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob((blob) => {
+          resolve(blob || file)
+        }, 'image/jpeg', 0.9)
+      } catch (_) {
+        resolve(file)
       }
-      canvas.width = width
-      canvas.height = height
-      ctx.drawImage(img, 0, 0, width, height)
-      canvas.toBlob(resolve, 'image/jpeg', 0.9)
+    }
+    img.onerror = () => {
+      resolve(file)
     }
     img.src = URL.createObjectURL(file)
   })
@@ -702,26 +742,41 @@ const compressImage = (file) => {
 const toggleVoiceSearch = () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
   if (!SpeechRecognition) {
-    alert('Trình duyệt của bạn không hỗ trợ tìm kiếm bằng giọng nói.')
+    alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói.\nVui lòng sử dụng Google Chrome hoặc Microsoft Edge trên máy tính.')
     return
   }
 
+  // Nếu đang lắng nghe, bấm lại để dừng
   if (isListening.value) {
-    recognition?.stop()
+    if (recognition) {
+      try { recognition.stop() } catch (e) { /* ignore */ }
+    }
     isListening.value = false
     return
   }
 
-  if (!recognition) {
+  try {
+    // Luôn dừng/hủy instance cũ trước khi tạo instance mới để tránh lỗi InvalidStateError
+    if (recognition) {
+      try { recognition.abort() } catch (e) { /* ignore */ }
+    }
+
     recognition = new SpeechRecognition()
     recognition.lang = 'vi-VN'
     recognition.continuous = false
     recognition.interimResults = false
+    recognition.maxAlternatives = 1
+
+    recognition.onstart = () => {
+      isListening.value = true
+    }
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript
-      searchText.value = transcript
-      search()
+      if (event.results && event.results[0] && event.results[0][0]) {
+        const transcript = event.results[0][0].transcript
+        searchText.value = transcript
+        search()
+      }
     }
 
     recognition.onend = () => {
@@ -729,16 +784,25 @@ const toggleVoiceSearch = () => {
     }
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error)
+      console.warn('Speech recognition error:', event.error)
       isListening.value = false
-      if (event.error !== 'not-allowed') {
-        alert('Có lỗi xảy ra khi nhận diện giọng nói. Vui lòng thử lại.')
+      if (event.error === 'not-allowed') {
+        alert('Trình duyệt chưa được cấp quyền sử dụng Micro!\n\nCách xử lý:\n1. Nhấp vào biểu tượng ổ khóa hoặc micro ở bên trái thanh địa chỉ URL (bên trái "localhost:8080").\n2. Bật quyền Microphone sang "Cho phép" (Allow).\n3. Tải lại trang (F5) và thử lại.')
+      } else if (event.error === 'network') {
+        alert('Lỗi kết nối mạng đến dịch vụ nhận diện giọng nói Google Speech API.\nTrình duyệt cần kết nối Internet để chuyển đổi âm thanh tiếng Việt thành văn bản. Vui lòng kiểm tra lại kết nối mạng.')
+      } else if (event.error === 'no-speech') {
+        console.log('Không phát hiện âm thanh nói.')
+      } else if (event.error !== 'aborted') {
+        alert(`Không thể nhận diện giọng nói (Mã lỗi: ${event.error}). Vui lòng thử lại.`)
       }
     }
-  }
 
-  isListening.value = true
-  recognition.start()
+    recognition.start()
+  } catch (err) {
+    console.error('Lỗi khởi động nhận diện giọng nói:', err)
+    isListening.value = false
+    alert('Không thể kích hoạt Micro: ' + (err.message || 'Lỗi không xác định'))
+  }
 }
 
 onMounted(async () => {

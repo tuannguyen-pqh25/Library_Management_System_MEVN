@@ -2,19 +2,72 @@
 
 Đây là file lưu trữ thông tin về tiến độ mới nhất của dự án và các quyết định kiến trúc quan trọng đã được thống nhất. AI bắt buộc phải tham khảo file này để biết chính xác điểm bắt đầu trước khi code.
 
-> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-11-04):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã gỡ bỏ Chatbot AI theo yêu cầu. Đã hoàn thiện toàn bộ thư mục `tests/` với 6 tài liệu kịch bản chuẩn hóa (`01` đến `06`), bộ Postman Collection v2.1 (40+ endpoints), và bộ kiểm thử tự động `tests/run-api-tests.js` đạt **44/44 PASS (100%)** trong 1.15s kèm 1-click batch runner `run-tests.bat`. Đã tích hợp hệ thống CI/CD tự động qua **GitHub Actions 100% Free** (`.github/workflows/ci.yml`) kèm cẩm nang thực hành chi tiết tại `Cores/huong_dan_ci_cd_github_actions.md`. Đã khắc phục triệt để lỗi encoding batch script trong `start-production.bat`, `stop-production.bat`, `start.bat`, `stop.bat`. Đã chuẩn hóa quy trình vòng đời phiên làm việc `session-workflow-manager` kết nối chặt chẽ với `Cores/checkpoint.md`, `Cores/next_step_guide.md` và `Cores/prompt.md`. Sẵn sàng bảo vệ đạt điểm tối đa.
+> **Điểm bắt đầu cho phiên kế tiếp (cập nhật 2026-11-05):** Toàn bộ 11 giai đoạn nghiệp vụ & kỹ thuật đã hoàn thành 100%. Đã bổ sung tính năng Xóa tài khoản Độc giả (kèm kiểm soát ràng buộc mượn trả chống thất thoát sách), cơ chế hiển thị "Sách mới cập nhật" theo thời gian thực (timestamps createdAt/updatedAt kết hợp dọn cache Redis và giải thuật sắp xếp hybrid), nâng cấp giao diện Quản lý Nhân viên sang Bootstrap Modal kèm công tắc ẩn/hiện mật khẩu và thao tác xóa hàng loạt, bổ sung thanh thao tác hàng loạt (Bulk actions: Khóa, Mở khóa, Xóa) cho Quản lý Độc giả, chuẩn hóa bộ chọn phân trang (10, 20, 50, 100 dòng) trên 100% các màn hình quản trị Admin-Web, tối ưu hóa và chống lỗi InvalidStateError cho tính năng Tìm kiếm giọng nói (Voice Search AI - Web Speech API) trên cả hai phân hệ, và giải quyết triệt để lỗi Cloudinary fallback khi lưu sách có ảnh. Bộ kiểm thử tự động `tests/run-api-tests.js` đạt **44/44 PASS (100%)** hoàn hảo. Sẵn sàng bảo vệ đạt điểm tối đa.
 
 - **Git Commit Message đề xuất:**
   ```text
-  feat(dashboard): add dynamic time range selector for borrowing analytics (7d, 14d, 1m, 3m, 6m)
+  feat(system-polish): voice search resilience, 10/20/50/100 pagination, reader deletion, and production build
 
-  - Support query param ?range= in admin dashboard controller with daily and monthly aggregations
-  - Add interactive time range pill button group to StaffDashboard.vue line chart
-  - Auto-generate continuous day/month labels with zero-filled missing periods
-  - Invalidate all dashboard range caches automatically on mutations via Redis del
-  - Expand TC_DASH_01 in run-api-tests.js to verify custom time range filtering
-  - Update checkpoint.md and next_step_guide.md following session workflow protocol
+  - Enhance Voice Search AI (Web Speech API) with clean instance lifecycle, graceful permission diagnostics, and stop toggle
+  - Standardize dynamic pagination (10, 20, 50, 100 rows/page) across all 5 admin management interfaces
+  - Add DELETE /api/admin/docgia/:id with active loan integrity validation preventing orphaned borrowing records
+  - Implement bulk actions (Lock, Unlock, Delete) on reader management and staff modal with password eye toggle
+  - Support dual login identifiers (Email or Phone Number) across both user and admin portals
+  - Track ISO 8601 timestamps (createdAt/updatedAt) on books for real-time catalog sorting with Redis cache invalidation
+  - Resolve Cloudinary upload crash with local filesystem fallback in sach.service.js
+  - Sync 'Công nghệ thông tin' category across all admin book forms and rebuild production dist bundles
+  - Update documentation in checkpoint.md, next_step_guide.md, BaoCao.txt, Chienluoc.md, and README.md
   ```
+
+- **Đã tối ưu hóa & Khắc phục triệt để tính năng Nhận diện giọng nói (Voice Search) (2026-11-05):**
+  - **Khắc phục lỗi tái sử dụng Instance ([StaffSachManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/StaffSachManagement.vue) & [BookList.vue](file:///d:/Project/CT449/Project/frontend/user-web/src/views/BookList.vue)):** Web Speech API (`webkitSpeechRecognition`) trên Chromium ném lỗi `DOMException: InvalidStateError` hoặc bị treo nếu gọi lại phương thức `.start()` trên cùng một instance cũ đã kết thúc. Đã cấu hình cơ chế tự động hủy instance cũ (`abort`) và khởi tạo mới instance sạch trước mỗi phiên nhận diện.
+  - **Khắc phục tình trạng "nuốt lỗi" khi Micro bị chặn (Permission Handling):** Trước đây khi người dùng chưa cấp quyền Micro (`event.error === 'not-allowed'`), mã nguồn cũ bỏ qua không thông báo khiến người dùng nhầm tưởng nút tìm kiếm giọng nói bị liệt. Đã bổ sung hộp thoại hướng dẫn chi tiết cách nhấp vào biểu tượng ổ khóa/micro trên thanh URL trình duyệt để bật quyền Micro ("Cho phép" / "Allow").
+  - **Làm rõ bản chất kỹ thuật Web Speech API:** Cơ chế nhận diện tiếng Việt (`vi-VN`) gửi gói tin âm thanh lên máy chủ Google Speech API để chuyển ngữ thành văn bản, do đó máy tính bắt buộc phải có kết nối Internet; đồng thời hỗ trợ tốt nhất trên Google Chrome và Microsoft Edge (Firefox mặc định tắt Web Speech API).
+  - **Bổ sung chức năng Dừng tức thời:** Cho phép người dùng nhấp lại vào biểu tượng Micro khi đang trong trạng thái lắng nghe (`isListening = true`) để dừng ghi âm ngay lập tức.
+  - **Build lại toàn bộ gói phân phối:** Đã chạy `npm run build` thành công cho cả `admin-web` và `user-web`.
+
+- **Đã chuẩn hóa Dropdown Phân trang (10, 20, 50, 100 dòng) trên toàn bộ Admin-Web (2026-11-05):**
+  - **Tích hợp tùy chọn kích thước trang (Page Size Selector):** Thay thế số dòng hiển thị cố định trước đây bằng Dropdown linh hoạt cho phép người dùng tùy chọn hiển thị: `10`, `20`, `50`, `100` dòng trên mỗi trang.
+  - **Đồng bộ trên 100% giao diện quản lý nghiệp vụ:**
+    + **Quản lý Sách ([StaffSachManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/StaffSachManagement.vue)):** Bổ sung dropdown số dòng ở thanh thông tin kết quả tìm kiếm phía trên lưới sách; nâng mặc định từ 8 lên 10 dòng/trang; tự động tính lại tổng số trang `totalPages` và chia trang `paginatedBooks`.
+    + **Quản lý Mượn Trả ([MuonSachManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/MuonSachManagement.vue)):** Chuyển đổi hằng số tĩnh `itemsPerPage = 10` sang `ref(10)`; bổ sung dropdown hiển thị dòng tại thanh tiêu đề bảng; tự động tính toán lại slice mảng dữ liệu phản ứng (reactive slicing).
+    + **Quản lý Độc Giả ([DocGiaManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/DocGiaManagement.vue)):** Chuyển đổi biến tĩnh `pageSize = 10` sang `ref(10)`; bổ sung dropdown tùy chọn số dòng trên card header; đồng bộ chỉ số phân trang ở footer.
+    + **Quản lý Nhân Sự ([NhanVienManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/NhanVienManagement.vue)):** Trước đây chưa có phân trang (hiển thị toàn bộ); đã triển khai hoàn chỉnh phân tầng phân trang gồm: dropdown chọn 10, 20, 50, 100 dòng, thanh điều hướng phân trang ở footer, đánh số thứ tự STT liên tục qua các trang `(currentPage - 1) * itemsPerPage + index + 1`, và cập nhật tính toán `paginatedRecords`.
+    + **Quản lý Nhà Xuất Bản ([StaffNhaXuatBanManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/StaffNhaXuatBanManagement.vue)):** Chuẩn hóa lại các tùy chọn từ danh sách cũ (5, 10, 15, 20, 50) thành chuẩn thống nhất (10, 20, 50, 100 dòng).
+  - **Cơ chế trải nghiệm (UX):** Khi thay đổi kích thước trang ở dropdown, hệ thống luôn tự động đặt lại trang hiện tại về trang đầu (`@change="currentPage = 1"`), ngăn chặn lỗi lệch trang hoặc hiển thị trang rỗng.
+  - **Build Production:** Đã biên dịch lại gói phân phối tĩnh bằng `npm run build`, cập nhật toàn bộ bundle mới nhất vào thư mục `frontend/admin-web/dist` phục vụ NGINX.
+
+- **Đã đồng bộ Thể loại Sách & Làm rõ cơ chế Hot Reload / PM2 / Nginx (2026-11-05):**
+  - **Đồng bộ Thể loại sách trên Admin-Web:** Bổ sung thể loại `"Công nghệ thông tin"` vào mảng `categories` trên toàn bộ các view quản lý sách của Admin Web: `StaffSachManagement.vue` (modal chính của trang `/sach`), `SachAdd.vue` và `SachEdit.vue`.
+  - **Phân định rõ kiến trúc thực thi (PM2 vs Vite HMR vs Nginx):**
+    + **PM2:** Chỉ là bộ giám sát tiến trình (Process Manager) cho dịch vụ Backend Node.js (`server.js` cổng 3000). PM2 hoàn toàn không quản lý, biên dịch hay hỗ trợ Hot Reload cho mã nguồn Vue SFC của Frontend.
+    + **Nginx (Cổng 8080):** Phục vụ các tệp tĩnh đã được build sẵn trong thư mục `frontend/admin-web/dist`. Do đó, mọi sửa đổi trong các tệp `.vue` chỉ có hiệu lực khi chạy `npm run build` để cập nhật `dist`, sau đó người dùng cần xóa cache trình duyệt (`Ctrl + F5`).
+    + **Định tuyến Route:** Đường dẫn `localhost:8080/sach` kích hoạt component `StaffSachManagement.vue` (sử dụng modal nội bộ `#sachModal`), không thông qua component `SachEdit.vue` (vốn dành cho route `/sach/edit/:id`).
+  - **Đóng gói Production:** Đã hoàn thành `npm run build` cho `frontend/admin-web`, phân phối bundle mới chứa đầy đủ danh mục "Công nghệ thông tin".
+
+- **Đã khắc phục lỗi Tải ảnh lên & Lưu sách (Upload Image & Cloudinary Fallback):**
+  - **Khắc phục lỗi Cloudinary Service ([sach.service.js](file:///d:/Project/CT449/Project/BACKEND/app/services/sach.service.js)):** Trước đây, hàm `create` và `update` luôn gọi `uploadImageFromUrl` lên Cloudinary khi có trường `HinhAnh`. Khi hệ thống không cấu hình biến môi trường Cloudinary (`CLOUDINARY_API_KEY`), Cloudinary ném lỗi `Must supply api_key`, khiến việc tạo hoặc cập nhật sách chứa ảnh bị chặn hoàn toàn (ném ngoại lệ 500). Đã thêm kiểm tra cấu hình Cloudinary hợp lệ (`hasCloudinary`) và chỉ upload ảnh ngoài; nếu không có Cloudinary hoặc upload thất bại, hệ thống lưu giữ nguyên vẹn đường dẫn ảnh cục bộ (`/uploads/...`) mà không ném lỗi.
+  - **Khắc phục giao diện tải ảnh ([StaffSachManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/StaffSachManagement.vue)):** Bổ sung cơ chế fallback giải mã an toàn cho hàm `compressImage` khi gặp định dạng ảnh đặc biệt; xử lý tự động làm trống `event.target.value` để cho phép chọn lại cùng 1 file ảnh; hiển thị chi tiết nguyên nhân lỗi thay vì alert chung chung; hỗ trợ kích thước ảnh tối đa 10MB; đồng bộ ngay lập tức `formData.value.HinhAnh`.
+  - **Build lại bản phân phối ([frontend/admin-web/dist](file:///d:/Project/CT449/Project/frontend/admin-web/dist)):** Đã chạy `npm run build` cập nhật toàn bộ mã nguồn mới nhất vào thư mục `dist` để NGINX (Port 8080) phục vụ người dùng chuẩn xác.
+
+- **Đã bổ sung / sửa trong phiên 2026-11-05 (Xóa Độc Giả, Sách Mới Cập Nhật Real-time, Modal Nhân Viên & Thao Tác Hàng Loạt):**
+  - **Xóa tài khoản Độc giả có kiểm tra ràng buộc ([docgia.controller.js](file:///d:/Project/CT449/Project/BACKEND/app/controllers/admin/docgia.controller.js)):**
+    + Triển khai endpoint `DELETE /api/admin/docgia/:id` trong controller và route admin.
+    + Kiểm tra toàn vẹn dữ liệu: Truy vấn bộ sưu tập `THEODOIMUONSACH` với trạng thái đang lưu thông (`chờ duyệt`, `đã duyệt`, `đang mượn`, `đang chờ trả`, `quá hạn`, `chờ gia hạn`). Nếu phát hiện độc giả đang giữ sách hoặc có phiếu mượn chưa hoàn tất, trả về lỗi 400 chặn đứng hành động xóa, tránh tình trạng mồ côi dữ liệu (orphaned record) hoặc thất thoát tài sản thư viện.
+    + Tích hợp nút Xóa trên giao diện từng hàng bảng độc giả kèm Modal xác nhận cảnh báo `deleteModal`.
+  - **Thao tác hàng loạt trên Quản lý Độc giả ([DocGiaManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/DocGiaManagement.vue)):**
+    + Checkbox chọn từng dòng và checkbox chọn tất cả ở tiêu đề bảng.
+    + Thanh công cụ tác vụ hàng loạt (Bulk Action Bar) hiển thị số lượng độc giả được chọn kèm 3 nút tác vụ: Khóa đã chọn, Mở khóa đã chọn, Xóa đã chọn (tự động bỏ qua và báo cáo số lượng độc giả đang mượn sách không thể xóa).
+  - **Sách mới cập nhật theo thời gian thực ([sach.service.js](file:///d:/Project/CT449/Project/BACKEND/app/services/sach.service.js) & [HomeUser.vue](file:///d:/Project/CT449/Project/frontend/user-web/src/views/HomeUser.vue)):**
+    + Trong `SachService`: Hàm `create` tự động gán `createdAt` và `updatedAt` theo chuẩn ISO 8601; hàm `update` tự động cập nhật `updatedAt` mới nhất khi quản trị viên hiệu chỉnh thông tin sách.
+    + Kết hợp cơ chế xóa cache thông minh `Redis.clearMatch("user:sach:*")` ngay khi tạo/sửa sách.
+    + Trong `HomeUser.vue`: Nâng cấp thuật toán sắp xếp danh mục "Sách mới cập nhật" dựa trên `Math.max(updatedAt, createdAt)`, kết hợp giải thuật trích xuất timestamp 4 byte đầu từ `ObjectId` của MongoDB đối với các sách cũ chưa có trường thời gian tường minh. Đảm bảo sách vừa tạo hoặc vừa cập nhật ngay lập tức được đẩy lên đầu trang chủ độc giả.
+  - **Nâng cấp UX Quản lý Nhân sự ([NhanVienManagement.vue](file:///d:/Project/CT449/Project/frontend/admin-web/src/views/NhanVienManagement.vue)):**
+    + Chuyển đổi toàn bộ biểu mẫu thêm/sửa nhân viên từ dạng in-page card đẩy layout bảng xuống dưới thành **Bootstrap Modal (`#staffModal`)** chuyên nghiệp, tập trung trải nghiệm người dùng.
+    + Thêm công tắc ẩn/hiện mật khẩu (eye toggle icon) cho phép người dùng quan sát kiểm tra mật khẩu trước khi lưu.
+    + Bổ sung tính năng chọn hàng loạt bằng checkbox và xóa hàng loạt tài khoản nhân viên, kèm cơ chế vô hiệu hóa checkbox đối với tài khoản quản trị viên đang đăng nhập phiên hiện tại (chống tự xóa chính mình).
+  - **Kiểm thử tự động ([run-api-tests.js](file:///d:/Project/CT449/Project/tests/run-api-tests.js)):**
+    + Mở rộng ca kiểm thử `TC_MNG_03` kiểm tra trực tiếp luồng xóa tài khoản độc giả qua API, toàn bộ **44/44 Test Case PASS (100.0%)** trong 2.27s.
 
 - **Đã bổ sung / sửa trong phiên 2026-11-04 (Mở rộng Bộ lọc Thời gian Dashboard Quản trị 7d, 14d, 1m, 3m, 6m):**
   - **Backend Controller ([dashboard.controller.js](file:///d:/Project/CT449/Project/BACKEND/app/controllers/admin/dashboard.controller.js)):** Tiếp nhận query param `?range=` với 5 mốc thời gian: `7d` (7 ngày), `14d` (14 ngày), `1m` (1 tháng / 30 ngày), `3m` (3 tháng), `6m` (6 tháng). Tự động phân tách chiến lược gom nhóm theo ngày (`%Y-%m-%d`) cho các mốc ngắn và theo tháng (`%Y-%m`) cho các mốc dài.

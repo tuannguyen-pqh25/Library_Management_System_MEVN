@@ -212,9 +212,9 @@ _(Nếu thầy yêu cầu nghiêm ngặt "khác tên miền" ở mức hạ tầ
 
 **Đề xuất bổ sung thuộc tính vào bảng có sẵn (không đổi tên field gốc, chỉ thêm mới):**
 
-- `Sach`: thêm `SoQuyenConLai` (Number) — số quyển còn có thể cho mượn, cập nhật mỗi khi mượn/trả; thêm `AnhBia` (String URL).
+- `Sach`: thêm `SoQuyenConLai` (Number) — số quyển còn có thể cho mượn, cập nhật mỗi khi mượn/trả; thêm `AnhBia` (String URL / HinhAnh); thêm `createdAt`, `updatedAt` (ISO 8601 Date String) lưu dấu vết thời gian tạo và cập nhật phục vụ hiển thị "Sách mới cập nhật" theo thời gian thực và tự động làm mới bộ đệm Redis.
 - `TheoDoiMuonSach`: thêm `NgayHenTra` (Date, = NgayMuon + N ngày, mặc định 14 ngày), `TrangThai` (enum: `"ChoDuyet" | "DangMuon" | "DaTra" | "QuaHan" | "Mat"`), `SoLanGiaHan` (Number, default 0), `GhiChu` (String).
-- `DocGia`: thêm `Email`, `MatKhau` (hash), `TrangThaiTaiKhoan` (enum: `"BinhThuong" | "BiKhoa"`) để phục vụ đăng nhập user (bảng gốc đề chưa có tài khoản đăng nhập cho độc giả — bắt buộc phải bổ sung vì đề yêu cầu "user đăng ký/đăng nhập" mà không có sẵn field này).
+- `DocGia`: thêm `Email`, `MatKhau` (hash), `TrangThaiTaiKhoan` (enum: `"BinhThuong" | "BiKhoa"`) để phục vụ đăng nhập user (bảng gốc đề chưa có tài khoản đăng nhập cho độc giả — bắt buộc phải bổ sung vì đề yêu cầu "user đăng ký/đăng nhập" mà không có sẵn field này). Bổ sung cơ chế ràng buộc toàn vẹn khi xóa độc giả (`DELETE /api/admin/docgia/:id`): Chặn xóa tuyệt đối nếu độc giả còn bản ghi mượn sách đang lưu thông trong `TheoDoiMuonSach`.
 
 > Ghi chú quan trọng để giải trình trong báo cáo: đề gốc không có field đăng nhập cho `DocGia`, nhưng yêu cầu chức năng "đăng ký/đăng nhập" của user. Do đó việc thêm `Email`/`MatKhau`/`TrangThaiTaiKhoan` vào `DocGia` là **bắt buộc phải có**, không thuộc diện "tùy chọn" — cần nêu rõ trong slide bảo vệ để tránh bị hỏi khó.
 

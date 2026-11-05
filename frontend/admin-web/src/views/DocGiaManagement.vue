@@ -108,7 +108,7 @@
       <!-- Data Table -->
       <BaseCard class="border-0 shadow-sm rounded-4 overflow-hidden p-0">
         <div class="bg-white pt-4 pb-3 px-4 border-bottom">
-          <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center">
               <div class="bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                 <i class="fas fa-user-graduate fa-lg"></i>
@@ -118,6 +118,42 @@
                 <small class="text-muted">{{ filteredPaginated.length }} / {{ filteredList.length }} hiển thị</small>
               </div>
             </div>
+            <div class="d-flex align-items-center gap-2">
+              <label class="text-muted small fw-semibold text-nowrap">Hiển thị:</label>
+              <select
+                class="form-select form-select-sm w-auto bg-light border-0 fw-bold text-primary shadow-none cursor-pointer rounded-pill px-3"
+                v-model="pageSize"
+                @change="currentPage = 1"
+              >
+                <option :value="10">10 dòng</option>
+                <option :value="20">20 dòng</option>
+                <option :value="50">50 dòng</option>
+                <option :value="100">100 dòng</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Action Bar -->
+        <div v-if="selectedIds.length > 0" class="bg-primary-subtle border-bottom px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary fs-6 rounded-pill px-3 py-2">
+              <i class="fas fa-check-square me-1"></i> Đã chọn {{ selectedIds.length }} độc giả
+            </span>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-outline-danger" @click="openBulkLockModal" :disabled="actionLoading">
+              <i class="fas fa-lock me-1"></i> Khóa đã chọn
+            </button>
+            <button class="btn btn-sm btn-outline-success" @click="bulkUnlock" :disabled="actionLoading">
+              <i class="fas fa-unlock me-1"></i> Mở khóa đã chọn
+            </button>
+            <button class="btn btn-sm btn-danger" @click="openBulkDeleteModal" :disabled="actionLoading">
+              <i class="fas fa-trash-alt me-1"></i> Xóa đã chọn
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" @click="selectedIds = []" :disabled="actionLoading">
+              Bỏ chọn
+            </button>
           </div>
         </div>
 
@@ -141,7 +177,12 @@
           <table class="table table-hover align-middle mb-0" id="docgia-table">
             <thead class="table-light text-muted-custom">
               <tr>
-                <th class="fw-semibold text-uppercase small ps-4 py-3">STT</th>
+                <th class="ps-4 py-3" style="width: 40px;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+                  </div>
+                </th>
+                <th class="fw-semibold text-uppercase small py-3">STT</th>
                 <th class="fw-semibold text-uppercase small py-3">Độc giả</th>
                 <th class="fw-semibold text-uppercase small py-3">Liên hệ</th>
                 <th class="fw-semibold text-uppercase small py-3 text-center">Trạng thái</th>
@@ -151,7 +192,12 @@
             </thead>
             <tbody>
               <tr v-for="(dg, index) in filteredPaginated" :key="dg._id">
-                <td class="text-muted fw-bold ps-4">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
+                <td class="ps-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" :value="dg._id" v-model="selectedIds" />
+                  </div>
+                </td>
+                <td class="text-muted fw-bold">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
 
                 <!-- Cột Độc Giả -->
                 <td>
@@ -229,6 +275,14 @@
                       :disabled="actionLoading"
                     >
                       <i class="fas fa-unlock"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      @click="openDeleteModal(dg)"
+                      title="Xóa tài khoản độc giả"
+                      :disabled="actionLoading"
+                    >
+                      <i class="fas fa-trash-alt"></i>
                     </button>
                   </div>
                 </td>
@@ -443,6 +497,75 @@
       </div>
     </div>
 
+    <!-- ========== MODAL: Xóa Độc Giả ========== -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+          <div class="modal-header border-0 pb-0 px-4 pt-4">
+            <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">
+              <i class="fas fa-trash-alt me-2"></i>Xác nhận xóa tài khoản độc giả
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body px-4 pb-2" v-if="deleteTarget">
+            <div class="alert alert-danger d-flex align-items-start gap-2 rounded-3 mb-3">
+              <i class="fas fa-exclamation-triangle mt-1"></i>
+              <div>
+                Hành động này <strong>không thể hoàn tác</strong>! Bạn có chắc muốn xóa vĩnh viễn tài khoản của độc giả:
+                <div class="fw-bold mt-1">{{ getFullName(deleteTarget) }} ({{ deleteTarget.Email || deleteTarget.MaDocGia }})</div>
+              </div>
+            </div>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-info-circle me-1"></i>
+              Lưu ý: Hệ thống sẽ tự động chặn xóa nếu độc giả đang giữ sách hoặc có phiếu mượn chưa hoàn tất.
+            </p>
+          </div>
+          <div class="modal-footer border-0 px-4 pb-4 pt-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete" :disabled="actionLoading">
+              <span v-if="actionLoading" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="fas fa-trash-alt me-1"></i>
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL: Xóa Hàng Loạt Độc Giả ========== -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+          <div class="modal-header border-0 pb-0 px-4 pt-4">
+            <h5 class="modal-title fw-bold text-danger" id="bulkDeleteModalLabel">
+              <i class="fas fa-trash-alt me-2"></i>Xác nhận xóa hàng loạt
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body px-4 pb-2">
+            <div class="alert alert-danger d-flex align-items-start gap-2 rounded-3 mb-3">
+              <i class="fas fa-exclamation-triangle mt-1"></i>
+              <div>
+                Bạn có chắc chắn muốn xóa <strong>{{ selectedIds.length }}</strong> độc giả đã chọn?
+              </div>
+            </div>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-info-circle me-1"></i>
+              Các tài khoản có sách đang mượn hoặc phiếu mượn chưa hoàn tất sẽ được tự động bỏ qua để bảo vệ dữ liệu thư viện.
+            </p>
+          </div>
+          <div class="modal-footer border-0 px-4 pb-4 pt-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-danger" @click="executeBulkDelete" :disabled="actionLoading">
+              <span v-if="actionLoading" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="fas fa-trash-alt me-1"></i>
+              Xác nhận xóa hàng loạt
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ========== MODAL: Lịch Sử Mượn Sách ========== -->
     <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -545,7 +668,7 @@ const actionLoading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('')
 const currentPage = ref(1)
-const pageSize = 10
+const pageSize = ref(10)
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
@@ -562,6 +685,10 @@ const lockReason = ref('')
 const historyTarget = ref(null)
 const historyRecords = ref([])
 const historyLoading = ref(false)
+
+// Bulk & Delete state
+const selectedIds = ref([])
+const deleteTarget = ref(null)
 
 // =========== COMPUTED ===========
 const stats = computed(() => {
@@ -595,11 +722,11 @@ const filteredList = computed(() => {
   return result
 })
 
-const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize))
+const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize.value) || 1)
 
 const filteredPaginated = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredList.value.slice(start, start + pageSize)
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredList.value.slice(start, start + pageSize.value)
 })
 
 const visiblePages = computed(() => {
@@ -614,6 +741,11 @@ const visiblePages = computed(() => {
   }
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
+})
+
+const isAllSelected = computed(() => {
+  if (!filteredPaginated.value.length) return false
+  return filteredPaginated.value.every(d => selectedIds.value.includes(d._id))
 })
 
 // =========== FETCH ===========
@@ -726,6 +858,119 @@ const resetPassword = async (dg) => {
     showToast(`Đã cấp lại mật khẩu thành công. Mật khẩu mới: ${res.data.newPassword}`, 'success')
   } catch (error) {
     showToast(error.response?.data?.message || 'Không thể cấp lại mật khẩu.', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// =========== BULK SELECTION & ACTIONS ===========
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    const pageIds = filteredPaginated.value.map(d => d._id)
+    selectedIds.value = selectedIds.value.filter(id => !pageIds.includes(id))
+  } else {
+    const pageIds = filteredPaginated.value.map(d => d._id)
+    const newSelected = new Set([...selectedIds.value, ...pageIds])
+    selectedIds.value = Array.from(newSelected)
+  }
+}
+
+// =========== DELETE MODAL ===========
+const openDeleteModal = (dg) => {
+  deleteTarget.value = { ...dg }
+  openModal('deleteModal')
+}
+
+const confirmDelete = async () => {
+  if (!deleteTarget.value) return
+  actionLoading.value = true
+  try {
+    const res = await DocGiaService.delete(deleteTarget.value._id)
+    showToast(res.data?.message || `Đã xóa độc giả ${getFullName(deleteTarget.value)}`, 'success')
+    closeModal('deleteModal')
+    selectedIds.value = selectedIds.value.filter(id => id !== deleteTarget.value._id)
+    deleteTarget.value = null
+    await fetchDocGia()
+  } catch (error) {
+    showToast(error.response?.data?.message || 'Không thể xóa độc giả này.', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const openBulkDeleteModal = () => {
+  if (!selectedIds.value.length) return
+  openModal('bulkDeleteModal')
+}
+
+const executeBulkDelete = async () => {
+  if (!selectedIds.value.length) return
+  actionLoading.value = true
+  let successCount = 0
+  let failCount = 0
+  let failMessages = []
+
+  for (const id of selectedIds.value) {
+    try {
+      await DocGiaService.delete(id)
+      successCount++
+    } catch (err) {
+      failCount++
+      const msg = err.response?.data?.message || 'Lỗi không xác định'
+      if (!failMessages.includes(msg)) failMessages.push(msg)
+    }
+  }
+
+  closeModal('bulkDeleteModal')
+  selectedIds.value = []
+  await fetchDocGia()
+  actionLoading.value = false
+
+  if (successCount > 0 && failCount === 0) {
+    showToast(`Đã xóa thành công ${successCount} độc giả.`, 'success')
+  } else if (successCount > 0 && failCount > 0) {
+    showToast(`Đã xóa ${successCount} độc giả. Bỏ qua ${failCount} độc giả (${failMessages.join(', ')}).`, 'warning')
+  } else {
+    showToast(`Không thể xóa độc giả đã chọn: ${failMessages.join(', ')}`, 'error')
+  }
+}
+
+const openBulkLockModal = async () => {
+  if (!selectedIds.value.length) return
+  if (!confirm(`Bạn có chắc muốn khóa ${selectedIds.value.length} tài khoản độc giả đã chọn?`)) return
+  actionLoading.value = true
+  try {
+    for (const id of selectedIds.value) {
+      await DocGiaService.toggleAccountStatus(id, {
+        TrangThaiTaiKhoan: 'BiKhoa',
+        LyDoKhoa: 'Khóa hàng loạt bởi quản trị viên'
+      })
+    }
+    showToast(`Đã khóa thành công ${selectedIds.value.length} tài khoản độc giả.`, 'success')
+    selectedIds.value = []
+    await fetchDocGia()
+  } catch (error) {
+    showToast(error.response?.data?.message || 'Lỗi khi khóa hàng loạt.', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const bulkUnlock = async () => {
+  if (!selectedIds.value.length) return
+  if (!confirm(`Bạn có chắc muốn mở khóa ${selectedIds.value.length} tài khoản độc giả đã chọn?`)) return
+  actionLoading.value = true
+  try {
+    for (const id of selectedIds.value) {
+      await DocGiaService.toggleAccountStatus(id, {
+        TrangThaiTaiKhoan: 'BinhThuong'
+      })
+    }
+    showToast(`Đã mở khóa thành công ${selectedIds.value.length} tài khoản độc giả.`, 'success')
+    selectedIds.value = []
+    await fetchDocGia()
+  } catch (error) {
+    showToast(error.response?.data?.message || 'Lỗi khi mở khóa hàng loạt.', 'error')
   } finally {
     actionLoading.value = false
   }

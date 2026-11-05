@@ -245,7 +245,7 @@ export default {
       showSuccessNotification: false,
       showErrorNotification: false, // State mới cho toast lỗi
       publishers: [],
-      categories: ["Khoa học", "Văn học", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa"],
+      categories: ["Khoa học", "Văn học", "Văn học Việt Nam", "Công nghệ thông tin", "Lịch sử", "Thiếu nhi", "Kinh tế", "Tâm lý", "Kỹ năng sống", "Tiểu thuyết", "Tôn giáo", "Triết học", "Giáo khoa", "Truyện tranh"],
     };
   },
   async mounted() {

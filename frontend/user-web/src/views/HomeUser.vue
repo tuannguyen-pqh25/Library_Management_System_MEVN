@@ -183,11 +183,18 @@ export default {
       const response = await SachService.getAll()
       const allBooks = Array.isArray(response.data) ? response.data : []
       this.books = allBooks.slice(0, 4)
-      const sortedBooks = [...allBooks].sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime()
-        const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime()
-        return dateB - dateA
-      })
+      const getLatestTimestamp = (item) => {
+        const tUpdated = item.updatedAt ? new Date(item.updatedAt).getTime() : 0
+        const tCreated = item.createdAt ? new Date(item.createdAt).getTime() : 0
+        const explicit = Math.max(tUpdated, tCreated)
+        if (explicit > 0 && !isNaN(explicit)) return explicit
+        if (item._id && typeof item._id === 'string' && item._id.length === 24) {
+          const ts = parseInt(item._id.substring(0, 8), 16) * 1000
+          if (!isNaN(ts)) return ts
+        }
+        return 0
+      }
+      const sortedBooks = [...allBooks].sort((a, b) => getLatestTimestamp(b) - getLatestTimestamp(a))
       this.newBooks = sortedBooks.slice(0, 4)
     } catch (error) {
       console.error('Không thể tải danh sách sách:', error)

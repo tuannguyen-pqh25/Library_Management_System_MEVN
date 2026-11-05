@@ -85,11 +85,24 @@
 
       <!-- ===== TABLE ===== -->
       <div v-else class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <!-- Result count -->
-        <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between">
+        <!-- Result count & items per page -->
+        <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
           <small class="text-muted fw-semibold">
             Hiển thị {{ paginatedRecords.length }} / {{ filteredRecords.length }} phiếu
           </small>
+          <div class="d-flex align-items-center gap-2">
+            <label class="text-muted small fw-semibold text-nowrap">Hiển thị:</label>
+            <select
+              class="form-select form-select-sm w-auto bg-light border-0 fw-bold text-primary shadow-none cursor-pointer rounded-pill px-3"
+              v-model="itemsPerPage"
+              @change="currentPage = 1"
+            >
+              <option :value="10">10 dòng</option>
+              <option :value="20">20 dòng</option>
+              <option :value="50">50 dòng</option>
+              <option :value="100">100 dòng</option>
+            </select>
+          </div>
         </div>
 
         <div class="table-responsive">
@@ -468,7 +481,7 @@ const loading = ref(false)
 const filterStatus = ref('')
 const searchText = ref('')
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = ref(10)
 const processingId = ref(null)
 // Map: recordId → selected action value
 const actionSelected = ref({})
@@ -546,11 +559,11 @@ const filteredRecords = computed(() => {
   return list
 })
 
-const totalPages = computed(() => Math.ceil(filteredRecords.value.length / itemsPerPage) || 1)
+const totalPages = computed(() => Math.ceil(filteredRecords.value.length / itemsPerPage.value) || 1)
 
 const paginatedRecords = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredRecords.value.slice(start, start + itemsPerPage)
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredRecords.value.slice(start, start + itemsPerPage.value)
 })
 
 // =================== METHODS ===================

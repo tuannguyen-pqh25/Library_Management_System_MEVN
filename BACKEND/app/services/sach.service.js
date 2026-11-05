@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { uploadImageFromUrl, deleteImage } = require("../utils/cloudinary.util");
+const config = require("../config");
 
 class SachService {
     constructor(client) {
@@ -23,6 +24,8 @@ class SachService {
             MoTa: payload.MoTa,
             NgonNgu: payload.NgonNgu,
             TheLoai: payload.TheLoai,
+            createdAt: payload.createdAt,
+            updatedAt: payload.updatedAt,
         };
 
         // Loại bỏ các trường không xác định (undefined)
@@ -35,6 +38,11 @@ class SachService {
     // 1. Tạo sách mới
     async create(payload) {
         const sachData = this.#extractSachData(payload);
+        const now = new Date().toISOString();
+        if (!sachData.createdAt) {
+            sachData.createdAt = now;
+        }
+        sachData.updatedAt = now;
 
         // Tự động sinh MaSach
         if (!sachData.MaSach) {
@@ -62,14 +70,17 @@ class SachService {
             throw new Error("Tên sách đã tồn tại");
         }
 
-        // B. Nếu có hình ảnh, upload lên Cloudinary
-        if (sachData.HinhAnh) {
-            const uploadResult = await uploadImageFromUrl(sachData.HinhAnh);
-            if (uploadResult.success) {
-                sachData.HinhAnh = uploadResult.url;
-                sachData.CloudinaryPublicId = uploadResult.publicId; // Lưu ID để xóa sau
-            } else {
-                throw new Error(`Lỗi upload ảnh: ${uploadResult.message}`);
+        // B. Nếu có hình ảnh và có cấu hình Cloudinary, thử upload lên Cloudinary
+        const hasCloudinary = Boolean(config.cloudinary?.cloudName && config.cloudinary?.apiKey && config.cloudinary?.apiSecret);
+        if (sachData.HinhAnh && hasCloudinary && !sachData.HinhAnh.includes("/uploads/")) {
+            try {
+                const uploadResult = await uploadImageFromUrl(sachData.HinhAnh);
+                if (uploadResult?.success) {
+                    sachData.HinhAnh = uploadResult.url;
+                    sachData.CloudinaryPublicId = uploadResult.publicId; // Lưu ID để xóa sau
+                }
+            } catch (cloudErr) {
+                console.warn("Cloudinary upload failed, keeping original image URL:", cloudErr.message);
             }
         }
 
@@ -136,6 +147,7 @@ class SachService {
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
         };
         const update = this.#extractSachData(payload);
+        update.updatedAt = new Date().toISOString();
 
         // Cập nhật không trùng tên sách hoặc mã sách (trừ bản ghi hiện tại)
         if (update.TenSach) {
@@ -161,20 +173,27 @@ class SachService {
         // Lấy sách cũ để kiểm tra ảnh
         const oldBook = await this.Sach.findOne(filter);
 
-        // Nếu có ảnh mới, upload lên Cloudinary và xóa ảnh cũ
+        // Nếu có ảnh mới và có cấu hình Cloudinary, upload lên Cloudinary và xóa ảnh cũ
+        const hasCloudinaryUpdate = Boolean(config.cloudinary?.cloudName && config.cloudinary?.apiKey && config.cloudinary?.apiSecret);
         if (update.HinhAnh && update.HinhAnh !== oldBook?.HinhAnh) {
-            // Xóa ảnh cũ từ Cloudinary nếu có
-            if (oldBook?.CloudinaryPublicId) {
-                await deleteImage(oldBook.CloudinaryPublicId);
-            }
+            if (hasCloudinaryUpdate) {
+                // Xóa ảnh cũ từ Cloudinary nếu có
+                if (oldBook?.CloudinaryPublicId) {
+                    try { await deleteImage(oldBook.CloudinaryPublicId); } catch (_) {}
+                }
 
-            // Upload ảnh mới
-            const uploadResult = await uploadImageFromUrl(update.HinhAnh);
-            if (uploadResult.success) {
-                update.HinhAnh = uploadResult.url;
-                update.CloudinaryPublicId = uploadResult.publicId;
-            } else {
-                throw new Error(`Lỗi upload ảnh: ${uploadResult.message}`);
+                // Upload ảnh mới lên Cloudinary nếu không phải file cục bộ
+                if (!update.HinhAnh.includes("/uploads/")) {
+                    try {
+                        const uploadResult = await uploadImageFromUrl(update.HinhAnh);
+                        if (uploadResult?.success) {
+                            update.HinhAnh = uploadResult.url;
+                            update.CloudinaryPublicId = uploadResult.publicId;
+                        }
+                    } catch (cloudErr) {
+                        console.warn("Cloudinary update failed, keeping original image URL:", cloudErr.message);
+                    }
+                }
             }
         }
 

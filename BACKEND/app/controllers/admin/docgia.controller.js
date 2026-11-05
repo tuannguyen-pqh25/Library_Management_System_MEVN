@@ -271,3 +271,35 @@ exports.resetPassword = async (req, res, next) => {
         return next(new ApiError(500, `Lỗi khi reset mật khẩu của độc giả id=${req.params.id}`));
     }
 };
+
+/**
+ * Admin – Xóa tài khoản độc giả
+ */
+exports.delete = async (req, res, next) => {
+    try {
+        const { ObjectId } = require("mongodb");
+        const docGiaId = ObjectId.isValid(req.params.id) ? new ObjectId(req.params.id) : req.params.id;
+
+        const db = MongoDB.client.db();
+        // Kiểm tra độc giả có đang giữ sách hoặc có phiếu mượn chưa hoàn tất không
+        const activeLoans = await db.collection("THEODOIMUONSACH").countDocuments({
+            docGiaId: docGiaId,
+            trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn", "đang chờ trả", "quá hạn", "chờ gia hạn"] }
+        });
+
+        if (activeLoans > 0) {
+            return next(new ApiError(400, "Không thể xóa độc giả đang mượn sách hoặc có phiếu mượn chưa hoàn tất!"));
+        }
+
+        const docGiaService = new DocGiaService(MongoDB.client);
+        const result = await docGiaService.delete(req.params.id);
+
+        if (!result) {
+            return next(new ApiError(404, "Không tìm thấy độc giả để xóa"));
+        }
+
+        return res.send({ message: "Xóa tài khoản độc giả thành công" });
+    } catch (error) {
+        return next(new ApiError(500, `Lỗi khi xóa độc giả id=${req.params.id}: ${error.message}`));
+    }
+};

@@ -30,6 +30,11 @@ class DocGiaService {
   resetPassword(id) {
     return http.put(`/docgia/${id}/reset-password`);
   }
+
+  // Xóa tài khoản độc giả
+  delete(id) {
+    return http.delete(`/docgia/${id}`);
+  }
 }
 
 export default new DocGiaService();
