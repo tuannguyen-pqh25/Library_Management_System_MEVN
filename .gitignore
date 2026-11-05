@@ -36,5 +36,6 @@ logs/
 
 # AI agent configs & internal documentation (kept locally, NOT pushed to GitHub)
 .agents/
+Cores/
 *.md
 !README.md
