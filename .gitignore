@@ -33,3 +33,9 @@ logs/
 
 # Local Windows Batch Automation Scripts (kept locally, not pushed to GitHub)
 *.bat
+
+# AI agent configs & internal documentation (kept locally, NOT pushed to GitHub)
+.agents/
+Cores/
+*.md
+!README.md
