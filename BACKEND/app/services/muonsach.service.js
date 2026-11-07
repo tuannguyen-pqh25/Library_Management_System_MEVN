@@ -120,16 +120,24 @@ class MuonSachService {
 
     async _checkAndUpdateOverdue() {
         try {
-            const today = new Date().toISOString();
-            await this.MuonSach.updateMany(
+            const todayDateStr = new Date().toLocaleDateString('en-CA');
+            const todayIso = new Date().toISOString();
+            const res = await this.MuonSach.updateMany(
                 {
                     trangThai: { $in: ["đang mượn", "đã duyệt", "chờ gia hạn"] },
-                    ngayTra: { $lt: today }
+                    $or: [
+                        { ngayTra: { $lt: todayDateStr } },
+                        { ngayTra: { $lt: todayIso } }
+                    ]
                 },
                 {
                     $set: { trangThai: "quá hạn" }
                 }
             );
+            if (res && res.modifiedCount > 0) {
+                const Redis = require("../utils/redis.util");
+                await Redis.del("admin:dashboard:stats");
+            }
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái quá hạn:", error);
         }
@@ -195,6 +203,8 @@ class MuonSachService {
                         out.TenDocGia = ((docGia.HoLot || docGia.HOLOT || '') + ' ' + (docGia.Ten || docGia.TEN || '')).trim() || docGia.Email || '—';
                         out.EmailDocGia = docGia.Email || docGia.EMAIL || '—';
                         out.DienThoaiDocGia = docGia.DienThoai || docGia.DIENTHOAI || '—';
+                        out.TrangThaiTaiKhoan = docGia.TrangThaiTaiKhoan || 'BinhThuong';
+                        out.MaDocGia = docGia.MaDocGia || '—';
                     }
                 } catch (e) { console.error("Populate docgia error:", e); }
             }
@@ -257,8 +267,14 @@ class MuonSachService {
 
     //4. Find by DocGiaId: Chức năng cho Độc Giả xem lịch sử mượn.
     async findByDocGia(docGiaId) {
+        if (!docGiaId) return [];
+        const objId = ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null;
+        const strId = String(docGiaId);
         const filter = {
-            docGiaId: ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null
+            $or: [
+                ...(objId ? [{ docGiaId: objId }] : []),
+                { docGiaId: strId }
+            ]
         };
         const records = await this.find(filter);
 
@@ -269,7 +285,7 @@ class MuonSachService {
             // Populate staff name if nhanVienId exists
             if (rec.nhanVienId && !out.nhanVienName && !out.TenNhanVien) {
                 try {
-                    const nhanVien = await this.client.db().collection("NHANVIEN").findOne({ _id: rec.nhanVienId });
+                    const nhanVien = await this.client.db().collection("NHANVIEN").findOne({ _id: this._normalizeObjectId(rec.nhanVienId) });
                     if (nhanVien) {
                         out.nhanVienName = (nhanVien.HOLOT || nhanVien.HoTenNV || '') + ' ' + (nhanVien.TEN || '');
                         out.nhanVienName = out.nhanVienName.trim() || 'Nhân viên không xác định';
@@ -282,7 +298,7 @@ class MuonSachService {
             // Populate publisher name from book
             if (rec.sachId) {
                 try {
-                    const sach = await this.Sach.findOne({ _id: rec.sachId });
+                    const sach = await this.Sach.findOne({ _id: this._normalizeObjectId(rec.sachId) });
                     if (sach) {
                         out.TenSach = sach.TenSach || out.TenSach;
                         out.TacGia = sach.TacGia || out.TacGia;
@@ -439,6 +455,10 @@ class MuonSachService {
             if (isReturning || isRejected) {
                 await this.Sach.updateOne({ _id: sachId }, { $inc: { SoQuyen: soLuong } });
             }
+            try {
+                const Redis = require("../utils/redis.util");
+                await Redis.del("admin:dashboard:stats");
+            } catch (_) {}
             return result;
         } catch (error) {
             if (stockDeducted) {
@@ -635,6 +655,10 @@ class MuonSachService {
         );
 
         if (!result) throw new Error("Phiếu mượn đã được cập nhật trước đó");
+        try {
+            const Redis = require("../utils/redis.util");
+            await Redis.del("admin:dashboard:stats");
+        } catch (_) {}
         return result;
     }
 
@@ -666,6 +690,10 @@ class MuonSachService {
         );
 
         if (!result) throw new Error("Phiếu mượn đã được cập nhật trước đó");
+        try {
+            const Redis = require("../utils/redis.util");
+            await Redis.del("admin:dashboard:stats");
+        } catch (_) {}
         return result;
     }
 }

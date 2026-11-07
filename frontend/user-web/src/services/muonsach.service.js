@@ -40,25 +40,65 @@ class MuonSachService {
    * @returns {Promise<Array>} mảng thông báo đã chuẩn hóa
    */
   async getNotifications() {
+    try {
+      const res = await http.get('/user/muon/thong-bao')
+      if (Array.isArray(res.data)) {
+        return res.data
+      }
+    } catch (_) {
+      // Fallback bên dưới nếu có lỗi mạng
+    }
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const res = await this.getHistory()
-    const list = Array.isArray(res.data) ? res.data : []
+    let list = []
+    try {
+      const res = await this.getHistory()
+      list = Array.isArray(res.data) ? res.data : []
+    } catch (_) {
+      list = []
+    }
+
     const notifications = []
+
+    // Kiểm tra tài khoản bị khóa từ localStorage
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
+        notifications.push({
+          _id: `lock_${user._id}`,
+          notifId: `account_locked_${user._id}`,
+          alertType: 'account_locked',
+          title: 'Tài khoản của bạn đang bị khóa!',
+          message: 'Tài khoản độc giả đã bị khóa do có sách quá hạn chưa hoàn tất trả hoặc theo quyết định của thủ thư. Vui lòng liên hệ thư viện để được giải quyết.',
+          time: new Date().toISOString(),
+          isUrgent: true,
+        })
+      }
+    } catch (_) {}
 
     list.forEach(item => {
       const dueDateStr = item.ngayTra || item.ngayHenTra
       let daysLeft = null
+      let soNgayTre = 0
       if (dueDateStr) {
         const due = new Date(dueDateStr)
         if (!isNaN(due.getTime())) {
           due.setHours(0, 0, 0, 0)
           daysLeft = Math.round((due - today) / (1000 * 60 * 60 * 24))
+          if (daysLeft < 0) {
+            soNgayTre = Math.abs(daysLeft)
+          }
         }
       }
 
       const notifTime = item.updatedAt || item.createdAt || item.ngayMuon || ''
+      const soLuong = item.soLuong || 1
+      if (item.trangThai === 'quá hạn' && soNgayTre <= 0) {
+        soNgayTre = 1
+      }
+      const tienPhat = soNgayTre * 5000 * soLuong
 
       // 1. THỦ THƯ ĐÃ DUYỆT YÊU CẦU MƯỢN SÁCH
       if (item.trangThai === 'đã duyệt') {
@@ -68,7 +108,7 @@ class MuonSachService {
           daysLeft,
           alertType: 'approved',
           title: 'Yêu cầu mượn đã được duyệt',
-          message: `Thủ thư đã duyệt yêu cầu mượn ${item.soLuong || 1} quyển. Vui lòng đến thư viện nhận sách!`,
+          message: `Thủ thư đã duyệt yêu cầu mượn ${soLuong} quyển sách "${item.TenSach || 'Sách mượn'}". Vui lòng đến thư viện nhận sách!`,
           time: notifTime,
         })
       }
@@ -124,11 +164,13 @@ class MuonSachService {
       else if (item.trangThai === 'quá hạn' || (daysLeft !== null && daysLeft < 0 && ['đang mượn', 'đang chờ trả', 'chờ gia hạn'].includes(item.trangThai))) {
         notifications.push({
           ...item,
-          notifId: `${item._id}_overdue_${item.ngayTra || ''}`,
+          notifId: `${item._id}_overdue_${dueDateStr || ''}`,
           daysLeft,
+          soNgayTre,
+          tienPhat,
           alertType: 'overdue',
-          title: 'Sách quá hạn trả',
-          message: daysLeft !== null && daysLeft < 0 ? `Đã quá hạn ${Math.abs(daysLeft)} ngày. Vui lòng trả sách sớm!` : 'Phiếu mượn đã quá hạn trả.',
+          title: 'Sách quá hạn trả!',
+          message: soNgayTre > 0 ? `Đã quá hạn ${soNgayTre} ngày (${soLuong} quyển). Phí phạt trễ hạn tạm tính: ${tienPhat.toLocaleString('vi-VN')} VNĐ (5.000đ/ngày/quyển). Vui lòng trả sách sớm!` : 'Phiếu mượn đã quá hạn trả.',
           time: notifTime,
         })
       }
@@ -147,7 +189,7 @@ class MuonSachService {
     })
 
     // Sắp xếp: Quá hạn & Đã duyệt lên trước, sau đó sắp hết hạn, từ chối
-    const priority = { overdue: 1, approved: 2, extension_approved: 2, soon: 3, rejected: 4, extension_rejected: 4 }
+    const priority = { account_locked: 0, overdue: 1, approved: 2, extension_approved: 2, soon: 3, rejected: 4, extension_rejected: 4 }
     return notifications.sort((a, b) => {
       const pDiff = (priority[a.alertType] || 99) - (priority[b.alertType] || 99)
       if (pDiff !== 0) return pDiff

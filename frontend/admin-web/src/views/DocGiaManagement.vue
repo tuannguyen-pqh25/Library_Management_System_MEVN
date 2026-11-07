@@ -652,6 +652,92 @@
       </div>
     </div>
 
+    <!-- ========== MODAL: Kết Quả Cấp Lại Mật Khẩu ========== -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header bg-success text-white px-4 py-3 border-0">
+            <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="resetPasswordModalLabel">
+              <i class="fas fa-check-circle fs-4"></i> Cấp Lại Mật Khẩu Thành Công
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4" v-if="resetResult">
+            <!-- Thông tin độc giả -->
+            <div class="bg-light p-3 rounded-3 mb-3 border">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Họ và tên:</span>
+                <strong class="text-dark">{{ resetResult.name }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Mã độc giả:</span>
+                <span class="badge bg-secondary font-monospace">{{ resetResult.maDocGia }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Email đăng nhập:</span>
+                <span class="text-dark fw-semibold">{{ resetResult.email || '—' }}</span>
+              </div>
+              <div class="d-flex justify-content-between" v-if="resetResult.phone">
+                <span class="text-muted small">Số điện thoại:</span>
+                <span class="text-dark fw-semibold">{{ resetResult.phone }}</span>
+              </div>
+            </div>
+
+            <!-- Khung Mật Khẩu Mới -->
+            <label class="form-label fw-bold text-dark small text-uppercase mb-2">
+              <i class="fas fa-key text-warning me-1"></i> Mật khẩu mới vừa cấp:
+            </label>
+            <div class="input-group mb-3">
+              <input
+                type="text"
+                readonly
+                class="form-control font-monospace fs-5 fw-bold text-center bg-white text-primary border-primary border-2"
+                :value="resetResult.newPassword"
+              />
+              <button
+                class="btn btn-primary px-3 d-flex align-items-center gap-1"
+                type="button"
+                @click="copyPassword"
+                :title="isCopied ? 'Đã sao chép' : 'Sao chép mật khẩu'"
+              >
+                <i class="fas" :class="isCopied ? 'fa-check' : 'fa-copy'"></i>
+                <span>{{ isCopied ? 'Đã chép' : 'Sao chép' }}</span>
+              </button>
+            </div>
+
+            <!-- Cảnh báo nếu tài khoản đang bị khóa -->
+            <div v-if="resetResult.isLocked" class="alert alert-danger d-flex align-items-start gap-2 rounded-3 mb-3 py-2 px-3 small">
+              <i class="fas fa-exclamation-triangle mt-1 fs-5 text-danger flex-shrink-0"></i>
+              <div>
+                <strong class="text-danger">Tài khoản này đang ở trạng thái BỊ KHÓA!</strong>
+                <p class="mb-0 text-dark">Độc giả sẽ không thể đăng nhập được khi bị khóa. Hãy mở khóa tài khoản để độc giả sử dụng được mật khẩu mới.</p>
+              </div>
+            </div>
+
+            <!-- Hướng dẫn đăng nhập -->
+            <div class="alert alert-info py-2 px-3 rounded-3 small mb-0 d-flex gap-2 align-items-start">
+              <i class="fas fa-info-circle mt-1 text-info flex-shrink-0"></i>
+              <div class="text-muted">
+                Độc giả có thể đăng nhập tại Cổng độc giả bằng <strong>Email</strong> hoặc <strong>Số điện thoại</strong>. Nhắc độc giả tắt bộ gõ tiếng Việt Telex khi gõ ký tự <code>@</code> hoặc <code>aA</code> để tránh bị biến thành ký tự có dấu.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0 px-4 py-3">
+            <button
+              v-if="resetResult && resetResult.isLocked"
+              type="button"
+              class="btn btn-success me-auto"
+              @click="unlockFromResetModal"
+              :disabled="actionLoading"
+            >
+              <i class="fas fa-unlock me-1"></i> Mở khóa tài khoản ngay
+            </button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -850,14 +936,61 @@ const unlockAccount = async (dg) => {
   }
 }
 
+// =========== RESET PASSWORD MODAL ===========
+const resetResult = ref(null)
+const isCopied = ref(false)
+
+const copyPassword = async () => {
+  if (!resetResult.value?.newPassword) return
+  try {
+    await navigator.clipboard.writeText(resetResult.value.newPassword)
+    isCopied.value = true
+    setTimeout(() => { isCopied.value = false }, 2500)
+  } catch (err) {
+    console.error('Không thể sao chép mật khẩu:', err)
+  }
+}
+
 const resetPassword = async (dg) => {
-  if (!confirm(`Bạn có chắc muốn cấp lại mật khẩu cho độc giả ${getFullName(dg)} về mặc định không?`)) return
+  if (!dg) return
+  if (!confirm(`Bạn có chắc muốn cấp lại mật khẩu cho độc giả ${getFullName(dg)} về mặc định (123456aA@) không?`)) return
   actionLoading.value = true
   try {
     const res = await DocGiaService.resetPassword(dg._id)
-    showToast(`Đã cấp lại mật khẩu thành công. Mật khẩu mới: ${res.data.newPassword}`, 'success')
+    const newPassword = res.data?.newPassword || '123456aA@'
+
+    closeModal('detailModal')
+
+    resetResult.value = {
+      _id: dg._id,
+      name: getFullName(dg),
+      maDocGia: dg.MaDocGia,
+      email: dg.Email,
+      phone: dg.DienThoai,
+      newPassword,
+      isLocked: dg.TrangThaiTaiKhoan === 'BiKhoa'
+    }
+    isCopied.value = false
+    openModal('resetPasswordModal')
   } catch (error) {
     showToast(error.response?.data?.message || 'Không thể cấp lại mật khẩu.', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const unlockFromResetModal = async () => {
+  if (!resetResult.value?._id) return
+  actionLoading.value = true
+  try {
+    await DocGiaService.toggleAccountStatus(resetResult.value._id, {
+      TrangThaiTaiKhoan: 'BinhThuong'
+    })
+    resetResult.value.isLocked = false
+    showToast('Đã mở khóa tài khoản độc giả thành công!', 'success')
+    await fetchDocGia()
+  } catch (error) {
+    showToast(error.response?.data?.message || 'Không thể mở khóa tài khoản.', 'error')
   } finally {
     actionLoading.value = false
   }

@@ -21,8 +21,11 @@
           <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis px-3 py-2 fw-semibold border border-primary-subtle">
             <i class="fas fa-book-reader me-1"></i> Đang mượn: {{ countStatus('đã duyệt') + countStatus('đang mượn') }}
           </span>
-          <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis px-3 py-2 fw-semibold border border-danger-subtle">
+          <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis px-3 py-2 fw-semibold border border-secondary-subtle">
             <i class="fas fa-clock me-1"></i> Chờ trả: {{ countStatus('đang chờ trả') }}
+          </span>
+          <span class="badge rounded-pill bg-danger text-white px-3 py-2 fw-semibold border border-danger shadow-sm">
+            <i class="fas fa-exclamation-triangle me-1"></i> Quá hạn: {{ countStatus('quá hạn') }}
           </span>
         </div>
       </div>
@@ -197,7 +200,7 @@
                     </button>
 
                     <!-- Action dropdown -->
-                    <template v-if="getActionOptions(record.trangThai).length > 0">
+                    <template v-if="getActionOptions(record.trangThai, record).length > 0">
                       <select
                         class="form-select form-select-sm action-select"
                         v-model="actionSelected[record._id]"
@@ -205,7 +208,7 @@
                       >
                         <option value="" disabled>--- Chọn ---</option>
                         <option
-                          v-for="opt in getActionOptions(record.trangThai)"
+                          v-for="opt in getActionOptions(record.trangThai, record)"
                           :key="opt.value"
                           :value="opt.value"
                         >{{ opt.label }}</option>
@@ -471,9 +474,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Modal, Toast } from 'bootstrap'
 import MuonSachService from '@/services/muonsach.service'
+import DocGiaService from '@/services/docgia.service'
 
 // =================== STATE ===================
 const records = ref([])
@@ -506,7 +510,7 @@ const toastVariant = ref('success')
 
 // =================== COMPUTED ===================
 /** Danh sách action options tùy trạng thái phiếu */
-const getActionOptions = (trangThai) => {
+const getActionOptions = (trangThai, record = null) => {
   switch (trangThai) {
     case 'chờ duyệt':
       return [
@@ -524,9 +528,15 @@ const getActionOptions = (trangThai) => {
         { value: 'confirm-return', label: 'Xác nhận trả' },
       ]
     case 'đang mượn':
+      return [
+        { value: 'confirm-return', label: 'Xác nhận trả' },
+      ]
     case 'quá hạn':
       return [
         { value: 'confirm-return', label: 'Xác nhận trả' },
+        record?.TrangThaiTaiKhoan === 'BiKhoa'
+          ? { value: 'unlock-account', label: 'Mở khóa tài khoản' }
+          : { value: 'lock-account',   label: 'Khóa tài khoản' },
       ]
     case 'đang chờ trả':
       return [
@@ -539,8 +549,8 @@ const getActionOptions = (trangThai) => {
 
 /** Màu nút Thực hiện theo action đang chọn */
 const getExecBtnClass = (action) => {
-  if (action === 'approve' || action === 'approve-extend') return 'btn-success text-white'
-  if (action === 'reject' || action === 'reject-extend')   return 'btn-danger text-white'
+  if (action === 'approve' || action === 'approve-extend' || action === 'unlock-account') return 'btn-success text-white'
+  if (action === 'reject' || action === 'reject-extend' || action === 'lock-account')   return 'btn-danger text-white'
   if (action === 'handover')       return 'btn-primary text-white'
   if (action === 'confirm-return') return 'btn-warning text-dark'
   return 'btn-secondary'
@@ -620,6 +630,38 @@ const openRejectModal = (record, fromDetail = false, isExtension = false) => {
 }
 
 const handleAction = async (record, action, fromDetail = false) => {
+  if (action === 'lock-account') {
+    if (!confirm(`Bạn có chắc muốn KHÓA TÀI KHOẢN độc giả "${record.TenDocGia}" do quá hạn mượn sách không?`)) return
+    processingId.value = record._id
+    try {
+      await DocGiaService.toggleAccountStatus(record.docGiaId, { TrangThaiTaiKhoan: 'BiKhoa', LyDoKhoa: 'Quá hạn mượn sách' })
+      showToast(`Đã khóa tài khoản độc giả ${record.TenDocGia}!`, 'warning')
+      record.TrangThaiTaiKhoan = 'BiKhoa'
+      await fetchRecords(filterStatus.value)
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Không thể khóa tài khoản độc giả!', 'danger')
+    } finally {
+      processingId.value = null
+    }
+    return
+  }
+
+  if (action === 'unlock-account') {
+    if (!confirm(`Mở khóa tài khoản cho độc giả "${record.TenDocGia}"?`)) return
+    processingId.value = record._id
+    try {
+      await DocGiaService.toggleAccountStatus(record.docGiaId, { TrangThaiTaiKhoan: 'BinhThuong' })
+      showToast(`Đã mở khóa tài khoản cho độc giả ${record.TenDocGia}!`, 'success')
+      record.TrangThaiTaiKhoan = 'BinhThuong'
+      await fetchRecords(filterStatus.value)
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Không thể mở khóa tài khoản độc giả!', 'danger')
+    } finally {
+      processingId.value = null
+    }
+    return
+  }
+
   let actionLabel = 'Duyệt'
   if (action === 'confirm-return') actionLabel = 'Xác nhận trả'
   if (action === 'handover') actionLabel = 'Giao'
@@ -745,12 +787,24 @@ const showToast = (message, variant = 'success') => {
 }
 
 // =================== LIFECYCLE ===================
+let tablePollingTimer = null
+const handleFocus = () => {
+  fetchRecords(filterStatus.value)
+}
+
 onMounted(async () => {
   detailModalInst = new Modal(document.getElementById('detailModal'))
   rejectModalInst = new Modal(document.getElementById('tuChoiModal'))
   toastInst = new Toast(document.getElementById('muonSachToast'), { delay: 3000 })
 
   await fetchRecords()
+  tablePollingTimer = setInterval(() => fetchRecords(filterStatus.value), 15000)
+  window.addEventListener('focus', handleFocus)
+})
+
+onBeforeUnmount(() => {
+  if (tablePollingTimer) clearInterval(tablePollingTimer)
+  window.removeEventListener('focus', handleFocus)
 })
 </script>
 

@@ -12,6 +12,7 @@ router.route("/")
     .post(muonsach.create);
 
 router.get("/lich-su", muonsach.getHistory);
+router.get("/thong-bao", muonsach.getNotifications);
 router.post("/:id/request-return", muonsach.requestReturn);
 router.post("/:id/gia-han", muonsach.requestExtension);
 
