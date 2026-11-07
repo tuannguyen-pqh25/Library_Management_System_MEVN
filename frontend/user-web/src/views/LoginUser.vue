@@ -31,13 +31,26 @@
               required
             />
 
-            <BaseInput
-              v-model="form.Password"
-              label="Mật khẩu"
-              type="password"
-              placeholder="••••••••"
-              required
-            />
+            <div class="mb-3">
+              <label class="form-label font-body fw-medium text-dark">Mật khẩu</label>
+              <div class="input-group">
+                <input
+                  v-model="form.Password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-control rounded-start-3 shadow-none border"
+                  placeholder="Nhập mật khẩu..."
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary rounded-end-3"
+                  @click="showPassword = !showPassword"
+                  :title="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+                >
+                  <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
+              </div>
+            </div>
 
             <div v-if="errorMessage" class="alert alert-danger py-2 mb-3 font-body small">
               {{ errorMessage }}
@@ -109,6 +122,7 @@ const form = reactive({
 
 const errorMessage = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
 
 onMounted(() => {
   if (route.query.error) {
@@ -121,7 +135,10 @@ const handleLogin = async () => {
   loading.value = true
 
   try {
-    await AuthService.login(form)
+    await AuthService.login({
+      Email: form.Email.trim(),
+      Password: form.Password
+    })
     eventBus.emit('auth-change') // Báo AppHeader reload trạng thái đăng nhập
     router.push('/sach')
   } catch (error) {

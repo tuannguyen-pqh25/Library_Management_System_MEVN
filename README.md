@@ -102,10 +102,12 @@ The system addresses the operational bottlenecks of traditional physical library
   8. *Administrative Analytics*: Real-time KPI aggregation and Dashboard verification.
 - **Automated Verification**: Executable via standard `npm test` inside `BACKEND` or `node tests/run-api-tests.js`.
 
-### 🔔 6. Deterministic In-App Notification System
-- **Deterministic ID Generation**: Overcomes the common single-page app defect where refresh (F5) re-increments notification badges. Generates immutable event identifiers:
-  `${item._id}_approved`, `${item._id}_ext_approved_${count}`, `${item._id}_overdue_${date}`.
-- **Zero-Backend Polling**: Client computes notifications from existing loan records on a 5-minute interval, drastically reducing backend load.
+### 🔔 6. Deterministic In-App Notification System & Dynamic Overdue Fines
+- **Deterministic ID Generation**: Overcomes the common single-page app defect where refresh (F5) or status transitions re-increment or falsely clear notification badges. Generates immutable event identifiers:
+  `${item._id}_approved`, `${item._id}_ext_approved_${count}`, `${item._id}_overdue_${date}`, `account_locked_${docGiaId}`.
+- **Dynamic Overdue Fine Calculation**: Computes penalty costs in real-time (`days_overdue * 5,000 VND * book_quantity`) rendered natively inside overdue notifications.
+- **Account Suspension & Live Approval Alerts**: Real-time floating approval toasts and distinct red badges when accounts are suspended by staff due to overdue violations.
+- **Low-Latency Polling**: 8-second interval synchronized with window `focus` events for instant tab updates.
 
 ### 🎙️ 7. Browser-Native Voice Search (AI Speech)
 - **Web Speech API Integration**: Browser-native speech recognition supporting Vietnamese (`vi-VN`) in both User Web and Admin Web search bars.
@@ -295,8 +297,10 @@ Dự án **Quản Lý Đăng Ký Mượn Trả Sách Trực Tuyến (Library Man
    - Script Node.js độc lập (`tests/run-api-tests.js`) kiểm thử liên hoàn 9 nhóm nghiệp vụ không cần framework bên ngoài cồng kềnh.
    - Kiểm chứng tự động: Kết nối, Đăng ký/Đăng nhập kép, RBAC 3 vai trò (chặn chéo 403), CRUD Sách/NXB, Ràng buộc đánh giá trước mượn (400), Chống Overbooking nguyên tử (400), Gia hạn hợp lệ, Hoàn kho khi trả sách, Khóa/Mở và Xóa tài khoản độc giả.
    - Kiểm thử dễ dàng qua lệnh tiêu chuẩn `npm test` trong thư mục `BACKEND` hoặc file `tests/run-tests.bat`.
-8. **Khắc Phục Triệt Để Lỗi Nhảy Lại Badge Chuông Thông Báo (Deterministic ID)**:
-   - Chuẩn hóa mã thông báo thành chuỗi bất biến không chứa timestamp biến đổi (`${item._id}_approved`), giải quyết dứt điểm lỗi F5 tải lại trang làm badge nhảy số lại.
+8. **Khắc Phục Triệt Để Lỗi Badge Thông Báo & Tính Phí Phạt Trễ Hạn Tự Động**:
+   - Chuẩn hóa mã thông báo thành chuỗi định danh đơn trị (`notifId`), giải quyết triệt để lỗi đánh dấu nhầm "đã đọc" khi chuyển trạng thái mượn sách.
+   - Tự động tính toán phí phạt trễ hạn theo công thức quy định: `Số ngày trễ * 5.000 VNĐ * Số lượng`, hiển thị chi tiết số tiền phạt cụ thể.
+   - Bổ sung thông báo trực quan khi tài khoản bị khóa (`account_locked`), toast nổi khi thủ thư duyệt sách, và đồng bộ tự động mỗi 8 giây kết hợp khi chuyển tab (`window.focus`).
 9. **Đăng Nhập Linh Hoạt & Ủy Quyền OAuth 2.0 (Google)**:
    - Cho phép người dùng đăng nhập bằng **Email hoặc Số điện thoại** kết hợp mật khẩu Bcrypt.
    - Tích hợp Passport.js Google OAuth 2.0 (Dự án ASALib) cấp phát JWT nội bộ an toàn. Cung cấp chế độ Mock OAuth phục vụ phát triển offline.

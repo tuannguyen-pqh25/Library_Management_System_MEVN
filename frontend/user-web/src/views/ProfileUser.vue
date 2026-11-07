@@ -3,19 +3,65 @@
     <div class="container">
       <div class="row g-4">
         <div class="col-lg-5">
-          <div class="card-surface p-4 h-100">
-            <h3 class="fw-bold mb-3">Hồ sơ cá nhân</h3>
+          <div class="card-surface p-4">
+            <h3 class="fw-bold mb-3 text-dark">Hồ sơ cá nhân</h3>
             <div v-if="profile" class="mb-3">
               <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-2" style="width: 72px; height: 72px; font-size: 1.5rem;">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-2 shadow-sm" style="width: 72px; height: 72px; font-size: 1.5rem;">
                   <i class="fa-solid fa-user"></i>
                 </div>
-                <h4 class="mb-1">{{ profile.HoLot || '' }} {{ profile.Ten || '' }}</h4>
+                <h4 class="mb-1 text-dark">{{ profile.HoLot || '' }} {{ profile.Ten || '' }}</h4>
                 <p class="text-muted-custom mb-0">{{ profile.Email || 'Chưa cập nhật email' }}</p>
               </div>
             </div>
 
             <div class="text-muted-custom small">Mã độc giả: {{ profile?.MaDocGia || '—' }}</div>
+          </div>
+
+          <!-- TÙY CHỌN GIAO DIỆN SÁNG / TỐI -->
+          <div class="card-surface p-4 mt-4">
+            <h4 class="fw-bold mb-3 text-dark">
+              <i class="fas fa-palette me-2 text-primary"></i>Giao diện hiển thị
+            </h4>
+            <p class="text-muted-custom small mb-3">Tùy chọn màu sắc giao diện phù hợp với môi trường sử dụng.</p>
+
+            <div class="d-flex flex-column gap-2">
+              <div
+                class="p-3 border rounded-3 d-flex align-items-center justify-content-between transition-all"
+                :class="{ 'border-primary bg-primary bg-opacity-10': !isDark }"
+                style="cursor: pointer;"
+                @click="setTheme('light')"
+              >
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-circle bg-white p-2 text-warning d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="fas fa-sun"></i>
+                  </div>
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 0.9rem;">Chế độ Sáng (Light)</div>
+                    <small class="text-muted-custom">Tươi sáng, tối ưu ban ngày</small>
+                  </div>
+                </div>
+                <i v-if="!isDark" class="fas fa-check-circle text-primary fs-5"></i>
+              </div>
+
+              <div
+                class="p-3 border rounded-3 d-flex align-items-center justify-content-between transition-all"
+                :class="{ 'border-primary bg-primary bg-opacity-10': isDark }"
+                style="cursor: pointer;"
+                @click="setTheme('dark')"
+              >
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-circle bg-dark p-2 text-warning d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="fas fa-moon"></i>
+                  </div>
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 0.9rem;">Chế độ Tối (Dark)</div>
+                    <small class="text-muted-custom">Dịu mắt, tiết kiệm pin ban đêm</small>
+                  </div>
+                </div>
+                <i v-if="isDark" class="fas fa-check-circle text-primary fs-5"></i>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -69,16 +115,39 @@
           </div>
 
           <div class="card-surface p-4 mt-4">
-            <h3 class="fw-bold mb-3">Đổi mật khẩu</h3>
+            <h3 class="fw-bold mb-3 text-dark">Đổi mật khẩu</h3>
             <form @submit.prevent="changePassword">
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="form-label fw-semibold">Mật khẩu hiện tại</label>
-                  <input v-model="passwordForm.currentPassword" type="password" class="form-control" required />
+                  <div class="input-group">
+                    <input
+                      v-model="passwordForm.currentPassword"
+                      :type="showCurrentPassword ? 'text' : 'password'"
+                      class="form-control"
+                      placeholder="Nhập mật khẩu đang dùng"
+                      required
+                    />
+                    <button class="btn btn-outline-secondary" type="button" @click="showCurrentPassword = !showCurrentPassword">
+                      <i :class="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label fw-semibold">Mật khẩu mới</label>
-                  <input v-model="passwordForm.newPassword" type="password" class="form-control" required />
+                  <div class="input-group">
+                    <input
+                      v-model="passwordForm.newPassword"
+                      :type="showNewPassword ? 'text' : 'password'"
+                      class="form-control"
+                      placeholder="Tối thiểu 6 ký tự"
+                      minlength="6"
+                      required
+                    />
+                    <button class="btn btn-outline-secondary" type="button" @click="showNewPassword = !showNewPassword">
+                      <i :class="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -87,7 +156,9 @@
               </div>
 
               <div class="d-flex justify-content-end mt-4">
-                <button type="submit" class="btn btn-outline-primary">Đổi mật khẩu</button>
+                <button type="submit" class="btn btn-outline-primary">
+                  <i class="fas fa-key me-1"></i>Đổi mật khẩu
+                </button>
               </div>
             </form>
           </div>
@@ -99,6 +170,7 @@
 
 <script>
 import ProfileService from '@/services/profile.service'
+import { getSavedTheme, applyTheme } from '@/services/theme.service'
 
 export default {
   name: 'ProfileUser',
@@ -118,6 +190,9 @@ export default {
         currentPassword: '',
         newPassword: '',
       },
+      showCurrentPassword: false,
+      showNewPassword: false,
+      isDark: getSavedTheme() === 'dark',
       profileMessage: '',
       profileMessageType: 'success',
       passwordMessage: '',
@@ -126,8 +201,19 @@ export default {
   },
   async created() {
     await this.loadProfile()
+    window.addEventListener('theme-change', this.handleThemeEvent)
+  },
+  unmounted() {
+    window.removeEventListener('theme-change', this.handleThemeEvent)
   },
   methods: {
+    handleThemeEvent(e) {
+      this.isDark = e.detail?.theme === 'dark'
+    },
+    setTheme(theme) {
+      applyTheme(theme)
+      this.isDark = theme === 'dark'
+    },
     async loadProfile() {
       try {
         const response = await ProfileService.getProfile()
@@ -173,3 +259,12 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.transition-all {
+  transition: all 0.2s ease;
+}
+.transition-all:hover {
+  transform: translateY(-2px);
+}
+</style>

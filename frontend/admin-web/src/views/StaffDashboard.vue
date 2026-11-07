@@ -11,7 +11,7 @@
             Tổng quan hệ thống thư viện — Cập nhật lúc {{ lastUpdated }}
           </p>
         </div>
-        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="fetchStats" :disabled="loading">
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="fetchStats(true)" :disabled="loading">
           <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loading }"></i>
           Làm mới
         </button>
@@ -622,17 +622,21 @@ function buildBarChart(topSach) {
 }
 
 // ========== Data fetching ==========
-const fetchStats = async () => {
-  loading.value = true
+let refreshTimer = null
+
+const fetchStats = async (isManual = false) => {
+  if (isManual) {
+    loading.value = true
+    destroyCharts()
+  }
   error.value = null
-  destroyCharts()
 
   try {
-    const res = await DashboardService.getStats(selectedRange.value)
+    const res = await DashboardService.getStats(selectedRange.value, isManual ? { fresh: true } : {})
     stats.value = res.data
 
     const now = new Date()
-    lastUpdated.value = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    lastUpdated.value = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
     loading.value = false
     await nextTick()
@@ -642,7 +646,9 @@ const fetchStats = async () => {
     buildBarChart(stats.value.topSach)
   } catch (err) {
     loading.value = false
-    error.value = err.response?.data?.message || err.message || 'Lỗi không xác định'
+    if (isManual) {
+      error.value = err.response?.data?.message || err.message || 'Lỗi không xác định'
+    }
   }
 }
 
@@ -666,8 +672,21 @@ const onSelectRange = async (rangeVal) => {
   }
 }
 
-onMounted(fetchStats)
-onBeforeUnmount(destroyCharts)
+const handleWindowFocus = () => {
+  fetchStats(false)
+}
+
+onMounted(() => {
+  fetchStats(true)
+  refreshTimer = setInterval(() => fetchStats(false), 15000)
+  window.addEventListener('focus', handleWindowFocus)
+})
+
+onBeforeUnmount(() => {
+  destroyCharts()
+  if (refreshTimer) clearInterval(refreshTimer)
+  window.removeEventListener('focus', handleWindowFocus)
+})
 </script>
 
 <style scoped>

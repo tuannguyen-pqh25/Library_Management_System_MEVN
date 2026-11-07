@@ -8,25 +8,43 @@ const Redis = require("../../utils/redis.util");
  */
 exports.getStats = async (req, res, next) => {
     try {
+        const isFresh = req.query.fresh === "true" || req.query.fresh === "1";
         const validRanges = ["7d", "14d", "1m", "3m", "6m"];
         const range = validRanges.includes(req.query.range) ? req.query.range : "6m";
         const cacheKey = `admin:dashboard:stats:${range}`;
-        const cachedData = await Redis.get(cacheKey);
 
-        if (cachedData) {
-            return res.status(200).json(cachedData);
+        if (isFresh) {
+            await Redis.del("admin:dashboard:stats");
         }
+
         const db = MongoDB.client.db();
         const MuonSach = db.collection("THEODOIMUONSACH");
         const Sach = db.collection("SACH");
         const DocGia = db.collection("DOCGIA");
 
         // Tự động cập nhật trạng thái quá hạn trước khi tính
-        const today = new Date().toISOString();
-        await MuonSach.updateMany(
-            { trangThai: { $in: ["đang mượn", "đã duyệt"] }, ngayTra: { $lt: today } },
+        const todayDateStr = new Date().toLocaleDateString('en-CA');
+        const todayIso = new Date().toISOString();
+        const overdueUpdate = await MuonSach.updateMany(
+            {
+                trangThai: { $in: ["đang mượn", "đã duyệt", "chờ gia hạn"] },
+                $or: [
+                    { ngayTra: { $lt: todayDateStr } },
+                    { ngayTra: { $lt: todayIso } }
+                ]
+            },
             { $set: { trangThai: "quá hạn" } }
         );
+        if (overdueUpdate && overdueUpdate.modifiedCount > 0) {
+            await Redis.del("admin:dashboard:stats");
+        }
+
+        if (!isFresh) {
+            const cachedData = await Redis.get(cacheKey);
+            if (cachedData) {
+                return res.status(200).json(cachedData);
+            }
+        }
 
         // Tính ngày bắt đầu và nhóm thống kê dựa trên range (7d, 14d, 1m, 3m, 6m)
         const now = new Date();
@@ -199,7 +217,7 @@ exports.getStats = async (req, res, next) => {
             isDayGroup,
         };
 
-        await Redis.set(cacheKey, responseData, 300);
+        await Redis.set(cacheKey, responseData, 30);
 
         return res.status(200).json(responseData);
     } catch (error) {

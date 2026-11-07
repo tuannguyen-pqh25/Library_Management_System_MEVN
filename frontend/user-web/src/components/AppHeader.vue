@@ -122,8 +122,11 @@
 
                     <!-- Book thumbnail -->
                     <div class="notif-thumb flex-shrink-0">
+                      <div v-if="item.alertType === 'account_locked'" class="notif-thumb-placeholder bg-danger">
+                        <i class="fas fa-user-lock text-white"></i>
+                      </div>
                       <img
-                        v-if="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
+                        v-else-if="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
                         :src="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
                         :alt="item.TenSach"
                         class="notif-thumb-img"
@@ -137,12 +140,18 @@
                     <!-- Info -->
                     <div class="min-w-0 flex-grow-1">
                       <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
-                        <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.TenSach">
-                          {{ item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn' }}
+                        <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : item.TenSach">
+                          {{ item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : (item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn') }}
                         </p>
                         <!-- Chip / Badge -->
                         <span
-                          v-if="item.alertType === 'approved'"
+                          v-if="item.alertType === 'account_locked'"
+                          class="notif-chip chip-overdue flex-shrink-0"
+                        >
+                          <i class="fas fa-lock me-1"></i>Bị khóa
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'approved'"
                           class="notif-chip chip-approved flex-shrink-0"
                         >
                           <i class="fas fa-check me-1"></i>Đã duyệt
@@ -179,12 +188,16 @@
                         </span>
                       </div>
 
-                      <p class="mb-1 text-muted" style="font-size:0.75rem;">
+                      <p v-if="item.alertType !== 'account_locked'" class="mb-1 text-muted" style="font-size:0.75rem;">
                         Số lượng: <strong>{{ item.soLuong || 1 }}</strong> quyển
                       </p>
 
                       <!-- Specific Message -->
-                      <p v-if="item.alertType === 'approved'" class="mb-0 text-success fw-medium d-flex align-items-center gap-1" style="font-size:0.74rem; line-height: 1.3;">
+                      <p v-if="item.alertType === 'account_locked'" class="mb-0 text-danger fw-semibold" style="font-size:0.74rem; line-height: 1.35;">
+                        <i class="fas fa-ban me-1"></i>
+                        <span>{{ item.message || 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ thủ thư để được mở khóa.' }}</span>
+                      </p>
+                      <p v-else-if="item.alertType === 'approved'" class="mb-0 text-success fw-medium d-flex align-items-center gap-1" style="font-size:0.74rem; line-height: 1.3;">
                         <i class="fas fa-store"></i>
                         <span>Thủ thư đã duyệt! Hãy đến nhận sách.</span>
                       </p>
@@ -202,14 +215,18 @@
                       </p>
                       <p v-else-if="item.alertType === 'overdue'" class="mb-0 text-danger fw-medium" style="font-size:0.74rem;">
                         <i class="fas fa-exclamation-circle me-1"></i>
-                        Quá hạn {{ item.daysLeft < 0 ? Math.abs(item.daysLeft) + ' ngày' : '' }}
+                        Quá hạn {{ item.soNgayTre ? item.soNgayTre + ' ngày' : (item.daysLeft < 0 ? Math.abs(item.daysLeft) + ' ngày' : '') }}
                       </p>
+                      <div v-if="item.alertType === 'overdue' && (item.tienPhat || item.soNgayTre)" class="mt-1 fw-bold text-danger d-flex align-items-center gap-1" style="font-size:0.74rem;">
+                        <i class="fas fa-coins text-warning"></i>
+                        <span>Phí phạt trễ hạn: {{ (item.tienPhat || (item.soNgayTre * 5000 * (item.soLuong || 1))).toLocaleString('vi-VN') }} VNĐ</span>
+                      </div>
                       <p v-else-if="item.alertType === 'soon'" class="mb-0 text-warning-emphasis" style="font-size:0.74rem;">
                         <i class="fas fa-hourglass-half me-1"></i>
                         {{ item.daysLeft === 0 ? 'Hết hạn hôm nay' : 'Hết hạn sau ' + item.daysLeft + ' ngày' }}
                       </p>
 
-                      <div class="d-flex align-items-center justify-content-between mt-1 text-muted" style="font-size:0.7rem;">
+                      <div v-if="item.ngayTra && item.alertType !== 'account_locked'" class="d-flex align-items-center justify-content-between mt-1 text-muted" style="font-size:0.7rem;">
                         <span><i class="far fa-calendar-alt me-1"></i>Hạn trả: {{ formatDate(item.ngayTra) }}</span>
                       </div>
                     </div>
@@ -247,12 +264,12 @@
 
           <!-- Auth user dropdown -->
           <template v-if="currentUser">
-            <div class="dropdown user-dropdown-container">
+            <div class="dropdown user-dropdown-container position-relative" ref="userDropdownRef">
               <button
                 class="btn btn-user-profile d-flex align-items-center gap-2 rounded-pill ps-1 pe-3 py-1 border-0"
                 type="button"
                 id="userDropdown"
-                @click="userDropdownOpen = !userDropdownOpen"
+                @click.stop="toggleUserDropdown"
                 :aria-expanded="userDropdownOpen"
               >
                 <div class="user-avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle flex-shrink-0">
@@ -265,54 +282,66 @@
                 <i class="fas fa-chevron-down text-muted-custom ms-1 d-none d-sm-block" style="font-size:0.7rem;"></i>
               </button>
 
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-light rounded-4 mt-3 p-2 user-dropdown bg-white" :class="{ show: userDropdownOpen }" aria-labelledby="userDropdown">
-                <!-- User info card inside dropdown -->
-                <li class="px-3 pt-2 pb-3 mb-2 border-bottom">
-                  <div class="d-flex align-items-center gap-3">
-                    <div class="user-avatar-lg bg-primary bg-gradient text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm">
-                      {{ userInitial }}
-                    </div>
-                    <div class="min-w-0">
-                      <div class="fw-bold text-dark text-truncate" style="font-size:1rem;">{{ displayName }}</div>
-                      <div class="text-muted-custom text-truncate" style="font-size:0.8rem;">Độc giả thư viện</div>
+              <transition name="user-drop">
+                <div
+                  v-if="userDropdownOpen"
+                  class="user-dropdown-panel shadow-lg rounded-4 p-2 bg-white border position-absolute"
+                  id="userDropdownPanel"
+                  @click.stop
+                >
+                  <!-- User info card inside dropdown -->
+                  <div class="px-3 pt-2 pb-3 mb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="user-avatar-lg bg-primary bg-gradient text-white fw-bold d-flex align-items-center justify-content-center rounded-circle shadow-sm">
+                        {{ userInitial }}
+                      </div>
+                      <div class="min-w-0">
+                        <div class="fw-bold text-dark text-truncate" style="font-size:1rem;">{{ displayName }}</div>
+                        <div class="text-muted-custom text-truncate" style="font-size:0.8rem;">Độc giả thư viện</div>
+                      </div>
                     </div>
                   </div>
-                </li>
 
-                <li>
-                  <router-link class="dropdown-item rounded-3 py-2 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary" to="/profile" active-class="active text-primary">
+                  <router-link class="dropdown-custom-item rounded-3 py-2 px-3 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary text-decoration-none" to="/profile" @click="userDropdownOpen = false">
                     <span class="menu-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-user"></i></span>
                     Tài khoản của tôi
                   </router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item rounded-3 py-2 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary" to="/lich-su" active-class="active text-info">
+                  <router-link class="dropdown-custom-item rounded-3 py-2 px-3 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary text-decoration-none" to="/lich-su" @click="userDropdownOpen = false">
                     <span class="menu-icon bg-info bg-opacity-10 text-info"><i class="fas fa-history"></i></span>
                     Lịch sử mượn
                   </router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item rounded-3 py-2 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary" to="/gio-muon" active-class="active text-primary">
+                  <router-link class="dropdown-custom-item rounded-3 py-2 px-3 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary text-decoration-none" to="/gio-muon" @click="userDropdownOpen = false">
                     <span class="menu-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-shopping-basket"></i></span>
                     Giỏ mượn
                     <span v-if="cartCount > 0" class="badge bg-primary ms-auto rounded-pill shadow-sm">{{ cartCount }}</span>
                   </router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item rounded-3 py-2 mb-2 d-flex align-items-center gap-3 fw-medium text-secondary" to="/yeuthich" active-class="active text-danger">
+                  <router-link class="dropdown-custom-item rounded-3 py-2 px-3 mb-1 d-flex align-items-center gap-3 fw-medium text-secondary text-decoration-none" to="/yeuthich" @click="userDropdownOpen = false">
                     <span class="menu-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-heart"></i></span>
                     Sách yêu thích
                     <span v-if="wishlistCount > 0" class="badge bg-danger ms-auto rounded-pill shadow-sm">{{ wishlistCount }}</span>
                   </router-link>
-                </li>
-                <li><div class="dropdown-divider my-2 opacity-25"></div></li>
-                <li>
-                  <button class="dropdown-item rounded-3 py-2 text-danger fw-bold d-flex align-items-center gap-3 mt-1" @click="handleLogout">
+
+                  <!-- Theme toggle switch -->
+                  <div class="dropdown-divider my-2 opacity-25"></div>
+                  <div class="dropdown-custom-item rounded-3 py-2 px-3 mb-1 d-flex align-items-center justify-content-between text-secondary" @click="handleToggleTheme" role="button">
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="menu-icon" :class="isDark ? 'bg-warning bg-opacity-10 text-warning' : 'bg-secondary bg-opacity-10 text-secondary'">
+                        <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
+                      </span>
+                      <span class="fw-medium" style="font-size:0.875rem;">{{ isDark ? 'Chế độ tối' : 'Chế độ sáng' }}</span>
+                    </div>
+                    <div class="form-check form-switch m-0 p-0 d-flex align-items-center">
+                      <input class="form-check-input ms-0" type="checkbox" role="switch" :checked="isDark" style="cursor: pointer;" @click.stop="handleToggleTheme">
+                    </div>
+                  </div>
+
+                  <div class="dropdown-divider my-2 opacity-25"></div>
+                  <button class="dropdown-custom-item rounded-3 py-2 px-3 text-danger fw-bold d-flex align-items-center gap-3 w-100 border-0 bg-transparent text-start" @click="handleLogout">
                     <span class="menu-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-sign-out-alt"></i></span>
                     Đăng xuất
                   </button>
-                </li>
-              </ul>
+                </div>
+              </transition>
             </div>
           </template>
 
@@ -421,6 +450,7 @@ import YeuThichService from '@/services/yeuthich.service'
 import CartService from '@/services/cart.service'
 import MuonSachService from '@/services/muonsach.service'
 import eventBus from '@/services/eventBus'
+import { getSavedTheme, toggleTheme } from '@/services/theme.service'
 
 export default {
   name: 'AppHeader',
@@ -431,6 +461,7 @@ export default {
       cartCount: 0,
       mobileMenuOpen: false,
       userDropdownOpen: false,
+      isDark: getSavedTheme() === 'dark',
       // Notification bell
       notifications: [],
       readNotifIds: [],
@@ -486,21 +517,19 @@ export default {
     },
     isNotifRead(item) {
       if (!item) return false
-      const id = item.notifId || item._id
-      if (this.readNotifIds.includes(id)) return true
-      const prefix = `${item._id}_${item.alertType}`
-      return this.readNotifIds.some(rId => rId === id || rId === item._id || rId.startsWith(prefix))
+      const id = String(item.notifId || item._id)
+      return this.readNotifIds.includes(id)
     },
     markAsRead(item) {
       if (!item) return
-      const id = item.notifId || item._id
-      if (!this.isNotifRead(item)) {
+      const id = String(item.notifId || item._id)
+      if (!this.readNotifIds.includes(id)) {
         this.readNotifIds = [...this.readNotifIds, id]
         this.saveReadNotifs()
       }
     },
     markAllAsRead() {
-      const allIds = this.notifications.map(n => n.notifId || n._id).filter(Boolean)
+      const allIds = this.notifications.map(n => String(n.notifId || n._id)).filter(Boolean)
       this.readNotifIds = Array.from(new Set([...this.readNotifIds, ...allIds]))
       this.saveReadNotifs()
     },
@@ -563,6 +592,7 @@ export default {
       }, 7000)
     },
     getNotifTooltip(item) {
+      if (item.alertType === 'account_locked') return 'Tài khoản độc giả đang bị khóa!'
       if (item.alertType === 'approved') return 'Bấm để xem lịch sử và chuẩn bị nhận sách'
       if (item.alertType === 'extension_approved') return 'Bấm để xem hạn trả mới'
       if (item.alertType === 'overdue' || item.daysLeft < 0) return 'Bấm để xem và xin trả sách'
@@ -580,6 +610,19 @@ export default {
         // Refresh data mỗi lần mở
         this.fetchNotifications()
       }
+    },
+    toggleUserDropdown() {
+      this.userDropdownOpen = !this.userDropdownOpen
+      if (this.userDropdownOpen) {
+        this.notifDropdownOpen = false
+      }
+    },
+    handleToggleTheme() {
+      const next = toggleTheme()
+      this.isDark = next === 'dark'
+    },
+    handleThemeEvent(e) {
+      this.isDark = e.detail?.theme === 'dark'
     },
     goToHistory() {
       this.notifDropdownOpen = false
@@ -603,8 +646,8 @@ export default {
     },
     closeDropdown(e) {
       if (this.userDropdownOpen) {
-        const container = this.$el.querySelector('.user-dropdown-container')
-        if (container && !container.contains(e.target)) {
+        const wrapper = this.$refs.userDropdownRef
+        if (wrapper && !wrapper.contains(e.target)) {
           this.userDropdownOpen = false
         }
       }
@@ -622,11 +665,12 @@ export default {
     eventBus.on('auth-change', this.updateUser)
     eventBus.on('wishlist-change', this.fetchWishlistCount)
     window.addEventListener('cart-updated', this.fetchCartCount)
+    window.addEventListener('theme-change', this.handleThemeEvent)
 
-    // Auto-refresh thông báo mỗi 20 giây để đồng bộ ngay khi thủ thư duyệt
+    // Auto-refresh thông báo mỗi 8 giây để đồng bộ ngay khi thủ thư duyệt
     this._notifTimer = setInterval(() => {
       if (this.currentUser) this.fetchNotifications()
-    }, 20 * 1000)
+    }, 8 * 1000)
 
     // Tự động refresh khi người dùng quay lại tab trình duyệt
     this._focusHandler = () => {
@@ -639,6 +683,7 @@ export default {
   },
   unmounted() {
     document.removeEventListener('click', this.closeDropdown)
+    window.removeEventListener('theme-change', this.handleThemeEvent)
     eventBus.off('auth-change', this.updateUser)
     eventBus.off('wishlist-change', this.fetchWishlistCount)
     window.removeEventListener('cart-updated', this.fetchCartCount)
@@ -710,27 +755,33 @@ export default {
 .user-dropdown-container {
   position: relative;
 }
-.user-dropdown {
-  min-width: 260px;
+.user-dropdown-panel {
+  min-width: 270px;
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  display: none;
+  z-index: 1030;
 }
-.user-dropdown.show {
-  display: block;
-  animation: dropdownFade 0.2s ease;
-}
-@keyframes dropdownFade {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.dropdown-item {
+.dropdown-custom-item {
   font-size: 0.875rem;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  cursor: pointer;
 }
-.dropdown-item:hover {
-  background-color: #f8f9fa;
+.dropdown-custom-item:hover {
+  background-color: var(--bs-body-bg);
+  color: #0d6efd !important;
+}
+.dropdown-custom-item:hover .menu-icon {
+  transform: scale(1.08);
+}
+.user-drop-enter-active,
+.user-drop-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.user-drop-enter-from,
+.user-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 .dropdown-item:active, .dropdown-item.active {
   background-color: rgba(13, 110, 253, 0.08) !important;
