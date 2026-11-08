@@ -63,6 +63,7 @@ exports.approve = async (req, res, next) => {
             return next(new ApiError(404, "Borrow record not found"));
         }
         await Redis.del("admin:dashboard:stats");
+        await Redis.clearMatch("user:sach:*");
         return res.status(200).json({ message: "Borrow request approved successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to approve borrow request"));
@@ -93,6 +94,7 @@ exports.reject = async (req, res, next) => {
             return next(new ApiError(404, "Borrow record not found"));
         }
         await Redis.del("admin:dashboard:stats");
+        await Redis.clearMatch("user:sach:*");
         return res.status(200).json({ message: "Borrow request rejected successfully", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to reject borrow request"));
@@ -149,7 +151,27 @@ exports.confirmReturn = async (req, res, next) => {
             return next(new ApiError(404, "Borrow record not found"));
         }
         await Redis.del("admin:dashboard:stats");
-        return res.status(200).json({ message: "Book return confirmed successfully", data: result });
+        await Redis.clearMatch("user:sach:*");
+
+        // Lấy thông tin độc giả để kiểm tra xem tài khoản có đang bị khóa hay không
+        let docGiaInfo = null;
+        if (result.docGiaId) {
+            const db = MongoDB.client.db();
+            const docGia = await db.collection("DOCGIA").findOne({ _id: result.docGiaId });
+            if (docGia) {
+                docGiaInfo = {
+                    _id: docGia._id,
+                    TenDocGia: ((docGia.HoLot || docGia.HOLOT || '') + ' ' + (docGia.Ten || docGia.TEN || '')).trim() || docGia.Email || '—',
+                    TrangThaiTaiKhoan: docGia.TrangThaiTaiKhoan || 'BinhThuong',
+                };
+            }
+        }
+
+        return res.status(200).json({
+            message: "Book return confirmed successfully",
+            data: result,
+            docGia: docGiaInfo
+        });
     } catch (error) {
         return next(new ApiError(400, error.message || "Failed to confirm book return"));
     }
@@ -207,6 +229,7 @@ exports.delete = async (req, res, next) => {
             return next(new ApiError(404, "Borrow record not found"));
         }
         await Redis.del("admin:dashboard:stats");
+        await Redis.clearMatch("user:sach:*");
         return res.status(200).json({ message: "Borrow record deleted successfully" });
     } catch (error) {
         return next(new ApiError(500, `Failed to delete borrow record: ${error.message}`));

@@ -15,14 +15,14 @@
           <p class="text-muted-custom mb-0">Khám phá kho sách phong phú của Thư viện Số</p>
         </div>
 
-        <!-- Search Bar with Category Filter -->
-        <div class="search-box">
+        <!-- Search Bar with Category Filter & Hot Search Dropdown -->
+        <div class="search-box position-relative" ref="searchBoxRef">
           <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border">
             <select 
               class="form-select border-0 shadow-none bg-transparent py-2 ps-3" 
               style="max-width: 160px; border-right: 1px solid #dee2e6 !important;" 
               v-model="selectedCategory" 
-              @change="fetchBooks" 
+              @change="onCategoryChange" 
               :disabled="loading"
             >
               <option value="">Tất cả thể loại</option>
@@ -32,10 +32,22 @@
               v-model="searchText" 
               type="text" 
               class="form-control border-0 shadow-none bg-transparent py-2 px-3" 
-              placeholder="Tìm kiếm tên sách..." 
-              @keyup.enter="fetchBooks" 
+              placeholder="Tìm theo tên sách, tác giả..." 
+              @input="onSearchInput"
+              @focus="onSearchFocus"
+              @keyup.enter="onSearchEnter" 
               :disabled="loading"
+              autocomplete="off"
             />
+            <button 
+              v-if="searchText" 
+              type="button" 
+              class="btn border-0 px-2 bg-transparent text-muted-custom hover-danger" 
+              @click="clearSearchInput"
+              title="Xóa tìm kiếm"
+            >
+              <i class="fas fa-times-circle"></i>
+            </button>
             <button 
               type="button" 
               class="btn border-0 px-3 bg-transparent" 
@@ -46,11 +58,118 @@
             >
               <i class="fas fa-microphone"></i>
             </button>
-            <BaseButton variant="primary" class="rounded-pill m-1 px-4" @click="fetchBooks" :disabled="loading">
+            <BaseButton variant="primary" class="rounded-pill m-1 px-4" @click="onSearchEnter" :disabled="loading">
               <i class="fas fa-spinner fa-spin me-1" v-if="loading"></i>
               <span v-else>Tìm</span>
             </BaseButton>
           </div>
+
+          <!-- Hot Search & Suggestions Dropdown Panel -->
+          <transition name="fade-drop">
+            <div 
+              v-if="showSuggestions" 
+              class="suggestions-dropdown position-absolute start-0 end-0 bg-white shadow-lg rounded-4 p-3 border mt-2"
+              style="z-index: 1050; top: 100%; max-height: 420px; overflow-y: auto;"
+            >
+              <!-- Khi chưa gõ: Hiển thị Hot Search (Từ khóa phổ biến & Thể loại thịnh hành) -->
+              <div v-if="!searchText.trim()">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="small fw-bold text-dark text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">
+                    <i class="fas fa-fire text-danger me-1"></i> Tìm kiếm phổ biến (Hot Searches)
+                  </span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <button 
+                    v-for="kw in hotKeywords" 
+                    :key="kw" 
+                    type="button" 
+                    class="btn btn-sm btn-light border rounded-pill px-3 py-1 text-secondary hot-tag hover-accent"
+                    @mousedown.prevent="selectHotKeyword(kw)"
+                  >
+                    <i class="fas fa-search small me-1 opacity-50"></i>{{ kw }}
+                  </button>
+                </div>
+
+                <div v-if="categories.length > 0" class="border-top pt-2">
+                  <span class="small fw-bold text-muted text-uppercase mb-2 d-block" style="font-size: 0.72rem;">
+                    <i class="fas fa-layer-group me-1"></i> Khám phá theo thể loại
+                  </span>
+                  <div class="d-flex flex-wrap gap-1">
+                    <span 
+                      v-for="cat in categories.slice(0, 8)" 
+                      :key="cat" 
+                      class="badge bg-light text-dark border rounded-pill px-2 py-1 cursor-pointer hover-primary"
+                      style="font-size: 0.75rem;"
+                      @mousedown.prevent="selectCategoryFromHot(cat)"
+                    >
+                      {{ cat }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Khi đã gõ: Gợi ý sách khớp theo từng ký tự/từ (Live Matches) -->
+              <div v-else>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="small fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">
+                    <i class="fas fa-bolt text-warning me-1"></i> Gợi ý trực tiếp theo từ khóa
+                  </span>
+                  <small class="text-muted" style="font-size: 0.72rem;">
+                    {{ quickSuggestions.length }} kết quả
+                  </small>
+                </div>
+
+                <!-- Danh sách sách gợi ý -->
+                <div v-if="quickSuggestions.length > 0" class="list-group list-group-flush">
+                  <router-link
+                    v-for="item in quickSuggestions"
+                    :key="item._id"
+                    :to="`/sach/${item._id}`"
+                    class="list-group-item list-group-item-action border-0 px-2 py-2 rounded-3 d-flex align-items-center gap-3 mb-1"
+                    @mousedown="closeSuggestions"
+                  >
+                    <img 
+                      :src="item.HinhAnh || 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=80&q=80'" 
+                      class="rounded-2 flex-shrink-0 shadow-sm"
+                      style="width: 42px; height: 56px; object-fit: cover;"
+                      :alt="item.TenSach"
+                    />
+                    <div class="flex-grow-1 overflow-hidden">
+                      <div class="fw-bold text-dark text-truncate" :title="item.TenSach" style="font-size: 0.88rem;">
+                        {{ item.TenSach }}
+                      </div>
+                      <div class="small text-muted text-truncate" style="font-size: 0.78rem;">
+                        <i class="fas fa-pen-nib me-1"></i>{{ item.TacGia || 'Tác giả không rõ' }}
+                        <span v-if="item.TheLoai" class="badge bg-light text-secondary border ms-2" style="font-size: 0.68rem;">{{ item.TheLoai }}</span>
+                      </div>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                      <span class="d-block fw-bold text-primary" style="font-size: 0.85rem;">{{ formatPrice(item.DonGia) }}</span>
+                      <span class="small" :class="item.SoQuyen > 0 ? 'text-success' : 'text-danger'" style="font-size: 0.72rem;">
+                        {{ item.SoQuyen > 0 ? `Còn ${item.SoQuyen} q` : 'Hết sách' }}
+                      </span>
+                    </div>
+                  </router-link>
+                </div>
+
+                <!-- Không tìm thấy gợi ý nào -->
+                <div v-else class="text-center py-3 text-muted">
+                  <i class="fas fa-search me-1 opacity-50"></i> Không tìm thấy gợi ý phù hợp cho "{{ searchText }}"
+                </div>
+
+                <!-- Nút xem toàn bộ kết quả bên dưới -->
+                <div class="border-top pt-2 mt-2 text-center">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-link text-primary text-decoration-none fw-semibold"
+                    @mousedown.prevent="onSearchEnter"
+                  >
+                    Xem tất cả kết quả cho "{{ searchText }}" <i class="fas fa-arrow-right ms-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
       </div>
 
@@ -92,9 +211,14 @@
             </template>
             
             <div class="d-flex flex-column h-100 mt-2">
-              <span class="badge bg-light text-accent border border-accent-subtle rounded-pill align-self-start px-2 py-1 mb-2" style="font-size: 0.7rem;">
-                {{ book.TheLoai || 'Khác' }}
-              </span>
+              <div class="d-flex align-items-center gap-1 mb-2 flex-wrap">
+                <span class="badge bg-light text-accent border border-accent-subtle rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                  {{ book.TheLoai || 'Khác' }}
+                </span>
+                <span v-if="book.isHot || (book.soLanMuon && book.soLanMuon >= 3)" class="badge bg-danger text-white rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                  Mượn nhiều
+                </span>
+              </div>
               <h6 class="card-title fw-bold text-dark mb-1 line-clamp-2" :title="book.TenSach">{{ book.TenSach }}</h6>
               <p class="text-muted-custom small mb-3 line-clamp-1" :title="book.TacGia"><i class="fas fa-pen-nib me-1"></i> {{ book.TacGia || 'Tác giả không rõ' }}</p>
               
@@ -126,18 +250,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import SachService from '@/services/sach.service'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 const books = ref([])
 const categories = ref([])
+const allBooksCache = ref([])
 const searchText = ref('')
 const selectedCategory = ref('')
 const loading = ref(false)
 const isListening = ref(false)
 const toast = ref({ show: false, message: '', type: 'success' })
+
+// Hot Search & Autocomplete State
+const searchBoxRef = ref(null)
+const showSuggestions = ref(false)
+const hotKeywords = ref(['Lập trình', 'Công nghệ', 'Văn học', 'Kinh tế', 'Kỹ năng sống', 'Khoa học', 'Lịch sử', 'Truyện tranh'])
+let searchTimeout = null
 
 const showToast = (message, type = 'error') => {
   toast.value = { show: true, message, type }
@@ -147,8 +278,9 @@ const showToast = (message, type = 'error') => {
 const fetchCategories = async () => {
   try {
     const response = await SachService.getAll()
-    const allBooks = Array.isArray(response.data) ? response.data : []
-    const rawCategories = allBooks.map(b => b.TheLoai).filter(Boolean)
+    const all = Array.isArray(response.data) ? response.data : []
+    allBooksCache.value = all
+    const rawCategories = all.map(b => b.TheLoai).filter(Boolean)
     categories.value = [...new Set(rawCategories)].sort()
   } catch (error) {
     console.error('Lỗi khi lấy danh mục', error)
@@ -161,6 +293,9 @@ const fetchBooks = async () => {
   try {
     const response = await SachService.getAll(searchText.value, selectedCategory.value)
     books.value = Array.isArray(response.data) ? response.data : []
+    if (!searchText.value && !selectedCategory.value) {
+      allBooksCache.value = books.value
+    }
   } catch (error) {
     console.error('Không thể tải danh sách sách:', error)
     showToast(error.response?.data?.message || 'Lỗi khi tải danh sách sách')
@@ -169,9 +304,75 @@ const fetchBooks = async () => {
   }
 }
 
+// Hot search theo từng ký tự & từng từ (Debounce 250ms)
+const onSearchInput = () => {
+  showSuggestions.value = true
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchBooks()
+  }, 250)
+}
+
+const onSearchFocus = () => {
+  showSuggestions.value = true
+}
+
+const onSearchEnter = () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  showSuggestions.value = false
+  fetchBooks()
+}
+
+const onCategoryChange = () => {
+  showSuggestions.value = false
+  fetchBooks()
+}
+
+const clearSearchInput = () => {
+  searchText.value = ''
+  showSuggestions.value = false
+  fetchBooks()
+}
+
+const selectHotKeyword = (kw) => {
+  searchText.value = kw
+  showSuggestions.value = false
+  fetchBooks()
+}
+
+const selectCategoryFromHot = (cat) => {
+  selectedCategory.value = cat
+  searchText.value = ''
+  showSuggestions.value = false
+  fetchBooks()
+}
+
+const closeSuggestions = () => {
+  showSuggestions.value = false
+}
+
+// Gợi ý tức thì khớp theo từng từ / từng ký tự
+const quickSuggestions = computed(() => {
+  if (!searchText.value.trim()) return []
+  const query = searchText.value.trim().toLowerCase()
+  const words = query.split(/\s+/).filter(Boolean)
+
+  return allBooksCache.value.filter(book => {
+    if (selectedCategory.value && book.TheLoai !== selectedCategory.value) {
+      return false
+    }
+    const title = (book.TenSach || '').toLowerCase()
+    const author = (book.TacGia || '').toLowerCase()
+    const cat = (book.TheLoai || '').toLowerCase()
+    // Khớp theo từng từ: tất cả các từ khóa gõ vào đều xuất hiện trong tiêu đề, tác giả hoặc thể loại
+    return words.every(w => title.includes(w) || author.includes(w) || cat.includes(w))
+  }).slice(0, 6)
+})
+
 const clearSearch = () => {
   searchText.value = ''
   selectedCategory.value = ''
+  showSuggestions.value = false
   fetchBooks()
 }
 
@@ -213,6 +414,7 @@ const startVoiceSearch = () => {
         const transcript = event.results[0][0].transcript
         searchText.value = transcript
         toast.value.show = false
+        showSuggestions.value = false
         fetchBooks()
       }
     }
@@ -248,9 +450,21 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
 }
 
+const handleClickOutside = (e) => {
+  if (searchBoxRef.value && !searchBoxRef.value.contains(e.target)) {
+    showSuggestions.value = false
+  }
+}
+
 onMounted(() => {
   fetchCategories()
   fetchBooks()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -258,6 +472,53 @@ onMounted(() => {
 .search-box {
   width: 100%;
   max-width: 550px;
+}
+
+.suggestions-dropdown {
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-drop-enter-active,
+.fade-drop-leave-active {
+  transition: all 0.2s ease;
+}
+.fade-drop-enter-from,
+.fade-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.hot-tag {
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+.hot-tag:hover {
+  background-color: var(--bs-primary) !important;
+  color: white !important;
+  border-color: var(--bs-primary) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-danger:hover {
+  color: #dc3545 !important;
+}
+
+.hover-accent:hover {
+  border-color: var(--bs-primary) !important;
 }
 
 .img-wrapper {

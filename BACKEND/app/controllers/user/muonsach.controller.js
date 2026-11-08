@@ -20,8 +20,9 @@ exports.create = async (req, res, next) => {
         };
 
         const document = await muonSachService.create(payload);
-        
+
         await Redis.del("admin:dashboard:stats");
+        await Redis.clearMatch("user:sach:*");
 
         return res.status(201).json({
             message: "Yêu cầu mượn sách đã được gửi",
@@ -71,13 +72,18 @@ exports.getNotifications = async (req, res, next) => {
                 notifId: `account_locked_${docGia._id}`,
                 alertType: "account_locked",
                 title: "Tài khoản của bạn đang bị khóa!",
-                message: "Tài khoản độc giả đã bị khóa do vi phạm quy định (trễ hạn mượn sách hoặc theo quyết định của thủ thư). Vui lòng liên hệ thư viện để được giải quyết.",
+                message: docGia.LyDoKhoa
+                    ? `Tài khoản độc giả đã bị khóa do: ${docGia.LyDoKhoa}. Vui lòng liên hệ ban quản lý thư viện để giải quyết.`
+                    : "Tài khoản độc giả đã bị khóa do vi phạm quy định (trễ hạn mượn sách hoặc theo quyết định của thủ thư). Vui lòng liên hệ thư viện để được giải quyết.",
                 time: docGia.updatedAt || new Date().toISOString(),
                 isUrgent: true,
             });
         }
 
-        // B. Thông báo từ các phiếu mượn
+        // B. Thông báo từ các phiếu mượn & thống kê phạt
+        let maxSoNgayTre = 0;
+        let tongTienPhat = 0;
+
         records.forEach((item) => {
             const dueDateStr = item.ngayTra || item.ngayHenTra;
             let daysLeft = null;
@@ -99,6 +105,12 @@ exports.getNotifications = async (req, res, next) => {
                 soNgayTre = 1;
             }
             const tienPhat = soNgayTre * 5000 * soLuong;
+
+            const isOverdue = item.trangThai === "quá hạn" || item.daTungQuaHan || (daysLeft !== null && daysLeft < 0 && ["đang mượn", "đang chờ trả", "chờ gia hạn"].includes(item.trangThai));
+            if (isOverdue && !["đã trả", "từ chối"].includes(item.trangThai)) {
+                tongTienPhat += tienPhat;
+                if (soNgayTre > maxSoNgayTre) maxSoNgayTre = soNgayTre;
+            }
 
             // 1. THỦ THƯ ĐÃ DUYỆT YÊU CẦU MƯỢN SÁCH
             if (item.trangThai === "đã duyệt") {
@@ -151,7 +163,7 @@ exports.getNotifications = async (req, res, next) => {
                 });
             }
             // 3. SÁCH QUÁ HẠN (KÈM GIÁ TIỀN PHẠT TÍNH TRỰC TIẾP)
-            else if (item.trangThai === "quá hạn" || (daysLeft !== null && daysLeft < 0 && ["đang mượn", "đang chờ trả", "chờ gia hạn"].includes(item.trangThai))) {
+            else if (isOverdue) {
                 notifications.push({
                     ...item,
                     notifId: `${item._id}_overdue_${dueDateStr || ''}`,
@@ -178,8 +190,73 @@ exports.getNotifications = async (req, res, next) => {
             }
         });
 
-        // Sắp xếp ưu tiên: Tài khoản bị khóa (0) -> Quá hạn (1) -> Đã duyệt (2) -> Sắp hết hạn (3) -> Từ chối (4)
-        const priority = { account_locked: 0, overdue: 1, approved: 2, extension_approved: 2, soon: 3, rejected: 4, extension_rejected: 4 };
+        // C. CẢNH BÁO TRƯỚC KHI KHÓA TÀI KHOẢN (Khi chưa bị khóa nhưng trễ hạn hoặc tiền phạt tăng cao)
+        if (docGia && docGia.TrangThaiTaiKhoan !== "BiKhoa" && (maxSoNgayTre > 0 || tongTienPhat > 0)) {
+            // C.1. Cảnh báo trước khi khóa 1 ngày (quyển đầu tiên trễ hạn 6-7 ngày, sắp cán mốc > 7 ngày)
+            if (maxSoNgayTre >= 6) {
+                notifications.push({
+                    _id: `lock_warn_urgent_${docGia._id}`,
+                    notifId: `lock_warn_urgent_${docGia._id}_${maxSoNgayTre}`,
+                    alertType: "lock_warning_urgent",
+                    title: "CẢNH BÁO KHẨN CẤP: Tài khoản sắp bị khóa sau 1 ngày!",
+                    message: `Quyển sách đầu tiên của bạn đã trễ hạn ${maxSoNgayTre} ngày. Theo quy chế thư viện, tài khoản sẽ tự động bị KHÓA sau 24h nữa (khi thời gian trễ tính từ quyển đầu tiên vượt quá 7 ngày). Hãy mang sách đến trả ngay!`,
+                    time: new Date().toISOString(),
+                    isUrgent: true,
+                });
+            }
+            // C.2. Cảnh báo trước khi khóa khoảng 3 ngày (quyển đầu tiên trễ hạn 4-5 ngày)
+            else if (maxSoNgayTre >= 4) {
+                notifications.push({
+                    _id: `lock_warn_3d_${docGia._id}`,
+                    notifId: `lock_warn_3d_${docGia._id}_${maxSoNgayTre}`,
+                    alertType: "lock_warning",
+                    title: "Cảnh báo: Nguy cơ bị khóa tài khoản sau 3 ngày",
+                    message: `Quyển sách đầu tiên của bạn đã trễ hạn ${maxSoNgayTre} ngày. Tài khoản sẽ tự động bị KHÓA khi thời gian trễ của quyển đầu tiên vượt quá 7 ngày (1 tuần). Vui lòng sắp xếp trả sách sớm!`,
+                    time: new Date().toISOString(),
+                    isUrgent: true,
+                });
+            }
+
+            // C.3. Cảnh báo theo mốc tổng tiền phạt đạt 75.000 VNĐ
+            if (tongTienPhat >= 75000 && tongTienPhat < 100000) {
+                notifications.push({
+                    _id: `fine_warn_75k_${docGia._id}`,
+                    notifId: `fine_warn_75k_${docGia._id}`,
+                    alertType: "fine_warning_75k",
+                    title: "CẢNH BÁO TIỀN PHẠT: Tổng tiền phạt đã đạt 75.000 VNĐ",
+                    message: `Tổng tiền phạt trễ hạn tích lũy của tất cả các sách bạn đang mượn đã đạt ${tongTienPhat.toLocaleString('vi-VN')} VNĐ. Tài khoản sẽ tự động bị KHÓA NGAY khi tổng tiền phạt đạt 100.000 VNĐ. Hãy đến trả sách ngay!`,
+                    time: new Date().toISOString(),
+                    isUrgent: true,
+                });
+            }
+            // C.4. Cảnh báo theo mốc tổng tiền phạt đạt 50.000 VNĐ
+            else if (tongTienPhat >= 50000 && tongTienPhat < 75000) {
+                notifications.push({
+                    _id: `fine_warn_50k_${docGia._id}`,
+                    notifId: `fine_warn_50k_${docGia._id}`,
+                    alertType: "fine_warning_50k",
+                    title: "Nhắc nhở tiền phạt: Tổng tiền phạt đạt 50.000 VNĐ",
+                    message: `Tổng tiền phạt trễ hạn của tất cả các sách bạn đang mượn là ${tongTienPhat.toLocaleString('vi-VN')} VNĐ (mức khóa tài khoản tự động là 100.000 VNĐ). Vui lòng trả sách sớm để tránh phát sinh thêm phí!`,
+                    time: new Date().toISOString(),
+                    isUrgent: false,
+                });
+            }
+        }
+
+        // Sắp xếp ưu tiên: Tài khoản bị khóa (0) -> Cảnh báo khẩn cấp (1) -> Tiền phạt 75k (2) -> Cảnh báo khóa 3d (3) -> Tiền phạt 50k (4) -> Quá hạn (5) -> Đã duyệt (6) -> Sắp hết hạn (7) -> Từ chối (8)
+        const priority = {
+            account_locked: 0,
+            lock_warning_urgent: 1,
+            fine_warning_75k: 2,
+            lock_warning: 3,
+            fine_warning_50k: 4,
+            overdue: 5,
+            approved: 6,
+            extension_approved: 6,
+            soon: 7,
+            rejected: 8,
+            extension_rejected: 8
+        };
         notifications.sort((a, b) => {
             const pDiff = (priority[a.alertType] ?? 99) - (priority[b.alertType] ?? 99);
             if (pDiff !== 0) return pDiff;
@@ -195,20 +272,25 @@ exports.getNotifications = async (req, res, next) => {
 exports.requestReturn = async (req, res, next) => {
     try {
         const muonSachService = new MuonSachService(MongoDB.client);
-        
+
         // Kiểm tra xem phiếu mượn có tồn tại và thuộc về user này không
         const record = await muonSachService.findById(req.params.id);
         if (!record || record.docGiaId.toString() !== req.user._id.toString()) {
             return next(new ApiError(404, "Không tìm thấy phiếu mượn"));
         }
-        
+
         if (!["đã duyệt", "đang mượn", "quá hạn"].includes(record.trangThai)) {
             return next(new ApiError(400, "Không thể xin trả sách lúc này"));
         }
 
+        const todayDateStr = new Date().toLocaleDateString('en-CA');
+        const returnDateStr = record.ngayTra ? new Date(record.ngayTra).toLocaleDateString('en-CA') : null;
+        const isPastDue = record.trangThai === "quá hạn" || (returnDateStr && returnDateStr < todayDateStr) || Boolean(record.daTungQuaHan);
+
         const payload = {
             trangThai: "đang chờ trả",
             ngayDuKienTra: req.body.ngayDuKienTra || new Date().toISOString(),
+            daTungQuaHan: isPastDue,
         };
 
         const result = await muonSachService.update(req.params.id, payload);
@@ -224,7 +306,7 @@ exports.updatePending = async (req, res, next) => {
         const muonSachService = new MuonSachService(MongoDB.client);
         const soLuong = req.body.soLuong;
         if (!soLuong) return next(new ApiError(400, "Vui lòng cung cấp số lượng"));
-        
+
         const result = await muonSachService.updatePendingRequest(req.params.id, req.user._id, soLuong);
         await Redis.del("admin:dashboard:stats");
         return res.status(200).json({ message: "Đã cập nhật số lượng", data: result });
@@ -238,6 +320,7 @@ exports.deletePending = async (req, res, next) => {
         const muonSachService = new MuonSachService(MongoDB.client);
         const result = await muonSachService.deletePendingRequest(req.params.id, req.user._id);
         await Redis.del("admin:dashboard:stats");
+        await Redis.clearMatch("user:sach:*");
         return res.status(200).json({ message: "Đã hủy yêu cầu mượn sách", data: result });
     } catch (error) {
         return next(new ApiError(400, error.message || "Không thể hủy phiếu mượn"));

@@ -88,15 +88,21 @@ const INDEX_DEFINITIONS = [
     // 5. Bảng THEODOIMUONSACH
     {
         collection: "THEODOIMUONSACH",
-        spec: { MaDocGia: 1, trangThai: 1 },
+        spec: { docGiaId: 1, trangThai: 1 },
         options: { name: "idx_muon_docgia_trangthai" },
         description: "Tối ưu kiểm tra hạn mức mượn (10 quyển) và lịch sử độc giả"
     },
     {
         collection: "THEODOIMUONSACH",
-        spec: { MaSach: 1 },
-        options: { name: "idx_muon_masach" },
-        description: "Tối ưu aggregate thống kê sách được mượn nhiều nhất"
+        spec: { sachId: 1 },
+        options: { name: "idx_muon_sachid" },
+        description: "Tối ưu aggregate thống kê sách được mượn nhiều nhất và hoàn kho"
+    },
+    {
+        collection: "THEODOIMUONSACH",
+        spec: { trangThai: 1, ngayTra: 1 },
+        options: { name: "idx_muon_trangthai_ngaytra" },
+        description: "Tối ưu quét tự động quá hạn và chuông thông báo"
     },
     {
         collection: "THEODOIMUONSACH",
@@ -104,25 +110,27 @@ const INDEX_DEFINITIONS = [
         options: { name: "idx_muon_trangthai" },
         description: "Tối ưu lọc danh sách phiếu theo trạng thái (chờ duyệt, đang mượn...)"
     },
-    {
-        collection: "THEODOIMUONSACH",
-        spec: { ngayHenTra: 1 },
-        options: { name: "idx_muon_ngayhentra" },
-        description: "Tối ưu kiểm tra quá hạn và tính toán chuông thông báo"
-    },
 
-    // 6. Các bảng phụ (Đánh giá, Chat)
+    // 6. Bảng phụ Đánh giá
     {
         collection: "DANHGIA",
-        spec: { MaSach: 1, MaDocGia: 1 },
+        spec: { sachId: 1, docGiaId: 1 },
         options: { name: "idx_danhgia_sach_docgia" },
-        description: "Tối ưu tải đánh giá theo từng cuốn sách"
+        description: "Tối ưu tải đánh giá và kiểm tra đánh giá trùng theo từng cuốn sách"
+    },
+
+    // 7. Bảng Yêu thích (Wishlist)
+    {
+        collection: "YEUTHICH",
+        spec: { docGiaId: 1, sachId: 1 },
+        options: { unique: true, name: "uniq_yeuthich_docgia_sach" },
+        description: "Khóa duy nhất chống trùng lặp danh sách yêu thích của độc giả"
     },
     {
-        collection: "CHAT_HISTORY",
-        spec: { docGiaId: 1, createdAt: -1 },
-        options: { name: "idx_chat_docgia_time" },
-        description: "Tối ưu tải lịch sử hội thoại Chatbot theo độc giả"
+        collection: "YEUTHICH",
+        spec: { docGiaId: 1 },
+        options: { name: "idx_yeuthich_docgia" },
+        description: "Tối ưu tải danh sách sách yêu thích theo độc giả"
     }
 ];
 
@@ -147,7 +155,22 @@ async function ensureIndexes(client, verbose = false) {
     for (const def of INDEX_DEFINITIONS) {
         try {
             const col = db.collection(def.collection);
-            const indexName = await col.createIndex(def.spec, def.options);
+            let indexName;
+            try {
+                indexName = await col.createIndex(def.spec, def.options);
+            } catch (createErr) {
+                // Nếu index đã tồn tại với tên này nhưng khác key spec (code 85: IndexOptionsConflict / IndexKeySpecsConflict)
+                if (createErr.code === 85 || (createErr.message && createErr.message.includes("same name as the requested index"))) {
+                    if (def.options?.name) {
+                        await col.dropIndex(def.options.name);
+                        indexName = await col.createIndex(def.spec, def.options);
+                    } else {
+                        throw createErr;
+                    }
+                } else {
+                    throw createErr;
+                }
+            }
             results.created++;
             results.details.push({
                 collection: def.collection,

@@ -61,17 +61,22 @@ class MuonSachService {
     }
 
     const notifications = []
+    let maxSoNgayTre = 0
+    let tongTienPhat = 0
+    let userObj = null
 
     // Kiểm tra tài khoản bị khóa từ localStorage
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
+      userObj = JSON.parse(localStorage.getItem('user') || '{}')
+      if (userObj && userObj.TrangThaiTaiKhoan === 'BiKhoa') {
         notifications.push({
-          _id: `lock_${user._id}`,
-          notifId: `account_locked_${user._id}`,
+          _id: `lock_${userObj._id}`,
+          notifId: `account_locked_${userObj._id}`,
           alertType: 'account_locked',
           title: 'Tài khoản của bạn đang bị khóa!',
-          message: 'Tài khoản độc giả đã bị khóa do có sách quá hạn chưa hoàn tất trả hoặc theo quyết định của thủ thư. Vui lòng liên hệ thư viện để được giải quyết.',
+          message: userObj.LyDoKhoa
+            ? `Tài khoản độc giả đã bị khóa do: ${userObj.LyDoKhoa}. Vui lòng liên hệ ban quản lý thư viện để giải quyết.`
+            : 'Tài khoản độc giả đã bị khóa do có sách quá hạn chưa hoàn tất trả hoặc theo quyết định của thủ thư. Vui lòng liên hệ thư viện để được giải quyết.',
           time: new Date().toISOString(),
           isUrgent: true,
         })
@@ -161,7 +166,9 @@ class MuonSachService {
         }
       }
       // 3. SÁCH QUÁ HẠN
-      else if (item.trangThai === 'quá hạn' || (daysLeft !== null && daysLeft < 0 && ['đang mượn', 'đang chờ trả', 'chờ gia hạn'].includes(item.trangThai))) {
+      else if (item.trangThai === 'quá hạn' || item.daTungQuaHan || (daysLeft !== null && daysLeft < 0 && ['đang mượn', 'đang chờ trả', 'chờ gia hạn'].includes(item.trangThai))) {
+        tongTienPhat += tienPhat
+        if (soNgayTre > maxSoNgayTre) maxSoNgayTre = soNgayTre
         notifications.push({
           ...item,
           notifId: `${item._id}_overdue_${dueDateStr || ''}`,
@@ -188,8 +195,67 @@ class MuonSachService {
       }
     })
 
+    // Cảnh báo trước khi khóa (Khi chưa bị khóa)
+    if (userObj && userObj.TrangThaiTaiKhoan !== 'BiKhoa' && (maxSoNgayTre > 0 || tongTienPhat > 0)) {
+      if (maxSoNgayTre >= 6) {
+        notifications.push({
+          _id: `lock_warn_urgent_${userObj._id}`,
+          notifId: `lock_warn_urgent_${userObj._id}_${maxSoNgayTre}`,
+          alertType: 'lock_warning_urgent',
+          title: 'CẢNH BÁO KHẨN CẤP: Tài khoản sắp bị khóa sau 1 ngày!',
+          message: `Quyển sách đầu tiên của bạn đã trễ hạn ${maxSoNgayTre} ngày. Theo quy chế thư viện, tài khoản sẽ tự động bị KHÓA sau 24h nữa (khi thời gian trễ tính từ quyển đầu tiên vượt quá 7 ngày). Hãy mang sách đến trả ngay!`,
+          time: new Date().toISOString(),
+          isUrgent: true,
+        })
+      } else if (maxSoNgayTre >= 4) {
+        notifications.push({
+          _id: `lock_warn_3d_${userObj._id}`,
+          notifId: `lock_warn_3d_${userObj._id}_${maxSoNgayTre}`,
+          alertType: 'lock_warning',
+          title: 'Cảnh báo: Nguy cơ bị khóa tài khoản sau 3 ngày',
+          message: `Quyển sách đầu tiên của bạn đã trễ hạn ${maxSoNgayTre} ngày. Tài khoản sẽ tự động bị KHÓA khi thời gian trễ của quyển đầu tiên vượt quá 7 ngày (1 tuần). Vui lòng sắp xếp trả sách sớm!`,
+          time: new Date().toISOString(),
+          isUrgent: true,
+        })
+      }
+
+      if (tongTienPhat >= 75000 && tongTienPhat < 100000) {
+        notifications.push({
+          _id: `fine_warn_75k_${userObj._id}`,
+          notifId: `fine_warn_75k_${userObj._id}`,
+          alertType: 'fine_warning_75k',
+          title: 'CẢNH BÁO TIỀN PHẠT: Tổng tiền phạt đã đạt 75.000 VNĐ',
+          message: `Tổng tiền phạt trễ hạn tích lũy của tất cả các sách bạn đang mượn đã đạt ${tongTienPhat.toLocaleString('vi-VN')} VNĐ. Tài khoản sẽ tự động bị KHÓA NGAY khi tổng tiền phạt đạt 100.000 VNĐ. Hãy đến trả sách ngay!`,
+          time: new Date().toISOString(),
+          isUrgent: true,
+        })
+      } else if (tongTienPhat >= 50000 && tongTienPhat < 75000) {
+        notifications.push({
+          _id: `fine_warn_50k_${userObj._id}`,
+          notifId: `fine_warn_50k_${userObj._id}`,
+          alertType: 'fine_warning_50k',
+          title: 'Nhắc nhở tiền phạt: Tổng tiền phạt đạt 50.000 VNĐ',
+          message: `Tổng tiền phạt trễ hạn của tất cả các sách bạn đang mượn là ${tongTienPhat.toLocaleString('vi-VN')} VNĐ (mức khóa tài khoản tự động là 100.000 VNĐ). Vui lòng trả sách sớm để tránh phát sinh thêm phí!`,
+          time: new Date().toISOString(),
+          isUrgent: false,
+        })
+      }
+    }
+
     // Sắp xếp: Quá hạn & Đã duyệt lên trước, sau đó sắp hết hạn, từ chối
-    const priority = { account_locked: 0, overdue: 1, approved: 2, extension_approved: 2, soon: 3, rejected: 4, extension_rejected: 4 }
+    const priority = {
+      account_locked: 0,
+      lock_warning_urgent: 1,
+      fine_warning_75k: 2,
+      lock_warning: 3,
+      fine_warning_50k: 4,
+      overdue: 5,
+      approved: 6,
+      extension_approved: 6,
+      soon: 7,
+      rejected: 8,
+      extension_rejected: 8
+    }
     return notifications.sort((a, b) => {
       const pDiff = (priority[a.alertType] || 99) - (priority[b.alertType] || 99)
       if (pDiff !== 0) return pDiff

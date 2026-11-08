@@ -39,6 +39,15 @@
                 v-model="searchText"
                 @keyup.enter="search"
               >
+              <button 
+                v-if="searchText" 
+                class="btn btn-light custom-height text-muted px-2 border-0" 
+                type="button" 
+                @click="searchText = ''; search()" 
+                title="Xóa tìm kiếm"
+              >
+                <i class="fas fa-times"></i>
+              </button>
               <button class="btn btn-primary px-4 custom-height z-0" type="button" @click="search">
                 <i class="fas fa-search"></i>
               </button>
@@ -479,10 +488,19 @@ const filteredBooks = computed(() => {
   else if (filterStock.value === "out_of_stock") filtered = filtered.filter(b => b.SoQuyen === 0)
 
   if (searchText.value.trim()) {
-    const lower = searchText.value.trim().toLowerCase()
-    filtered = filtered.filter(b => b.TenSach.toLowerCase().includes(lower) || b.TacGia.toLowerCase().includes(lower))
+    const words = searchText.value.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    filtered = filtered.filter(b => {
+      const title = (b.TenSach || '').toLowerCase()
+      const author = (b.TacGia || '').toLowerCase()
+      const code = (b.MaSach || '').toLowerCase()
+      return words.every(w => title.includes(w) || author.includes(w) || code.includes(w))
+    })
   }
   return filtered
+})
+
+watch(searchText, () => {
+  currentPage.value = 1
 })
 
 const totalPages = computed(() => Math.ceil(filteredBooks.value.length / itemsPerPage.value) || 1)

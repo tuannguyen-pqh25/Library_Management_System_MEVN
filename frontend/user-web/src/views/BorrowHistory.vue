@@ -63,12 +63,22 @@
                 </td>
                 <td class="fw-bold text-center text-primary" style="font-size: 0.95rem;">{{ record.soLuong || 1 }}</td>
                 <td class="fw-medium text-dark" style="font-size: 0.9rem;">{{ formatDate(record.ngayMuon) }}</td>
-                <td class="fw-medium text-dark" style="font-size: 0.9rem;">{{ formatDate(record.ngayTra) }}</td>
+                <td class="fw-medium" style="font-size: 0.9rem;">
+                  <span :class="isOverdueLoan(record) ? 'text-danger fw-bold' : 'text-dark'">
+                    {{ formatDate(record.ngayTra) }}
+                  </span>
+                  <span v-if="isOverdueLoan(record)" class="badge bg-danger-subtle text-danger border border-danger-subtle d-block mt-1" style="font-size:0.7rem; width:fit-content;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
+                  </span>
+                </td>
                 <td class="text-center">
                   <span class="badge rounded-pill px-3 py-2 fw-bold" :class="statusClass(record.trangThai)" style="font-size: 0.75rem;">
                     <i class="fas me-1" :class="statusIcon(record.trangThai)"></i>
                     {{ formatStatus(record.trangThai) }}
                   </span>
+                  <small v-if="record.trangThai === 'đang chờ trả' && isOverdueLoan(record)" class="text-danger d-block mt-1 fw-medium" style="font-size:0.72rem;">
+                    <i class="fas fa-info-circle me-1"></i>Chờ thủ thư xác nhận trả
+                  </small>
                 </td>
                 <td class="text-center pe-4" style="min-width:170px;">
                   <div class="d-flex align-items-center gap-1 justify-content-center">
@@ -344,6 +354,19 @@ const calcNewDueDate = (currentDueDate, days) => {
   const date = new Date(currentDueDate)
   date.setDate(date.getDate() + Number(days))
   return date.toLocaleDateString('vi-VN')
+}
+
+// Kiểm tra sách quá hạn (bao gồm cả trường hợp đang chờ xác nhận trả sau quá hạn)
+const isOverdueLoan = (record) => {
+  if (!record || ['đã trả', 'từ chối'].includes(record.trangThai)) return false
+  if (record.trangThai === 'quá hạn') return true
+  if (record.daTungQuaHan) return true
+  if (record.ngayTra) {
+    const todayDateStr = new Date().toLocaleDateString('en-CA')
+    const returnDateStr = new Date(record.ngayTra).toLocaleDateString('en-CA')
+    if (returnDateStr < todayDateStr) return true
+  }
+  return false
 }
 
 // Kiểm tra điều kiện gia hạn (phải gia hạn trước 3 ngày, đang mượn, tối đa 2 lần)

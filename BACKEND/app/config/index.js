@@ -20,23 +20,7 @@ const config = {
         apiKey: process.env.CLOUDINARY_API_KEY,
         apiSecret: process.env.CLOUDINARY_API_SECRET
     },
-    // Cấu hình Gemini AI Chatbot (hỗ trợ nhiều key, tự động chuyển đổi khi hết quota)
-    gemini: {
-        // Key đơn (tương thích ngược)
-        apiKey: process.env.GEMINI_API_KEY || "",
-        // Mảng nhiều key - nhập cách nhau bằng dấu phẩy trong .env
-        // Ví dụ: GEMINI_API_KEYS=AIzaSyAaaa,AIzaSyBbbb,AIzaSyCccc
-        apiKeys: (process.env.GEMINI_API_KEYS || "").split(",").map(k => k.trim()).filter(k => k.length > 0),
-        // Chuỗi model fallback: khi model chính bị 503, tự động chuyển xuống model nhẹ hơn
-        modelChain: (process.env.GEMINI_MODEL_CHAIN || "gemini-3.8-flash,gemini-3.5-flash-lite").split(",").map(m => m.trim()),
-        // Cấu hình retry với exponential backoff
-        retry: {
-            maxRetries: parseInt(process.env.GEMINI_MAX_RETRIES || "3", 10),
-            initialDelayMs: parseInt(process.env.GEMINI_INITIAL_DELAY_MS || "1000", 10),
-            maxDelayMs: parseInt(process.env.GEMINI_MAX_DELAY_MS || "15000", 10),
-        },
-    },
-    // Quy định mượn sách (dùng cho chatbot tra cứu)
+    // Quy định mượn sách chung của hệ thống
     quyDinhMuonSach: {
         maxBooksPerTime: 3,            // Tối đa 3 quyển/lần mượn
         maxBooksTotal: 10,             // Tối đa 10 quyển cùng lúc

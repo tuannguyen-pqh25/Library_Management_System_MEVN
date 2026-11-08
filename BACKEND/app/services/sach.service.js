@@ -17,7 +17,7 @@ class SachService {
             SoQuyen: payload.SoQuyen,
             NamXuatBan: payload.NamXuatBan,
             MaNXB: payload.MaNXB,
-            TacGia: payload.TacGia, 
+            TacGia: payload.TacGia,
             HinhAnh: payload.HinhAnh,
             CloudinaryPublicId: payload.CloudinaryPublicId,
             SoTrang: payload.SoTrang,
@@ -49,11 +49,11 @@ class SachService {
             // Đếm số lượng sách hiện có để tạo mã
             const count = await this.Sach.countDocuments();
             sachData.MaSach = `S${String(count + 1).padStart(3, '0')}`;
-            
+
             // Đảm bảo mã không trùng
             let isDuplicate = await this.Sach.findOne({ MaSach: sachData.MaSach });
             let attempts = 1;
-            while(isDuplicate) {
+            while (isDuplicate) {
                 sachData.MaSach = `S${String(count + 1 + attempts).padStart(3, '0')}`;
                 isDuplicate = await this.Sach.findOne({ MaSach: sachData.MaSach });
                 attempts++;
@@ -64,7 +64,7 @@ class SachService {
                 throw new Error("Mã sách đã tồn tại");
             }
         }
-        
+
         const existingBook = await this.Sach.findOne({ TenSach: sachData.TenSach });
         if (existingBook) {
             throw new Error("Tên sách đã tồn tại");
@@ -96,16 +96,34 @@ class SachService {
         const cursor = await this.Sach.find(filter);
         const books = await cursor.toArray();
         try {
-            const nxbs = await this.client.db().collection("NHAXUATBAN").find({}).toArray();
+            const [nxbs, borrowAgg] = await Promise.all([
+                this.client.db().collection("NHAXUATBAN").find({}).toArray(),
+                this.client.db().collection("THEODOIMUONSACH").aggregate([
+                    { $match: { trangThai: { $in: ["đang mượn", "đã duyệt", "đã trả", "quá hạn"] } } },
+                    { $group: { _id: "$sachId", count: { $sum: { $ifNull: ["$soLuong", 1] } } } }
+                ]).toArray()
+            ]);
+
             const nxbMap = new Map();
             nxbs.forEach(n => {
                 if (n.MaNXB) nxbMap.set(n.MaNXB, n.TenNXB);
                 if (n._id) nxbMap.set(n._id.toString(), n.TenNXB);
             });
-            return books.map(book => ({
-                ...book,
-                TenNXB: nxbMap.get(book.MaNXB) || nxbMap.get(book.MaNXB?.toString()) || book.MaNXB || '—'
-            }));
+
+            const borrowCountMap = new Map();
+            borrowAgg.forEach(b => {
+                if (b._id) borrowCountMap.set(b._id.toString(), b.count);
+            });
+
+            return books.map(book => {
+                const soLanMuon = borrowCountMap.get(book._id.toString()) || 0;
+                return {
+                    ...book,
+                    TenNXB: nxbMap.get(book.MaNXB) || nxbMap.get(book.MaNXB?.toString()) || book.MaNXB || '—',
+                    soLanMuon,
+                    isHot: soLanMuon >= 3
+                };
+            });
         } catch (_) {
             return books;
         }
@@ -114,7 +132,7 @@ class SachService {
     // 3. Tìm sách bằng Tên
     async findByName(name) {
         return await this.find({
-            TenSach: { $regex: new RegExp(name), $options: "i" }, 
+            TenSach: { $regex: new RegExp(name), $options: "i" },
         });
     }
 
@@ -179,7 +197,7 @@ class SachService {
             if (hasCloudinaryUpdate) {
                 // Xóa ảnh cũ từ Cloudinary nếu có
                 if (oldBook?.CloudinaryPublicId) {
-                    try { await deleteImage(oldBook.CloudinaryPublicId); } catch (_) {}
+                    try { await deleteImage(oldBook.CloudinaryPublicId); } catch (_) { }
                 }
 
                 // Upload ảnh mới lên Cloudinary nếu không phải file cục bộ
@@ -224,7 +242,7 @@ class SachService {
     // 7. Xóa tất cả
     async deleteAll() {
         // FIX 3: Sửa lỗi (NhanVien -> Sach)
-        const result = await this.Sach.deleteMany({}); 
+        const result = await this.Sach.deleteMany({});
         return result.deletedCount;
     }
 }
