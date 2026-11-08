@@ -17,7 +17,16 @@ exports.findAll = async (req, res, next) => {
         const sachService = new SachService(MongoDB.client);
         const filter = {};
         if (TenSach) {
-            filter.TenSach = { $regex: new RegExp(TenSach, "i") };
+            const trimmed = TenSach.trim();
+            const words = trimmed.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            if (words.length > 0) {
+                // Hỗ trợ tìm kiếm theo từng ký tự và từng từ (tất cả các từ đều khớp trong Tên sách hoặc Tác giả)
+                const pattern = words.map(w => `(?=.*${w})`).join('');
+                filter.$or = [
+                    { TenSach: { $regex: new RegExp(pattern, "i") } },
+                    { TacGia: { $regex: new RegExp(pattern, "i") } }
+                ];
+            }
         }
         if (TheLoai) {
             filter.TheLoai = TheLoai;

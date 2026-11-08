@@ -97,8 +97,11 @@
               </div>
             </div>
 
-            <div v-if="userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 small mb-3 rounded-3">
-              <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!
+            <div v-if="userBorrowStats.loaded && userBorrowStats.isLocked" class="alert alert-danger py-2 small mb-3 rounded-3">
+              <i class="fas fa-ban me-1"></i> Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Bạn không thể mượn sách mới lúc này. Vui lòng liên hệ ban quản lý thư viện!
+            </div>
+            <div v-else-if="userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 small mb-3 rounded-3">
+              <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn tiếp!
             </div>
             <div v-else-if="userBorrowStats.loaded && userBorrowStats.totalHolding + totalBooks > 10" class="alert alert-warning py-2 small mb-3 rounded-3">
               <i class="fas fa-exclamation-circle me-1"></i> Tổng số sách mượn ({{ userBorrowStats.totalHolding }} + {{ totalBooks }}) vượt quá hạn mức 10 quyển. Vui lòng giảm số lượng.
@@ -127,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CartService from '@/services/cart.service'
 import MuonSachService from '@/services/muonsach.service'
@@ -154,12 +157,34 @@ const fetchBorrowStats = async () => {
     const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
     const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
     const totalHolding = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
-    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+
+    const todayDateStr = new Date().toLocaleDateString('en-CA')
+    const isOverdueLoan = (r) => {
+      if (['đã trả', 'từ chối'].includes(r.trangThai)) return false
+      if (r.trangThai === 'quá hạn') return true
+      if (r.daTungQuaHan) return true
+      if (['đang chờ trả', 'đang mượn', 'chờ gia hạn', 'đã duyệt'].includes(r.trangThai) && r.ngayTra) {
+        const returnDateStr = new Date(r.ngayTra).toLocaleDateString('en-CA')
+        if (returnDateStr < todayDateStr) return true
+      }
+      return false
+    }
+
+    const overdueCount = records.filter(isOverdueLoan).reduce((sum, r) => sum + (r.soLuong || 1), 0)
     const remainingQuota = Math.max(0, 10 - totalHolding)
+    let isLocked = false
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
+        isLocked = true
+      }
+    } catch (_) {}
+
     userBorrowStats.value = {
       totalHolding,
       overdueCount,
       remainingQuota,
+      isLocked,
       loaded: true
     }
   } catch (error) {
@@ -167,7 +192,14 @@ const fetchBorrowStats = async () => {
   }
 }
 
+const handleUserStatusChanged = (e) => {
+  if (userBorrowStats.value) {
+    userBorrowStats.value.isLocked = (e.detail?.TrangThaiTaiKhoan === 'BiKhoa')
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('user-status-changed', handleUserStatusChanged)
   cartItems.value = CartService.getCart()
   
   // Set default dates (today and +7 days)
@@ -179,6 +211,10 @@ onMounted(() => {
   returnDate.value = nextWeek.toISOString().split('T')[0]
 
   fetchBorrowStats()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('user-status-changed', handleUserStatusChanged)
 })
 
 // Check if return date is valid relative to borrow date
@@ -206,6 +242,7 @@ const hasOutOfStock = computed(() => {
 const canSubmit = computed(() => {
   if (cartItems.value.length === 0 || !isValidDates.value || hasOutOfStock.value) return false
   if (userBorrowStats.value.loaded) {
+    if (userBorrowStats.value.isLocked) return false
     if (userBorrowStats.value.overdueCount > 0) return false
     if (userBorrowStats.value.totalHolding + totalBooks.value > 10) return false
   }
@@ -247,11 +284,33 @@ const submitBorrow = async () => {
   isSubmitting.value = true
 
   try {
+    let isLocked = false
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') isLocked = true
+    } catch (_) {}
+    if (isLocked) {
+      alert('Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Không thể gửi yêu cầu mượn!')
+      isSubmitting.value = false
+      return
+    }
+
     const historyRes = await MuonSachService.getHistory()
     const records = historyRes.data || []
-    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+    const todayDateStr = new Date().toLocaleDateString('en-CA')
+    const isOverdueLoan = (r) => {
+      if (['đã trả', 'từ chối'].includes(r.trangThai)) return false
+      if (r.trangThai === 'quá hạn') return true
+      if (r.daTungQuaHan) return true
+      if (['đang chờ trả', 'đang mượn', 'chờ gia hạn', 'đã duyệt'].includes(r.trangThai) && r.ngayTra) {
+        const returnDateStr = new Date(r.ngayTra).toLocaleDateString('en-CA')
+        if (returnDateStr < todayDateStr) return true
+      }
+      return false
+    }
+    const overdueCount = records.filter(isOverdueLoan).reduce((sum, r) => sum + (r.soLuong || 1), 0)
     if (overdueCount > 0) {
-      alert(`Bạn đang có ${overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn sách mới!`)
+      alert(`Bạn đang có ${overdueCount} quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn sách mới!`)
       isSubmitting.value = false
       return
     }

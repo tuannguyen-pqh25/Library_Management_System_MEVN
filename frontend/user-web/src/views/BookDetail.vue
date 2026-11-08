@@ -97,7 +97,7 @@
                     <button
                       class="btn btn-outline-primary px-4 py-2 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2"
                       @click="addToCart"
-                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
+                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.isLocked || userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
                     >
                       <i class="fas fa-cart-plus"></i> Thêm vào giỏ
                     </button>
@@ -105,7 +105,7 @@
                       variant="primary"
                       class="px-5 py-2 rounded-pill fw-bold shadow-sm"
                       @click="openBorrowModal"
-                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
+                      :disabled="!book.SoQuyen || book.SoQuyen <= 0 || (isLoggedIn && userBorrowStats.loaded && (userBorrowStats.isLocked || userBorrowStats.overdueCount > 0 || userBorrowStats.remainingQuota === 0))"
                     >
                       <i class="fas fa-hand-holding-heart me-2"></i>
                       Mượn ngay
@@ -129,9 +129,13 @@
                   </div>
 
                   <!-- Quota alert message on book detail -->
-                  <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                  <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.isLocked" class="alert alert-danger py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                    <i class="fas fa-ban flex-shrink-0"></i>
+                    <div>Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Bạn không thể mượn sách mới lúc này. Vui lòng liên hệ ban quản lý thư viện!</div>
+                  </div>
+                  <div v-else-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
                     <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
-                    <div>Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn thêm sách mới.</div>
+                    <div>Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn tiếp!</div>
                   </div>
                   <div v-else-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.remainingQuota === 0" class="alert alert-warning py-2 px-3 rounded-3 small mt-3 mb-0 d-flex align-items-center gap-2">
                     <i class="fas fa-info-circle flex-shrink-0"></i>
@@ -399,7 +403,7 @@
         </div>
 
         <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.overdueCount > 0" class="alert alert-danger py-2 small mb-3 rounded-3">
-          <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!
+          <i class="fas fa-exclamation-triangle me-1"></i> Bạn đang có <strong>{{ userBorrowStats.overdueCount }}</strong> quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn tiếp!
         </div>
         <div v-else-if="isLoggedIn && userBorrowStats.loaded && soLuong > userBorrowStats.remainingQuota" class="alert alert-danger py-2 small mb-3 rounded-3">
           <i class="fas fa-exclamation-circle me-1"></i> Bạn chỉ còn được mượn tối đa <strong>{{ userBorrowStats.remainingQuota }}</strong> quyển sách!
@@ -428,7 +432,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import SachService from '@/services/sach.service'
 import MuonSachService from '@/services/muonsach.service'
@@ -505,12 +509,34 @@ const fetchUserBorrowQuota = async () => {
     const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
     const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
     const totalHolding = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
-    const overdueCount = records.filter(r => r.trangThai === 'quá hạn').reduce((sum, r) => sum + (r.soLuong || 1), 0)
+
+    const todayDateStr = new Date().toLocaleDateString('en-CA')
+    const isOverdueLoan = (r) => {
+      if (['đã trả', 'từ chối'].includes(r.trangThai)) return false
+      if (r.trangThai === 'quá hạn') return true
+      if (r.daTungQuaHan) return true
+      if (['đang chờ trả', 'đang mượn', 'chờ gia hạn', 'đã duyệt'].includes(r.trangThai) && r.ngayTra) {
+        const returnDateStr = new Date(r.ngayTra).toLocaleDateString('en-CA')
+        if (returnDateStr < todayDateStr) return true
+      }
+      return false
+    }
+
+    const overdueCount = records.filter(isOverdueLoan).reduce((sum, r) => sum + (r.soLuong || 1), 0)
     const remainingQuota = Math.max(0, 10 - totalHolding)
+    let isLocked = false
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
+        isLocked = true
+      }
+    } catch (_) {}
+
     userBorrowStats.value = {
       totalHolding,
       overdueCount,
       remainingQuota,
+      isLocked,
       loaded: true
     }
     // Adjust soLuong if needed
@@ -562,8 +588,13 @@ const fetchBook = async () => {
 // ---- Cart ----
 const addToCart = () => {
   if (!isLoggedIn.value) { router.push('/login'); return }
+  if (userBorrowStats.value.loaded && userBorrowStats.value.isLocked) {
+    message.value = 'Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Không thể thêm sách vào giỏ.'
+    messageType.value = 'danger'
+    return
+  }
   if (userBorrowStats.value.loaded && userBorrowStats.value.overdueCount > 0) {
-    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn. Vui lòng trả sách trước khi mượn thêm.`
+    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn thêm.`
     messageType.value = 'danger'
     return
   }
@@ -668,8 +699,13 @@ const deleteMyReview = async () => {
 const openBorrowModal = async () => {
   if (!localStorage.getItem('token')) { router.push('/login'); return }
   await fetchUserBorrowQuota()
+  if (userBorrowStats.value.isLocked) {
+    message.value = 'Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Không thể mượn sách!'
+    messageType.value = 'danger'
+    return
+  }
   if (userBorrowStats.value.overdueCount > 0) {
-    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách trước khi mượn tiếp!`
+    message.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước khi mượn tiếp!`
     messageType.value = 'danger'
     return
   }
@@ -691,8 +727,12 @@ const confirmBorrow = async () => {
   modalError.value = ''
   if (!ngayMuon.value || !ngayTra.value) { modalError.value = 'Vui lòng chọn ngày mượn và ngày trả.'; return }
   if (new Date(ngayTra.value) <= new Date(ngayMuon.value)) { modalError.value = 'Ngày trả phải sau ngày mượn ít nhất 1 ngày.'; return }
+  if (userBorrowStats.value.isLocked) {
+    modalError.value = 'Tài khoản của bạn đang bị khóa do vi phạm mượn trả sách. Không thể gửi yêu cầu mượn!'
+    return
+  }
   if (userBorrowStats.value.overdueCount > 0) {
-    modalError.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách trước!`
+    modalError.value = `Bạn đang có ${userBorrowStats.value.overdueCount} quyển sách quá hạn (hoặc đang chờ xác nhận trả sau quá hạn). Vui lòng đợi thủ thư xác nhận trả sách trước!`
     return
   }
   if (soLuong.value > userBorrowStats.value.remainingQuota) {
@@ -713,12 +753,23 @@ const confirmBorrow = async () => {
   }
 }
 
+const handleUserStatusChanged = (e) => {
+  if (userBorrowStats.value) {
+    userBorrowStats.value.isLocked = (e.detail?.TrangThaiTaiKhoan === 'BiKhoa')
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener('user-status-changed', handleUserStatusChanged)
   await fetchBook()
   checkWishlist()
   loadReviews()
   loadMyReview()
   fetchUserBorrowQuota()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('user-status-changed', handleUserStatusChanged)
 })
 </script>
 

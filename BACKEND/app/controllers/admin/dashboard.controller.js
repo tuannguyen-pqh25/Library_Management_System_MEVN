@@ -33,9 +33,19 @@ exports.getStats = async (req, res, next) => {
                     { ngayTra: { $lt: todayIso } }
                 ]
             },
-            { $set: { trangThai: "quá hạn" } }
+            { $set: { trangThai: "quá hạn", daTungQuaHan: true } }
         );
-        if (overdueUpdate && overdueUpdate.modifiedCount > 0) {
+        const overdueWaitingUpdate = await MuonSach.updateMany(
+            {
+                trangThai: "đang chờ trả",
+                $or: [
+                    { ngayTra: { $lt: todayDateStr } },
+                    { ngayTra: { $lt: todayIso } }
+                ]
+            },
+            { $set: { daTungQuaHan: true } }
+        );
+        if ((overdueUpdate && overdueUpdate.modifiedCount > 0) || (overdueWaitingUpdate && overdueWaitingUpdate.modifiedCount > 0)) {
             await Redis.del("admin:dashboard:stats");
         }
 

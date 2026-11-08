@@ -123,7 +123,7 @@ router.beforeEach((to, _from, next) => {
     }
   }
 
-  if (to.path === '/login' && token && isValidUserToken()) {
+  if (['/login', '/register'].includes(to.path) && token && isValidUserToken()) {
     next('/')
     return
   }

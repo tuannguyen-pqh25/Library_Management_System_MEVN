@@ -125,6 +125,9 @@
                       <div v-if="item.alertType === 'account_locked'" class="notif-thumb-placeholder bg-danger">
                         <i class="fas fa-user-lock text-white"></i>
                       </div>
+                      <div v-else-if="['lock_warning_urgent', 'lock_warning', 'fine_warning_75k', 'fine_warning_50k'].includes(item.alertType)" class="notif-thumb-placeholder bg-warning text-dark">
+                        <i class="fas fa-exclamation-triangle"></i>
+                      </div>
                       <img
                         v-else-if="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
                         :src="item.HinhAnh || (item.sachInfo && item.sachInfo.HinhAnh)"
@@ -140,8 +143,8 @@
                     <!-- Info -->
                     <div class="min-w-0 flex-grow-1">
                       <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
-                        <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : item.TenSach">
-                          {{ item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : (item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn') }}
+                        <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.title || item.TenSach">
+                          {{ item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : (['lock_warning_urgent', 'lock_warning', 'fine_warning_75k', 'fine_warning_50k'].includes(item.alertType) ? (item.title || 'Cảnh báo khóa tài khoản') : (item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn')) }}
                         </p>
                         <!-- Chip / Badge -->
                         <span
@@ -149,6 +152,26 @@
                           class="notif-chip chip-overdue flex-shrink-0"
                         >
                           <i class="fas fa-lock me-1"></i>Bị khóa
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'lock_warning_urgent'"
+                          class="notif-chip chip-overdue flex-shrink-0"
+                        >
+                          <i class="fas fa-hourglass-end me-1"></i>Sắp khóa (24h)
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'lock_warning'"
+                          class="notif-chip chip-soon flex-shrink-0"
+                          style="background-color: #ffeeba; color: #856404;"
+                        >
+                          <i class="fas fa-shield-alt me-1"></i>Nguy cơ khóa
+                        </span>
+                        <span
+                          v-else-if="item.alertType === 'fine_warning_75k' || item.alertType === 'fine_warning_50k'"
+                          class="notif-chip chip-soon flex-shrink-0"
+                          style="background-color: #fff3cd; color: #664d03;"
+                        >
+                          <i class="fas fa-coins me-1"></i>Tiền phạt
                         </span>
                         <span
                           v-else-if="item.alertType === 'approved'"
@@ -188,7 +211,7 @@
                         </span>
                       </div>
 
-                      <p v-if="item.alertType !== 'account_locked'" class="mb-1 text-muted" style="font-size:0.75rem;">
+                      <p v-if="!['account_locked', 'lock_warning_urgent', 'lock_warning', 'fine_warning_75k', 'fine_warning_50k'].includes(item.alertType)" class="mb-1 text-muted" style="font-size:0.75rem;">
                         Số lượng: <strong>{{ item.soLuong || 1 }}</strong> quyển
                       </p>
 
@@ -577,6 +600,29 @@ export default {
         this._hasFetchedBefore = true
         this._knownApprovedIds = new Set(currentApproved.map(n => String(n.notifId || n._id)))
 
+        // Đồng bộ trạng thái khóa tài khoản độc giả theo thời gian thực
+        try {
+          const lockNotif = notifs.find(n => n.alertType === 'account_locked')
+          const curUser = JSON.parse(localStorage.getItem('user') || '{}')
+          if (curUser && curUser._id) {
+            let changed = false
+            if (lockNotif && curUser.TrangThaiTaiKhoan !== 'BiKhoa') {
+              curUser.TrangThaiTaiKhoan = 'BiKhoa'
+              curUser.LyDoKhoa = lockNotif.message
+              changed = true
+            } else if (!lockNotif && curUser.TrangThaiTaiKhoan === 'BiKhoa') {
+              curUser.TrangThaiTaiKhoan = 'BinhThuong'
+              delete curUser.LyDoKhoa
+              changed = true
+            }
+            if (changed) {
+              localStorage.setItem('user', JSON.stringify(curUser))
+              this.currentUser = curUser
+              window.dispatchEvent(new CustomEvent('user-status-changed', { detail: curUser }))
+            }
+          }
+        } catch (_) {}
+
         this.notifications = notifs
       } catch (_) {
         this.notifications = []
@@ -593,6 +639,9 @@ export default {
     },
     getNotifTooltip(item) {
       if (item.alertType === 'account_locked') return 'Tài khoản độc giả đang bị khóa!'
+      if (item.alertType === 'lock_warning_urgent') return 'Cảnh báo: Tài khoản sắp bị khóa sau 1 ngày!'
+      if (item.alertType === 'lock_warning') return 'Cảnh báo: Nguy cơ bị khóa sau 3 ngày'
+      if (item.alertType === 'fine_warning_75k' || item.alertType === 'fine_warning_50k') return 'Cảnh báo: Tiền phạt trễ hạn mượn sách'
       if (item.alertType === 'approved') return 'Bấm để xem lịch sử và chuẩn bị nhận sách'
       if (item.alertType === 'extension_approved') return 'Bấm để xem hạn trả mới'
       if (item.alertType === 'overdue' || item.daysLeft < 0) return 'Bấm để xem và xin trả sách'

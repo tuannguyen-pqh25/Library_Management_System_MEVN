@@ -58,21 +58,26 @@ class MuonSachService {
             throw new Error("Mỗi lần chỉ được mượn tối đa 10 quyển");
         }
 
-        // --- 3. KIỂM TRA LOGIC SÁCH (KHÔNG TRỪ KHO NGAY, CHỈ KIỂM TRA TỒN TẠI) ---
+        // --- 3. CẬP NHẬT TRẠNG THÁI QUÁ HẠN & TỰ ĐỘNG KHÓA TRƯỚC TIÊN ---
+        await this._checkAndUpdateOverdue();
+
+        // --- 3.25. KIỂM TRA TRẠNG THÁI TÀI KHOẢN ĐỘC GIẢ ---
         const docGiaData = await this.client.db().collection("DOCGIA").findOne({ _id: docGiaId });
-        if (docGiaData && docGiaData.TrangThaiTaiKhoan === "BiKhoa") {
-            throw new Error("Tài khoản của bạn đã bị khóa. Không thể mượn sách.");
+        if (!docGiaData) {
+            throw new Error("Không tìm thấy thông tin tài khoản độc giả");
         }
+        if (docGiaData.TrangThaiTaiKhoan === "BiKhoa") {
+            const reason = docGiaData.LyDoKhoa ? `: ${docGiaData.LyDoKhoa}` : "";
+            throw new Error(`Tài khoản của bạn đang bị khóa do${reason}. Bạn không thể mượn sách lúc này! Vui lòng liên hệ ban quản lý thư viện để giải quyết.`);
+        }
+
+        // --- 3.5. KIỂM TRA TỒN TẠI VÀ SỐ LƯỢNG SÁCH CÒN LẠI ---
         const sach = await this.Sach.findOne({ _id: sachId });
         if (!sach) throw new Error("Không tìm thấy sách");
 
-        // --- 3.5. KIỂM TRA SỐ LƯỢNG SÁCH CÒN LẠI ---
         if (sach.SoQuyen < soLuong) {
             throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không thể mượn ${soLuong} quyển`);
         }
-
-        // Cập nhật trạng thái quá hạn trước khi kiểm tra
-        await this._checkAndUpdateOverdue();
 
         // --- 3.75. KIỂM TRA HẠN MỨC TỔNG CỘNG ĐỘC GIẢ (MAX 10 QUYỂN) ---
         const docGiaMuonSach = await this.MuonSach.find({
@@ -80,11 +85,22 @@ class MuonSachService {
             trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "quá hạn"] }
         }).toArray();
 
-        // 1. Kiểm tra sách quá hạn: Độc giả có sách quá hạn chưa trả sẽ không được mượn thêm
-        const overdueRecords = docGiaMuonSach.filter(record => record.trangThai === "quá hạn");
+        // 1. Kiểm tra sách quá hạn: Độc giả có sách quá hạn (kể cả đang chờ xác nhận trả) sẽ không được mượn thêm
+        const todayDateStr = new Date().toLocaleDateString('en-CA');
+        const isOverdueLoan = (record) => {
+            if (record.trangThai === "quá hạn") return true;
+            if (record.daTungQuaHan) return true;
+            if (["đang chờ trả", "đang mượn", "chờ gia hạn", "đã duyệt"].includes(record.trangThai) && record.ngayTra) {
+                const returnDateStr = new Date(record.ngayTra).toLocaleDateString('en-CA');
+                if (returnDateStr < todayDateStr) return true;
+            }
+            return false;
+        };
+
+        const overdueRecords = docGiaMuonSach.filter(isOverdueLoan);
         const overdueCount = overdueRecords.reduce((sum, record) => sum + (record.soLuong || 1), 0);
         if (overdueCount > 0) {
-            throw new Error(`Bạn đang có ${overdueCount} quyển sách quá hạn chưa trả. Vui lòng trả sách quá hạn trước khi mượn thêm sách mới!`);
+            throw new Error(`Bạn đang có ${overdueCount} quyển sách quá hạn (hoặc đang chờ thủ thư xác nhận trả sách quá hạn). Vui lòng hoàn tất trả sách và chờ thủ thư xác nhận trước khi mượn thêm sách mới!`);
         }
 
         // 2. Tính tổng số quyển đang giữ hoặc chờ duyệt (gồm chờ duyệt, đã duyệt, đang mượn, đang chờ trả)
@@ -122,6 +138,9 @@ class MuonSachService {
         try {
             const todayDateStr = new Date().toLocaleDateString('en-CA');
             const todayIso = new Date().toISOString();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             const res = await this.MuonSach.updateMany(
                 {
                     trangThai: { $in: ["đang mượn", "đã duyệt", "chờ gia hạn"] },
@@ -131,10 +150,104 @@ class MuonSachService {
                     ]
                 },
                 {
-                    $set: { trangThai: "quá hạn" }
+                    $set: { trangThai: "quá hạn", daTungQuaHan: true }
                 }
             );
-            if (res && res.modifiedCount > 0) {
+
+            // Cũng đánh dấu daTungQuaHan: true cho các phiếu "đang chờ trả" mà đã quá hạn
+            const resWaiting = await this.MuonSach.updateMany(
+                {
+                    trangThai: "đang chờ trả",
+                    $or: [
+                        { ngayTra: { $lt: todayDateStr } },
+                        { ngayTra: { $lt: todayIso } }
+                    ]
+                },
+                {
+                    $set: { daTungQuaHan: true }
+                }
+            );
+
+            // Quét tự động khóa tài khoản độc giả: quá hạn > 7 ngày (quá 1 tuần) hoặc tiền phạt >= 100.000 VNĐ
+            let hadAccountLocked = false;
+            const overdueRecords = await this.MuonSach.find({
+                trangThai: { $in: ["quá hạn", "đang mượn", "chờ gia hạn", "đang chờ trả"] },
+                $or: [
+                    { trangThai: "quá hạn" },
+                    { daTungQuaHan: true },
+                    { ngayTra: { $lt: todayDateStr } },
+                    { ngayTra: { $lt: todayIso } }
+                ]
+            }).toArray();
+
+            if (overdueRecords.length > 0) {
+                // Gom nhóm phiếu quá hạn theo docGiaId
+                const readerMap = new Map();
+                for (const rec of overdueRecords) {
+                    if (!rec.docGiaId) continue;
+                    const dgKey = rec.docGiaId.toString();
+                    if (!readerMap.has(dgKey)) {
+                        readerMap.set(dgKey, { docGiaId: rec.docGiaId, maxDays: 0, totalFine: 0 });
+                    }
+                    const item = readerMap.get(dgKey);
+
+                    let soNgayTre = 0;
+                    if (rec.ngayTra) {
+                        const due = new Date(rec.ngayTra);
+                        if (!isNaN(due.getTime())) {
+                            due.setHours(0, 0, 0, 0);
+                            const diffDays = Math.round((today - due) / (1000 * 60 * 60 * 24));
+                            if (diffDays > 0) soNgayTre = diffDays;
+                        }
+                    }
+                    if (rec.trangThai === "quá hạn" && soNgayTre <= 0) {
+                        soNgayTre = 1;
+                    }
+
+                    const fine = soNgayTre * 5000 * (rec.soLuong || 1);
+                    if (soNgayTre > item.maxDays) item.maxDays = soNgayTre;
+                    item.totalFine += fine;
+                }
+
+                // Kiểm tra độc giả nào vượt ngưỡng (quá hạn > 7 ngày từ quyển đầu tiên hoặc tổng phạt >= 100.000đ)
+                for (const [, stats] of readerMap.entries()) {
+                    if (stats.maxDays > 7 || stats.totalFine >= 100000) {
+                        const docGiaObjId = this._normalizeObjectId(stats.docGiaId);
+                        if (!docGiaObjId) continue;
+
+                        let reason = "";
+                        if (stats.maxDays > 7 && stats.totalFine >= 100000) {
+                            reason = `Tự động khóa: Quyển sách đầu tiên đã trễ hạn ${stats.maxDays} ngày (> 1 tuần) và tổng tiền phạt các sách (${stats.totalFine.toLocaleString('vi-VN')} VNĐ) vượt mức 100.000 VNĐ`;
+                        } else if (stats.maxDays > 7) {
+                            reason = `Tự động khóa: Quyển sách đầu tiên đã trễ hạn ${stats.maxDays} ngày (tính từ lúc quyển đầu tiên trễ hạn, vượt quá thời hạn 1 tuần cho phép)`;
+                        } else {
+                            reason = `Tự động khóa: Tổng tiền phạt trễ hạn tích lũy của tất cả các sách đang mượn (${stats.totalFine.toLocaleString('vi-VN')} VNĐ) đạt mức >= 100.000 VNĐ`;
+                        }
+
+                        const updateRes = await this.client.db().collection("DOCGIA").updateOne(
+                            {
+                                _id: docGiaObjId,
+                                TrangThaiTaiKhoan: { $ne: "BiKhoa" }
+                            },
+                            {
+                                $set: {
+                                    TrangThaiTaiKhoan: "BiKhoa",
+                                    LyDoKhoa: reason,
+                                    NgayKhoa: new Date(),
+                                    NguoiKhoa: "HeThongTuDong",
+                                    updatedAt: new Date().toISOString()
+                                }
+                            }
+                        );
+
+                        if (updateRes && updateRes.modifiedCount > 0) {
+                            hadAccountLocked = true;
+                        }
+                    }
+                }
+            }
+
+            if ((res && res.modifiedCount > 0) || (resWaiting && resWaiting.modifiedCount > 0) || hadAccountLocked) {
                 const Redis = require("../utils/redis.util");
                 await Redis.del("admin:dashboard:stats");
             }
@@ -434,6 +547,9 @@ class MuonSachService {
         if (payload.ngayDuKienTra) {
             updateData.ngayDuKienTra = payload.ngayDuKienTra;
         }
+        if (payload.daTungQuaHan !== undefined) {
+            updateData.daTungQuaHan = payload.daTungQuaHan;
+        }
 
         updateData.updatedAt = new Date().toISOString();
 
@@ -458,7 +574,8 @@ class MuonSachService {
             try {
                 const Redis = require("../utils/redis.util");
                 await Redis.del("admin:dashboard:stats");
-            } catch (_) {}
+                await Redis.clearMatch("user:sach:*");
+            } catch (_) { }
             return result;
         } catch (error) {
             if (stockDeducted) {
@@ -491,6 +608,11 @@ class MuonSachService {
         });
         if (result && ["đã duyệt", "đang mượn", "đang chờ trả"].includes(result.trangThai)) {
             await this.Sach.updateOne({ _id: result.sachId }, { $inc: { SoQuyen: result.soLuong || 1 } });
+            try {
+                const Redis = require("../utils/redis.util");
+                await Redis.del("admin:dashboard:stats");
+                await Redis.clearMatch("user:sach:*");
+            } catch (_) { }
         }
         return result;
     }
@@ -507,24 +629,24 @@ class MuonSachService {
         if (record.trangThai !== "chờ duyệt") {
             throw new Error("Chỉ có thể sửa số lượng khi phiếu mượn đang chờ duyệt");
         }
-        
+
         soLuong = parseInt(soLuong);
         if (isNaN(soLuong) || soLuong < 1 || soLuong > 10) {
             throw new Error("Số lượng phải từ 1 đến 10");
         }
-        
+
         const sach = await this.Sach.findOne({ _id: record.sachId });
         if (!sach) throw new Error("Không tìm thấy sách");
-        
+
         if (sach.SoQuyen < soLuong) {
             throw new Error(`Chỉ còn ${sach.SoQuyen} quyển, không thể mượn ${soLuong} quyển`);
         }
-        
+
         const docGiaMuonSach = await this.MuonSach.find({
             docGiaId: record.docGiaId,
             trangThai: { $in: ["chờ duyệt", "đã duyệt", "đang mượn", "chờ gia hạn", "đang chờ trả", "quá hạn"] }
         }).toArray();
-        
+
         const currentCount = docGiaMuonSach.reduce((sum, r) => sum + (r._id.toString() === id.toString() ? 0 : (r.soLuong || 1)), 0);
         if (currentCount + soLuong > 10) {
             throw new Error(`Bạn đã mượn/chờ duyệt ${currentCount} quyển. Không thể sửa thành ${soLuong} quyển vì sẽ vượt giới hạn 10`);
@@ -549,7 +671,7 @@ class MuonSachService {
         if (record.trangThai !== "chờ duyệt") {
             throw new Error("Chỉ có thể xóa phiếu mượn khi đang chờ duyệt");
         }
-        
+
         return await this.MuonSach.findOneAndDelete({ _id: phieuMuonId });
     }
 
@@ -565,6 +687,12 @@ class MuonSachService {
 
         if (record.docGiaId.toString() !== docGiaId.toString()) {
             throw new Error("Bạn không có quyền gia hạn phiếu mượn này");
+        }
+
+        const docGia = await this.client.db().collection("DOCGIA").findOne({ _id: this._normalizeObjectId(docGiaId) });
+        if (docGia && docGia.TrangThaiTaiKhoan === "BiKhoa") {
+            const reason = docGia.LyDoKhoa ? `: ${docGia.LyDoKhoa}` : "";
+            throw new Error(`Tài khoản của bạn đang bị khóa do${reason}. Không thể gửi yêu cầu gia hạn sách!`);
         }
 
         if (record.trangThai === "chờ gia hạn") {
@@ -658,7 +786,7 @@ class MuonSachService {
         try {
             const Redis = require("../utils/redis.util");
             await Redis.del("admin:dashboard:stats");
-        } catch (_) {}
+        } catch (_) { }
         return result;
     }
 
@@ -693,7 +821,7 @@ class MuonSachService {
         try {
             const Redis = require("../utils/redis.util");
             await Redis.del("admin:dashboard:stats");
-        } catch (_) {}
+        } catch (_) { }
         return result;
     }
 }

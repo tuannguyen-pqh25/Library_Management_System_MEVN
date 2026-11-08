@@ -248,42 +248,60 @@
                 </td>
 
                 <!-- Cột Thao tác -->
-                <td class="text-end pe-4">
-                  <div class="d-flex gap-1 justify-content-end">
-                    <button class="btn btn-sm btn-outline-primary" @click="viewDetail(dg)" title="Xem chi tiết">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-info" @click="viewHistory(dg)" title="Lịch sử mượn">
-                      <i class="fas fa-history"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-warning" @click="resetPassword(dg)" title="Cấp lại mật khẩu">
-                      <i class="fas fa-key"></i>
-                    </button>
+                <td class="text-end pe-4" style="min-width: 140px;">
+                  <div class="dropdown d-inline-block position-relative">
                     <button
-                      v-if="dg.TrangThaiTaiKhoan !== 'BiKhoa'"
-                      class="btn btn-sm btn-outline-danger"
-                      @click="openLockModal(dg)"
-                      title="Khóa tài khoản"
+                      class="btn btn-sm btn-light border px-3 py-1 rounded-pill fw-semibold shadow-none text-dark d-inline-flex align-items-center gap-1 action-dropdown-btn"
+                      type="button"
+                      @click.stop="toggleDropdown(dg._id)"
                     >
-                      <i class="fas fa-lock"></i>
+                      <i class="fas fa-ellipsis-h text-muted me-1"></i>
+                      <span>Thao tác</span>
+                      <i class="fas fa-chevron-down text-muted ms-1" style="font-size: 0.65rem;"></i>
                     </button>
-                    <button
-                      v-else
-                      class="btn btn-sm btn-outline-success"
-                      @click="unlockAccount(dg)"
-                      title="Mở khóa tài khoản"
-                      :disabled="actionLoading"
+                    <ul
+                      v-if="activeDropdownId === dg._id"
+                      class="dropdown-menu dropdown-menu-end show shadow border-0 rounded-3 py-2 position-absolute end-0 mt-1"
+                      style="z-index: 1050; min-width: 185px;"
                     >
-                      <i class="fas fa-unlock"></i>
-                    </button>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      @click="openDeleteModal(dg)"
-                      title="Xóa tài khoản độc giả"
-                      :disabled="actionLoading"
-                    >
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                      <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small" @click="viewDetail(dg); closeDropdown()">
+                          <i class="fas fa-eye text-primary text-center" style="width: 18px;"></i>
+                          <span>Xem chi tiết</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small" @click="viewHistory(dg); closeDropdown()">
+                          <i class="fas fa-history text-info text-center" style="width: 18px;"></i>
+                          <span>Lịch sử mượn</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small" @click="resetPassword(dg); closeDropdown()">
+                          <i class="fas fa-key text-warning text-center" style="width: 18px;"></i>
+                          <span>Cấp lại mật khẩu</span>
+                        </button>
+                      </li>
+                      <li><hr class="dropdown-divider my-1"></li>
+                      <li v-if="dg.TrangThaiTaiKhoan !== 'BiKhoa'">
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small text-danger" @click="openLockModal(dg); closeDropdown()">
+                          <i class="fas fa-lock text-danger text-center" style="width: 18px;"></i>
+                          <span>Khóa tài khoản</span>
+                        </button>
+                      </li>
+                      <li v-else>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small text-success" @click="unlockAccount(dg); closeDropdown()" :disabled="actionLoading">
+                          <i class="fas fa-unlock text-success text-center" style="width: 18px;"></i>
+                          <span>Mở khóa tài khoản</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 small text-danger" @click="openDeleteModal(dg); closeDropdown()" :disabled="actionLoading">
+                          <i class="fas fa-trash-alt text-danger text-center" style="width: 18px;"></i>
+                          <span>Xóa độc giả</span>
+                        </button>
+                      </li>
+                    </ul>
                   </div>
                 </td>
               </tr>
@@ -742,7 +760,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import DocGiaService from '@/services/docgia.service'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { Modal } from 'bootstrap'
@@ -755,6 +773,14 @@ const searchQuery = ref('')
 const statusFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+const activeDropdownId = ref(null)
+const toggleDropdown = (id) => {
+  activeDropdownId.value = activeDropdownId.value === id ? null : id
+}
+const closeDropdown = () => {
+  activeDropdownId.value = null
+}
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
@@ -1212,6 +1238,11 @@ const closeModal = (id) => {
 // =========== LIFECYCLE ===========
 onMounted(() => {
   fetchDocGia()
+  document.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown)
 })
 </script>
 
@@ -1219,6 +1250,20 @@ onMounted(() => {
 .page-shell {
   background-color: #f3f6f9;
   min-height: 100vh;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  min-height: 300px;
+}
+
+.action-dropdown-btn:hover {
+  background-color: #e9ecef;
+}
+
+.dropdown-menu {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
 }
 
 .stat-card {

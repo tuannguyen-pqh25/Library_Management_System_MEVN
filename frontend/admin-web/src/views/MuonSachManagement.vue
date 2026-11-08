@@ -25,7 +25,7 @@
             <i class="fas fa-clock me-1"></i> Chờ trả: {{ countStatus('đang chờ trả') }}
           </span>
           <span class="badge rounded-pill bg-danger text-white px-3 py-2 fw-semibold border border-danger shadow-sm">
-            <i class="fas fa-exclamation-triangle me-1"></i> Quá hạn: {{ countStatus('quá hạn') }}
+            <i class="fas fa-exclamation-triangle me-1"></i> Quá hạn: {{ countOverdue }}
           </span>
         </div>
       </div>
@@ -452,6 +452,53 @@
     </div>
   </div>
 
+  <!-- ===== MODAL XÁC NHẬN MỞ KHÓA TÀI KHOẢN SAU KHI TRẢ SÁCH ===== -->
+  <div class="modal fade" id="unlockPromptModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" v-if="unlockPromptData">
+        <div class="modal-header bg-warning bg-opacity-25 py-3 px-4 border-bottom">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="fas fa-user-shield text-warning"></i>
+            <span>Độc giả đang bị khóa tài khoản</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="bg-warning-subtle text-warning rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+            <i class="fas fa-unlock-alt fa-2x"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-2">Độc giả đã hoàn tất trả sách!</h5>
+          <p class="text-secondary mb-3">
+            Độc giả <strong class="text-dark">{{ unlockPromptData.tenDocGia }}</strong> vừa trả sách <strong class="text-dark">"{{ unlockPromptData.tenSach }}"</strong>. Hiện tài khoản của độc giả này đang ở trạng thái <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill">Bị khóa</span>.
+          </p>
+          <div class="alert alert-light border small text-muted text-start mb-0">
+            <i class="fas fa-info-circle me-1 text-primary"></i>
+            Bạn có muốn <strong>MỞ KHÓA TÀI KHOẢN</strong> cho độc giả <strong>{{ unlockPromptData.tenDocGia }}</strong> ngay bây giờ không?
+          </div>
+        </div>
+        <div class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between">
+          <button
+            type="button"
+            class="btn btn-outline-secondary rounded-pill px-4"
+            data-bs-dismiss="modal"
+            :disabled="unlockLoading"
+          >
+            <i class="fas fa-lock me-1"></i> Giữ khóa (Để sau)
+          </button>
+          <button
+            type="button"
+            class="btn btn-success rounded-pill px-4 text-white fw-semibold"
+            @click="confirmUnlockDocGia"
+            :disabled="unlockLoading"
+          >
+            <i class="fas" :class="unlockLoading ? 'fa-spinner fa-spin' : 'fa-unlock'"></i>
+            <span class="ms-1">{{ unlockLoading ? 'Đang mở khóa...' : 'Mở khóa tài khoản ngay' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== TOAST NOTIFICATION ===== -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100;">
     <div
@@ -474,7 +521,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Modal, Toast } from 'bootstrap'
 import MuonSachService from '@/services/muonsach.service'
 import DocGiaService from '@/services/docgia.service'
@@ -493,7 +540,12 @@ const actionSelected = ref({})
 // Modal instances
 let detailModalInst = null
 let rejectModalInst = null
+let unlockPromptModalInst = null
 let toastInst = null
+
+// Unlock Prompt modal state (khi trả sách mà độc giả đang bị khóa)
+const unlockPromptData = ref(null)
+const unlockLoading = ref(false)
 
 // Selected record (detail modal)
 const selectedRecord = ref(null)
@@ -541,6 +593,11 @@ const getActionOptions = (trangThai, record = null) => {
     case 'đang chờ trả':
       return [
         { value: 'confirm-return', label: 'Xác nhận trả' },
+        ...(isOverdue(record) || record?.daTungQuaHan ? [
+          record?.TrangThaiTaiKhoan === 'BiKhoa'
+            ? { value: 'unlock-account', label: 'Mở khóa tài khoản' }
+            : { value: 'lock-account',   label: 'Khóa tài khoản' }
+        ] : [])
       ]
     default:
       return [] // đã trả, từ chối → không có action
@@ -559,14 +616,20 @@ const getExecBtnClass = (action) => {
 const filteredRecords = computed(() => {
   let list = records.value
   if (searchText.value.trim()) {
-    const q = searchText.value.trim().toLowerCase()
-    list = list.filter(r =>
-      (r.TenSach || '').toLowerCase().includes(q) ||
-      (r.TenDocGia || '').toLowerCase().includes(q) ||
-      (r.EmailDocGia || '').toLowerCase().includes(q)
-    )
+    const words = searchText.value.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    list = list.filter(r => {
+      const book = (r.TenSach || '').toLowerCase()
+      const reader = (r.TenDocGia || '').toLowerCase()
+      const email = (r.EmailDocGia || '').toLowerCase()
+      const code = (r.MaSach || '').toLowerCase()
+      return words.every(w => book.includes(w) || reader.includes(w) || email.includes(w) || code.includes(w))
+    })
   }
   return list
+})
+
+watch(searchText, () => {
+  currentPage.value = 1
 })
 
 const totalPages = computed(() => Math.ceil(filteredRecords.value.length / itemsPerPage.value) || 1)
@@ -681,8 +744,18 @@ const handleAction = async (record, action, fromDetail = false) => {
       await MuonSachService.handover(record._id)
       showToast('Đã giao sách cho độc giả!', 'success')
     } else if (action === 'confirm-return') {
-      await MuonSachService.confirmReturn(record._id)
+      const res = await MuonSachService.confirmReturn(record._id)
       showToast('Xác nhận trả sách thành công!', 'success')
+
+      const docGiaData = res?.data?.docGia || {}
+      const isLocked = docGiaData.TrangThaiTaiKhoan === 'BiKhoa' || record.TrangThaiTaiKhoan === 'BiKhoa'
+      if (isLocked) {
+        openUnlockPromptModal({
+          docGiaId: record.docGiaId,
+          tenDocGia: docGiaData.TenDocGia || record.TenDocGia || 'Độc giả',
+          tenSach: record.TenSach || 'Sách mượn'
+        })
+      }
     }
     if (fromDetail) detailModalInst?.hide()
     await fetchRecords(filterStatus.value)
@@ -691,6 +764,28 @@ const handleAction = async (record, action, fromDetail = false) => {
     showToast(msg, 'danger')
   } finally {
     processingId.value = null
+  }
+}
+
+const openUnlockPromptModal = (data) => {
+  unlockPromptData.value = data
+  unlockPromptModalInst?.show()
+}
+
+const confirmUnlockDocGia = async () => {
+  if (!unlockPromptData.value) return
+  unlockLoading.value = true
+  try {
+    await DocGiaService.toggleAccountStatus(unlockPromptData.value.docGiaId, {
+      TrangThaiTaiKhoan: 'BinhThuong'
+    })
+    showToast(`Đã mở khóa tài khoản cho độc giả ${unlockPromptData.value.tenDocGia} thành công!`, 'success')
+    unlockPromptModalInst?.hide()
+    await fetchRecords(filterStatus.value)
+  } catch (error) {
+    showToast(error.response?.data?.message || 'Không thể mở khóa tài khoản độc giả!', 'danger')
+  } finally {
+    unlockLoading.value = false
   }
 }
 
@@ -736,10 +831,17 @@ const formatCurrency = (value) => {
 }
 
 const isOverdue = (record) => {
-  if (!record.ngayTra) return false
+  if (!record || !record.ngayTra) return false
   if (['đã trả', 'từ chối'].includes(record.trangThai)) return false
-  return new Date(record.ngayTra) < new Date()
+  if (record.trangThai === 'quá hạn' || record.daTungQuaHan) return true
+  const todayDateStr = new Date().toLocaleDateString('en-CA')
+  const returnDateStr = new Date(record.ngayTra).toLocaleDateString('en-CA')
+  return returnDateStr < todayDateStr
 }
+
+const countOverdue = computed(() => {
+  return records.value.filter(isOverdue).length
+})
 
 const getInitial = (name) => {
   if (!name || name === '—') return '?'
@@ -795,6 +897,7 @@ const handleFocus = () => {
 onMounted(async () => {
   detailModalInst = new Modal(document.getElementById('detailModal'))
   rejectModalInst = new Modal(document.getElementById('tuChoiModal'))
+  unlockPromptModalInst = new Modal(document.getElementById('unlockPromptModal'))
   toastInst = new Toast(document.getElementById('muonSachToast'), { delay: 3000 })
 
   await fetchRecords()

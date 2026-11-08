@@ -102,14 +102,17 @@ The system addresses the operational bottlenecks of traditional physical library
   8. *Administrative Analytics*: Real-time KPI aggregation and Dashboard verification.
 - **Automated Verification**: Executable via standard `npm test` inside `BACKEND` or `node tests/run-api-tests.js`.
 
-### 🔔 6. Deterministic In-App Notification System & Dynamic Overdue Fines
+### 🔔 6. Deterministic In-App Notification System, Dynamic Fines & Automated Reader Moderation
 - **Deterministic ID Generation**: Overcomes the common single-page app defect where refresh (F5) or status transitions re-increment or falsely clear notification badges. Generates immutable event identifiers:
   `${item._id}_approved`, `${item._id}_ext_approved_${count}`, `${item._id}_overdue_${date}`, `account_locked_${docGiaId}`.
-- **Dynamic Overdue Fine Calculation**: Computes penalty costs in real-time (`days_overdue * 5,000 VND * book_quantity`) rendered natively inside overdue notifications.
-- **Account Suspension & Live Approval Alerts**: Real-time floating approval toasts and distinct red badges when accounts are suspended by staff due to overdue violations.
+- **Automated Overdue Account Suspension**: Automatically suspends reader accounts (`TrangThaiTaiKhoan = "BiKhoa"`) when overdue duration from the earliest overdue book exceeds 7 days (1 week) or total accumulated fines across all overdue books reach $\ge$ 100,000 VND (5,000 VND/day/book), logging fine metrics and instantly invalidating Redis analytics.
+- **Proactive Multi-Tiered Warnings**: Dispatches 3-day and 1-day pre-lock warnings, alongside 50,000 VND and 75,000 VND fine threshold alerts before account suspension occurs.
+- **Strict Locked Borrowing Prevention**: Readers with locked accounts are strictly blocked from submitting new borrow requests on both Book Detail and Cart views.
+- **Librarian Post-Return Moderation Prompt**: Upon book return confirmation, the system prompts staff with a dedicated modal asking whether to reinstate the reader's account or preserve the suspension until penalties are cleared.
 - **Low-Latency Polling**: 8-second interval synchronized with window `focus` events for instant tab updates.
 
-### 🎙️ 7. Browser-Native Voice Search (AI Speech)
+### 🔍 7. Multi-Term Hot Search, Live Typeahead & Voice Search (AI Speech)
+- **Multi-Term Hot Search & Live Typeahead**: Instant as-you-type search (250ms debounce) filtering book collections character by character and word by word across book titles and authors via safe regex lookaheads `(?=.*word1)(?=.*word2)`. Includes popular Hot Search tag shortcuts and an interactive suggestion dropdown with real-time thumbnails, pricing, and stock metrics.
 - **Web Speech API Integration**: Browser-native speech recognition supporting Vietnamese (`vi-VN`) in both User Web and Admin Web search bars.
 - **Clean Instance Lifecycle**: Automatically aborts previous recognition sessions and instantiates fresh `SpeechRecognition` objects, eliminating Chromium `DOMException: InvalidStateError`.
 - **Multi-Tier Diagnostic Handling**: Detects blocked microphone permissions (`not-allowed`) with actionable browser URL bar guidance, handles network drops to Google Speech cloud services, and provides an immediate stop-listening toggle.
@@ -143,7 +146,7 @@ The system addresses the operational bottlenecks of traditional physical library
 | **Frontend Clients** | Vue 3 (Composition API, `<script setup>`), Vite 5, Vue Router 4, Pinia, Axios, Bootstrap 5.3, FontAwesome 6, Chart.js, VeeValidate 4 + Yup |
 | **Backend API** | Node.js (v20+), Express.js 4, Native MongoDB Driver (v6), Bcrypt.js, JsonWebToken, Passport.js, Morgan, Cors |
 | **Databases & Cache** | MongoDB (Document Store), Redis (In-Memory Key-Value Store) |
-| **AI & External APIs** | Google Gemini Generative AI SDK, Web Speech API (W3C Standard), Google OAuth 2.0 |
+| **AI & External APIs** | Web Speech API (W3C Standard - Voice Search), Google OAuth 2.0 |
 | **DevOps & Production** | NGINX (Reverse Proxy, Gzip, History Mode), PM2 (Process Supervisor) |
 
 ---
@@ -172,7 +175,7 @@ The system addresses the operational bottlenecks of traditional physical library
    cd BACKEND
    npm install
    cp .env.example .env
-   # Populate your JWT_SECRET and optional GEMINI_API_KEY
+   # Populate your JWT_SECRET and Google OAuth credentials
    npm run seed        # Seeds initial Admin (ADMIN001 / Admin@123) and sample books
    npm run db:indexes  # Enforces all 17 unique and compound indexes
    npm run dev         # Starts backend on http://localhost:3000
@@ -290,17 +293,19 @@ Dự án **Quản Lý Đăng Ký Mượn Trả Sách Trực Tuyến (Library Man
 5. **Tăng Tốc Truy Xuất Bằng Redis In-Memory Cache**:
    - Tích hợp bộ đệm Redis v6.x (tương thích RESP2) cho danh mục sách và KPI dashboard. Giảm độ trễ phản hồi từ ~65ms xuống chỉ còn 1.2ms - 2.5ms (tăng tốc gấp 40 lần).
    - Cơ chế tự động dọn cache theo sự kiện: Thao tác tạo/sửa/xóa sách tự động xóa `user:sach:*`, thao tác mượn/trả tự động làm mới `admin:dashboard:stats*`.
-6. **Tìm Kiếm Bằng Giọng Nói (Voice Search AI) Với Web Speech API**:
+6. **Tìm Kiếm Tức Thời Theo Từng Ký Tự/Từ (Hot Search, Live Typeahead) & Giọng Nói (Voice Search AI)**:
+   - Cơ chế tìm kiếm tức thời (as-you-type debounce 250ms) theo từng ký tự và từng từ, kết hợp dropdown gợi ý thông minh (Hot Search tags thịnh hành, danh mục và thẻ sách thu nhỏ) điều hướng thẳng vào chi tiết sách; regex lookahead đa từ an toàn chống RegExp injection.
    - Nhận diện giọng nói tiếng Việt (`vi-VN`) ngay trên thanh tìm kiếm. Xây dựng cơ chế Clean Instance Lifecycle tự hủy và tái tạo đối tượng `SpeechRecognition`, triệt tiêu hoàn toàn ngoại lệ `DOMException: InvalidStateError`.
    - Phân loại lỗi thông minh: Hướng dẫn người dùng cấp quyền Micro (`not-allowed`), cảnh báo lỗi mạng Google Speech API (`network`), và hỗ trợ bấm lần 2 để ngắt phiên tức thời.
 7. **Bộ Kiểm Thử Tự Động Toàn Diện (44 Ca Kiểm Thử, Đạt 100% Trong 1.15s - 2.27s)**:
    - Script Node.js độc lập (`tests/run-api-tests.js`) kiểm thử liên hoàn 9 nhóm nghiệp vụ không cần framework bên ngoài cồng kềnh.
    - Kiểm chứng tự động: Kết nối, Đăng ký/Đăng nhập kép, RBAC 3 vai trò (chặn chéo 403), CRUD Sách/NXB, Ràng buộc đánh giá trước mượn (400), Chống Overbooking nguyên tử (400), Gia hạn hợp lệ, Hoàn kho khi trả sách, Khóa/Mở và Xóa tài khoản độc giả.
    - Kiểm thử dễ dàng qua lệnh tiêu chuẩn `npm test` trong thư mục `BACKEND` hoặc file `tests/run-tests.bat`.
-8. **Khắc Phục Triệt Để Lỗi Badge Thông Báo & Tính Phí Phạt Trễ Hạn Tự Động**:
-   - Chuẩn hóa mã thông báo thành chuỗi định danh đơn trị (`notifId`), giải quyết triệt để lỗi đánh dấu nhầm "đã đọc" khi chuyển trạng thái mượn sách.
-   - Tự động tính toán phí phạt trễ hạn theo công thức quy định: `Số ngày trễ * 5.000 VNĐ * Số lượng`, hiển thị chi tiết số tiền phạt cụ thể.
-   - Bổ sung thông báo trực quan khi tài khoản bị khóa (`account_locked`), toast nổi khi thủ thư duyệt sách, và đồng bộ tự động mỗi 8 giây kết hợp khi chuyển tab (`window.focus`).
+8. **Cơ Chế Khóa Tài Khoản Quá Hạn Tự Động, Cảnh Báo Trước & Xác Nhận Mở Khóa Sau Khi Trả Sách**:
+   - Tự động quét và khóa tài khoản độc giả (`TrangThaiTaiKhoan: "BiKhoa"`) khi thời gian trễ hạn tính từ quyển sách đầu tiên > 7 ngày (1 tuần) hoặc tổng tiền phạt trễ hạn tích lũy của tất cả các sách >= 100.000 VNĐ (5.000đ/ngày/quyển), ghi nhận lý do chi tiết và tự động làm mới bộ nhớ đệm Redis Dashboard.
+   - Cảnh báo trước khi khóa trên thanh thông báo độc giả: Cảnh báo khẩn cấp trước 1 ngày (quá hạn 6-7 ngày), cảnh báo nguy cơ trước 3 ngày (quá hạn 4-5 ngày), và cảnh báo theo mốc tiền phạt đạt 50.000 VNĐ & 75.000 VNĐ với độ ưu tiên cao và badge trực quan.
+   - Chặn triệt để hành vi mượn sách mới khi độc giả đang bị khóa trên cả hai giao diện `BookDetail.vue` và `CartUser.vue`, chấm dứt việc lách luật "hẹn trả để được mượn lại".
+   - Khi Thủ thư xác nhận trả sách (`confirm-return`), hệ thống hoàn kho an toàn và phát sinh hộp thoại Modal xác nhận chuyên nghiệp cho Thủ thư: Hỏi ý kiến có muốn mở khóa tài khoản cho độc giả ngay không, trao quyền chủ động cho thủ thư thay vì tự ý mở khóa.
 9. **Đăng Nhập Linh Hoạt & Ủy Quyền OAuth 2.0 (Google)**:
    - Cho phép người dùng đăng nhập bằng **Email hoặc Số điện thoại** kết hợp mật khẩu Bcrypt.
    - Tích hợp Passport.js Google OAuth 2.0 (Dự án ASALib) cấp phát JWT nội bộ an toàn. Cung cấp chế độ Mock OAuth phục vụ phát triển offline.
