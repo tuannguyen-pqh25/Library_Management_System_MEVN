@@ -150,7 +150,8 @@ const handleLogin = async () => {
 
 const loginWithGoogle = () => {
   const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-  window.location.href = `${apiBase}/user/auth/google`
+  const origin = encodeURIComponent(window.location.origin)
+  window.location.href = `${apiBase}/user/auth/google?origin=${origin}`
 }
 </script>
 
