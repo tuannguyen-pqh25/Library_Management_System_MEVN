@@ -23,7 +23,6 @@
               style="max-width: 160px; border-right: 1px solid #dee2e6 !important;" 
               v-model="selectedCategory" 
               @change="onCategoryChange" 
-              :disabled="loading"
             >
               <option value="">Tất cả thể loại</option>
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -36,7 +35,6 @@
               @input="onSearchInput"
               @focus="onSearchFocus"
               @keyup.enter="onSearchEnter" 
-              :disabled="loading"
               autocomplete="off"
             />
             <button 
@@ -287,8 +285,10 @@ const fetchCategories = async () => {
   }
 }
 
-const fetchBooks = async () => {
-  loading.value = true
+const fetchBooks = async (isBackground = false) => {
+  if (!isBackground) {
+    loading.value = true
+  }
   toast.value.show = false
   try {
     const response = await SachService.getAll(searchText.value, selectedCategory.value)
@@ -300,7 +300,9 @@ const fetchBooks = async () => {
     console.error('Không thể tải danh sách sách:', error)
     showToast(error.response?.data?.message || 'Lỗi khi tải danh sách sách')
   } finally {
-    loading.value = false
+    if (!isBackground) {
+      loading.value = false
+    }
   }
 }
 
@@ -309,7 +311,7 @@ const onSearchInput = () => {
   showSuggestions.value = true
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    fetchBooks()
+    fetchBooks(true)
   }, 250)
 }
 

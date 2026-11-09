@@ -266,6 +266,82 @@
       </div>
     </div>
 
+    <!-- ========== MODAL: XÓA ĐƠN LẺ NHÂN VIÊN ========== -->
+    <div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-labelledby="deleteStaffModalLabel" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-body p-4 text-center">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 bg-danger bg-opacity-10 text-danger"
+                 style="width: 64px; height: 64px;">
+              <i class="fas fa-trash-alt fa-2x"></i>
+            </div>
+
+            <h5 class="fw-bold mb-2">
+              Xác nhận xóa Nhân Viên
+            </h5>
+
+            <p class="text-muted small mb-3">
+              Bạn có chắc chắn muốn xóa nhân viên "<strong>{{ staffToDelete?.HoTenNV || staffToDelete?.MSNV }}</strong>"
+              <span v-if="staffToDelete?.MSNV"> (MSNV: <code>{{ staffToDelete?.MSNV }}</code>)</span> khỏi hệ thống? Thao tác này không thể hoàn tác.
+            </p>
+
+            <p class="fw-semibold small text-danger mb-4">
+              Bạn có CHẮC CHẮN muốn tiếp tục xóa?
+            </p>
+
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal" :disabled="saving">
+                Hủy bỏ
+              </button>
+              <button type="button" class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm" @click="executeDeleteStaff" :disabled="saving">
+                <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                <i v-else class="fas fa-trash me-1"></i> Xóa vĩnh viễn
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL: XÓA HÀNG LOẠT NHÂN VIÊN ========== -->
+    <div class="modal fade" id="bulkDeleteStaffModal" tabindex="-1" aria-labelledby="bulkDeleteStaffModalLabel" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-body p-4 text-center">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 bg-danger bg-opacity-10 text-danger"
+                 style="width: 64px; height: 64px;">
+              <i class="fas fa-trash-alt fa-2x"></i>
+            </div>
+
+            <h5 class="fw-bold mb-2">
+              Xác nhận xóa hàng loạt
+            </h5>
+
+            <div class="alert alert-danger d-flex align-items-start gap-2 rounded-3 mb-3 text-start small">
+              <i class="fas fa-exclamation-triangle mt-1"></i>
+              <div>
+                Bạn có chắc chắn muốn xóa vĩnh viễn <strong>{{ selectedIds.length }}</strong> nhân viên đã chọn khỏi hệ thống?
+              </div>
+            </div>
+
+            <p class="text-muted small mb-3">
+              Thao tác này sẽ xóa hoàn toàn thông tin tài khoản và không thể phục hồi.
+            </p>
+
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal" :disabled="saving">
+                Hủy bỏ
+              </button>
+              <button type="button" class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm" @click="executeBulkDeleteStaff" :disabled="saving">
+                <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                <i v-else class="fas fa-trash me-1"></i> Xác nhận xóa hàng loạt
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -320,12 +396,31 @@ const visiblePages = computed(() => {
 })
 
 let staffModalInstance = null
+let deleteStaffModalInstance = null
+let bulkDeleteStaffModalInstance = null
+
 const getStaffModal = () => {
   if (!staffModalInstance) {
     const el = document.getElementById('staffModal')
     if (el) staffModalInstance = new Modal(el)
   }
   return staffModalInstance
+}
+
+const getDeleteStaffModal = () => {
+  if (!deleteStaffModalInstance) {
+    const el = document.getElementById('deleteStaffModal')
+    if (el) deleteStaffModalInstance = new Modal(el)
+  }
+  return deleteStaffModalInstance
+}
+
+const getBulkDeleteStaffModal = () => {
+  if (!bulkDeleteStaffModalInstance) {
+    const el = document.getElementById('bulkDeleteStaffModal')
+    if (el) bulkDeleteStaffModalInstance = new Modal(el)
+  }
+  return bulkDeleteStaffModalInstance
 }
 
 // Bulk Selection
@@ -393,26 +488,40 @@ const save = async () => {
   }
 }
 
-const remove = async (record) => {
-  if (!confirm(`Bạn có chắc muốn xóa nhân viên ${record.HoTenNV || record.MSNV}?`)) return
+const staffToDelete = ref(null)
+
+const remove = (record) => {
+  staffToDelete.value = record
+  getDeleteStaffModal()?.show()
+}
+
+const executeDeleteStaff = async () => {
+  if (!staffToDelete.value) return
   saving.value = true
   try {
-    await NhanVienService.delete(record._id)
-    selectedIds.value = selectedIds.value.filter(id => id !== record._id)
+    await NhanVienService.delete(staffToDelete.value._id)
+    selectedIds.value = selectedIds.value.filter(id => id !== staffToDelete.value._id)
     noticeType.value = 'success'
-    notice.value = 'Đã xóa nhân viên thành công.'
+    notice.value = `Đã xóa nhân viên ${staffToDelete.value.HoTenNV || staffToDelete.value.MSNV} thành công.`
+    getDeleteStaffModal()?.hide()
     await retrieveStaff()
   } catch (error) {
     noticeType.value = 'danger'
     notice.value = error.response?.data?.message || 'Không thể xóa nhân viên.'
+    getDeleteStaffModal()?.hide()
   } finally {
     saving.value = false
+    staffToDelete.value = null
   }
 }
 
-const confirmBulkDelete = async () => {
+const confirmBulkDelete = () => {
   if (!selectedIds.value.length) return
-  if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${selectedIds.value.length} nhân viên đã chọn?`)) return
+  getBulkDeleteStaffModal()?.show()
+}
+
+const executeBulkDeleteStaff = async () => {
+  if (!selectedIds.value.length) return
   saving.value = true
   let successCount = 0
   let failCount = 0
@@ -426,6 +535,7 @@ const confirmBulkDelete = async () => {
   }
   selectedIds.value = []
   saving.value = false
+  getBulkDeleteStaffModal()?.hide()
   noticeType.value = failCount > 0 ? 'danger' : 'success'
   notice.value = `Đã xóa ${successCount} nhân viên.` + (failCount > 0 ? ` Thất bại ${failCount} nhân viên.` : '')
   await retrieveStaff()

@@ -186,8 +186,21 @@
                   </div>
                 </div>
 
-                <!-- Write Review Form (only for logged-in users) -->
-                <div v-if="isLoggedIn" class="write-review-box rounded-4 p-4 mb-4">
+                <!-- Thông báo khi tài khoản bị khóa -->
+                <div v-if="isLoggedIn && userBorrowStats.loaded && userBorrowStats.isLocked" class="alert alert-danger rounded-4 p-4 mb-4 d-flex align-items-center gap-3">
+                  <div class="d-flex align-items-center justify-content-center bg-danger text-white rounded-circle flex-shrink-0" style="width: 44px; height: 44px;">
+                    <i class="fas fa-user-lock fa-lg"></i>
+                  </div>
+                  <div>
+                    <h6 class="fw-bold text-danger mb-1">Tài khoản đang bị khóa</h6>
+                    <p class="mb-0 text-muted-custom small">
+                      Tài khoản của bạn hiện đang bị tạm khóa do vi phạm quy định thư viện. Bạn không thể viết, chỉnh sửa hoặc gửi đánh giá cho ấn phẩm này.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Write Review Form (only for active logged-in users) -->
+                <div v-else-if="isLoggedIn" class="write-review-box rounded-4 p-4 mb-4">
                   <h6 class="fw-bold mb-3 text-dark">
                     <i class="fas fa-pen me-2 text-primary"></i>
                     {{ myReview ? 'Chỉnh sửa đánh giá của bạn' : 'Viết đánh giá' }}
@@ -441,6 +454,7 @@ import DanhGiaService from '@/services/danhgia.service'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import CartService from '@/services/cart.service'
+import ProfileService from '@/services/profile.service'
 import eventBus from '@/services/eventBus'
 
 const props = defineProps({ id: { type: String, required: true } })
@@ -526,11 +540,21 @@ const fetchUserBorrowQuota = async () => {
     const remainingQuota = Math.max(0, 10 - totalHolding)
     let isLocked = false
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
-        isLocked = true
+      const profileRes = await ProfileService.getProfile()
+      if (profileRes?.data) {
+        localStorage.setItem('user', JSON.stringify(profileRes.data))
+        if (profileRes.data.TrangThaiTaiKhoan === 'BiKhoa') {
+          isLocked = true
+        }
       }
-    } catch (_) {}
+    } catch (_) {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        if (user && user.TrangThaiTaiKhoan === 'BiKhoa') {
+          isLocked = true
+        }
+      } catch (_) {}
+    }
 
     userBorrowStats.value = {
       totalHolding,
@@ -666,6 +690,10 @@ const loadMyReview = async () => {
 
 const submitReview = async () => {
   if (!reviewForm.value.soSao) return
+  if (userBorrowStats.value.isLocked) {
+    reviewError.value = 'Tài khoản của bạn đang bị khóa do vi phạm. Không thể gửi đánh giá!'
+    return
+  }
   reviewSubmitting.value = true
   reviewError.value = ''
   try {
@@ -681,6 +709,10 @@ const submitReview = async () => {
 
 const deleteMyReview = async () => {
   if (!myReview.value?._id) return
+  if (userBorrowStats.value.isLocked) {
+    reviewError.value = 'Tài khoản của bạn đang bị khóa. Không thể xóa đánh giá!'
+    return
+  }
   reviewSubmitting.value = true
   reviewError.value = ''
   try {

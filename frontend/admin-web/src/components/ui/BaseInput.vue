@@ -54,13 +54,32 @@ defineEmits(['update:modelValue'])
   border-radius: 8px;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-color);
-  background-color: #ffffff;
+  background-color: var(--card-bg, #ffffff);
+  color: var(--bs-body-color);
 }
 .form-control:focus {
   border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.25rem rgba(30, 61, 47, 0.25);
+  background-color: var(--card-bg, #ffffff);
+  color: var(--bs-body-color);
+  box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
 }
 .form-control::placeholder {
-  color: #9ca3af;
+  color: var(--muted-text, #64748b);
+  opacity: 0.8;
+}
+
+:global([data-bs-theme="dark"]) .form-control {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+:global([data-bs-theme="dark"]) .form-control:focus {
+  background-color: #0f172a !important;
+  border-color: #3b82f6 !important;
+  color: #f8fafc !important;
+}
+:global([data-bs-theme="dark"]) .form-control::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.7;
 }
 </style>

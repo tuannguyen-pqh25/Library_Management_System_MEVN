@@ -79,6 +79,13 @@ class DanhGiaService {
         const sId = ObjectId.isValid(sachId) ? new ObjectId(sachId) : null;
         if (!dgId || !sId) throw new Error("ID không hợp lệ");
 
+        // Kiểm tra tài khoản độc giả và trạng thái khóa
+        const docGia = await this.DocGia.findOne({ _id: dgId });
+        if (!docGia) throw new Error("Không tìm thấy thông tin tài khoản độc giả");
+        if (docGia.TrangThaiTaiKhoan === "BiKhoa") {
+            throw new Error("Tài khoản của bạn đang bị khóa do vi phạm quy định thư viện. Bạn không thể thực hiện đánh giá sách!");
+        }
+
         // Kiểm tra sách tồn tại
         const sach = await this.Sach.findOne({ _id: sId });
         if (!sach) throw new Error("Không tìm thấy sách");
@@ -150,7 +157,13 @@ class DanhGiaService {
         const filter = { _id: reviewId };
         if (docGiaId) {
             const dgId = ObjectId.isValid(docGiaId) ? new ObjectId(docGiaId) : null;
-            if (dgId) filter.docGiaId = dgId;
+            if (dgId) {
+                const docGia = await this.DocGia.findOne({ _id: dgId });
+                if (docGia && docGia.TrangThaiTaiKhoan === "BiKhoa") {
+                    throw new Error("Tài khoản đang bị khóa, không thể thực hiện thao tác xóa đánh giá!");
+                }
+                filter.docGiaId = dgId;
+            }
         }
 
         const result = await this.DanhGia.findOneAndDelete(filter);

@@ -101,7 +101,7 @@
                   <button class="btn btn-sm btn-light text-warning rounded-circle action-btn shadow-sm me-2" @click="openEditModal(nxb)" title="Chỉnh sửa">
                       <i class="fas fa-pen"></i>
                   </button>
-                  <button class="btn btn-sm btn-light text-danger rounded-circle action-btn shadow-sm" @click="deleteNxb(nxb._id, nxb.TenNXB)" title="Xóa">
+                  <button class="btn btn-sm btn-light text-danger rounded-circle action-btn shadow-sm" @click="openDeleteModal(nxb)" title="Xóa">
                       <i class="fas fa-trash"></i>
                   </button>
                 </td>
@@ -182,15 +182,51 @@
         </div>
       </div>
 
+      <!-- Delete NXB Confirmation Modal -->
+      <div class="modal fade" id="deleteNxbModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+          <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-body p-4 text-center">
+              <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 bg-danger bg-opacity-10 text-danger"
+                   style="width: 64px; height: 64px;">
+                <i class="fas fa-trash-alt fa-2x"></i>
+              </div>
+
+              <h5 class="fw-bold mb-2">
+                Xác nhận xóa Nhà Xuất Bản
+              </h5>
+
+              <p class="text-muted small mb-3">
+                Bạn có chắc chắn muốn xóa Nhà Xuất Bản "<strong>{{ nxbToDelete?.TenNXB }}</strong>" (Mã: <code>{{ nxbToDelete?.MaNXB }}</code>) khỏi hệ thống? Thao tác này không thể hoàn tác.
+              </p>
+
+              <p class="fw-semibold small text-danger mb-4">
+                Bạn có CHẮC CHẮN muốn tiếp tục xóa?
+              </p>
+
+              <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal" :disabled="isDeleting">
+                  Hủy bỏ
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm" @click="confirmDeleteNxb" :disabled="isDeleting">
+                  <span v-if="isDeleting" class="spinner-border spinner-border-sm me-1"></span>
+                  <i v-else class="fas fa-trash me-1"></i> Xóa vĩnh viễn
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <!-- Toast Notification -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
-    <div id="nxbSuccessToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="nxbSuccessToast" class="toast align-items-center text-white border-0" :class="toastType === 'danger' ? 'bg-danger' : 'bg-success'" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
         <div class="toast-body fw-medium d-flex align-items-center">
-          <i class="fas fa-check-circle me-2 fs-5"></i>
+          <i class="fas me-2 fs-5" :class="toastType === 'danger' ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
           {{ notificationMessage }}
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -223,8 +259,12 @@ const copiedId = ref(null)
 
 const isEdit = ref(false)
 const notificationMessage = ref("")
+const toastType = ref("success")
 const formData = ref({ MaNXB: "", TenNXB: "", DiaChi: "" })
+const nxbToDelete = ref(null)
+const isDeleting = ref(false)
 let nxbModalInstance = null
+let deleteModalInstance = null
 let toastInstance = null
 
 const filteredNXB = computed(() => {
@@ -289,26 +329,42 @@ const saveNxb = async () => {
       await NhaXuatBanService.create(formData.value)
       notificationMessage.value = "Thêm NXB thành công!"
     }
+    toastType.value = "success"
     await retrieveNXB()
     nxbModalInstance?.hide()
     toastInstance?.show()
   } catch (error) {
     console.error("Lỗi lưu NXB:", error)
-    alert(error.response?.data?.message || "Lỗi khi lưu NXB")
+    notificationMessage.value = error.response?.data?.message || "Lỗi khi lưu NXB"
+    toastType.value = "danger"
+    toastInstance?.show()
   }
 }
 
-const deleteNxb = async (id, name) => {
-  if (confirm(`Bạn có chắc muốn xóa NXB "${name}" không?`)) {
-    try {
-      await NhaXuatBanService.delete(id)
-      notificationMessage.value = "Xóa NXB thành công!"
-      await retrieveNXB()
-      toastInstance?.show()
-    } catch (error) {
-      console.error("Lỗi xóa NXB:", error)
-      alert("Lỗi khi xóa NXB")
-    }
+const openDeleteModal = (nxb) => {
+  nxbToDelete.value = nxb
+  deleteModalInstance?.show()
+}
+
+const confirmDeleteNxb = async () => {
+  if (!nxbToDelete.value) return
+  isDeleting.value = true
+  try {
+    await NhaXuatBanService.delete(nxbToDelete.value._id)
+    notificationMessage.value = `Đã xóa NXB "${nxbToDelete.value.TenNXB}" thành công!`
+    toastType.value = "success"
+    deleteModalInstance?.hide()
+    await retrieveNXB()
+    toastInstance?.show()
+  } catch (error) {
+    console.error("Lỗi xóa NXB:", error)
+    notificationMessage.value = error.response?.data?.message || "Không thể xóa NXB. Vui lòng kiểm tra lại liên kết sách!"
+    toastType.value = "danger"
+    deleteModalInstance?.hide()
+    toastInstance?.show()
+  } finally {
+    isDeleting.value = false
+    nxbToDelete.value = null
   }
 }
 
@@ -321,13 +377,16 @@ const copyToClipboard = async (text) => {
     }, 2000)
   } catch (err) {
     console.error("Failed to copy:", err)
-    alert("Không thể sao chép. Vui lòng thử lại.")
+    notificationMessage.value = "Không thể sao chép. Vui lòng thử lại."
+    toastType.value = "danger"
+    toastInstance?.show()
   }
 }
 
 onMounted(() => {
   retrieveNXB()
   nxbModalInstance = new Modal(document.getElementById("nxbModal"))
+  deleteModalInstance = new Modal(document.getElementById("deleteNxbModal"))
   toastInstance = new Toast(document.getElementById("nxbSuccessToast"))
 })
 </script>

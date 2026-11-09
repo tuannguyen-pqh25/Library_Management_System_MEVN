@@ -117,9 +117,10 @@ class DocGiaService {
         }
 
         if (docgia.TrangThaiTaiKhoan === "BiKhoa") {
+            const reason = docgia.LyDoKhoa ? ` (Lý do: ${docgia.LyDoKhoa})` : "";
             throw {
                 status: 403,
-                message: "Tài khoản đã bị khóa",
+                message: `Tài khoản đã bị khóa${reason}. Vui lòng liên hệ qua email: thuvien@ctu.edu.vn hoặc số điện thoại: 0292.3832.663 để biết thêm chi tiết.`,
             };
         }
 
@@ -151,9 +152,10 @@ class DocGiaService {
 
         if (docgia) {
             if (docgia.TrangThaiTaiKhoan === "BiKhoa") {
+                const reason = docgia.LyDoKhoa ? ` (Lý do: ${docgia.LyDoKhoa})` : "";
                 throw {
                     status: 403,
-                    message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ ban quản lý thư viện.",
+                    message: `Tài khoản của bạn đã bị khóa${reason}. Vui lòng liên hệ qua email: thuvien@ctu.edu.vn hoặc số điện thoại: 0292.3832.663 để biết thêm chi tiết.`,
                 };
             }
 

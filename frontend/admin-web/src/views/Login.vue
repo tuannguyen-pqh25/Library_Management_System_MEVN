@@ -78,10 +78,11 @@
               />
               <button
                 type="button"
-                class="btn position-absolute border-0 shadow-none text-muted px-3"
-                style="top: 36px; right: 0;"
+                class="btn position-absolute border-0 shadow-none px-3"
+                style="top: 36px; right: 0; z-index: 5; color: var(--muted-text);"
                 @click="showPassword = !showPassword"
                 v-if="form.Password"
+                title="Hiện/Ẩn mật khẩu"
               >
                 <i :class="showPassword ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
               </button>

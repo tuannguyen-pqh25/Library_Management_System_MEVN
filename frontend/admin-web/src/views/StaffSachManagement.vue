@@ -405,6 +405,53 @@
     </div>
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+               :class="bookToDelete?.SoQuyen > 0 ? 'bg-warning bg-opacity-10 text-warning' : 'bg-danger bg-opacity-10 text-danger'"
+               style="width: 64px; height: 64px;">
+            <i class="fas fa-2x" :class="bookToDelete?.SoQuyen > 0 ? 'fa-triangle-exclamation' : 'fa-trash-alt'"></i>
+          </div>
+
+          <h5 class="fw-bold mb-2">
+            {{ bookToDelete?.SoQuyen > 0 ? 'Cảnh báo xóa sách còn tồn kho' : 'Xác nhận xóa ấn phẩm' }}
+          </h5>
+
+          <!-- Cảnh báo khi còn tồn kho -->
+          <div v-if="bookToDelete?.SoQuyen > 0" class="alert alert-warning text-start small mb-3 rounded-3 border-warning border-opacity-25">
+            <div class="fw-semibold mb-1">
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              Sách "<strong>{{ bookToDelete?.TenSach }}</strong>" hiện đang còn <strong>{{ bookToDelete?.SoQuyen }}</strong> quyển trong kho.
+            </div>
+            <div class="text-secondary">Việc xóa sách đang còn tồn kho có thể gây mất đồng bộ dữ liệu nếu sách này đang được Độc giả mượn.</div>
+          </div>
+
+          <!-- Thông báo bình thường khi hết sách -->
+          <p v-else class="text-muted small mb-3">
+            Bạn có chắc chắn muốn xóa cuốn sách "<strong>{{ bookToDelete?.TenSach }}</strong>" khỏi hệ thống? Thao tác này không thể hoàn tác.
+          </p>
+
+          <p class="fw-semibold small text-danger mb-4">
+            Bạn có CHẮC CHẮN muốn tiếp tục xóa?
+          </p>
+
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal" :disabled="isDeleting">
+              Hủy bỏ
+            </button>
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm" @click="confirmDeleteSach" :disabled="isDeleting">
+              <span v-if="isDeleting" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="fas fa-trash me-1"></i> Xóa vĩnh viễn
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
     <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -475,7 +522,10 @@ const formData = ref({
 
 let detailModalInstance = null
 let sachModalInstance = null
+let deleteModalInstance = null
 let toastInstance = null
+const bookToDelete = ref(null)
+const isDeleting = ref(false)
 
 const isListening = ref(false)
 let recognition = null
@@ -622,25 +672,27 @@ const saveSach = async () => {
   }
 }
 
-const deleteSach = async (book) => {
-  if (book.SoQuyen > 0) {
-    if (!confirm(`CẢNH BÁO: Sách "${book.TenSach}" hiện đang còn ${book.SoQuyen} quyển trong kho.\n\nViệc xóa sách đang còn tồn kho có thể gây mất đồng bộ dữ liệu nếu sách này đang được Độc giả mượn.\n\nBạn có CHẮC CHẮN muốn tiếp tục xóa?`)) {
-      return
-    }
-  } else {
-    if (!confirm(`Bạn có chắc chắn muốn xóa sách "${book.TenSach}" không?`)) {
-      return
-    }
-  }
+const deleteSach = (book) => {
+  bookToDelete.value = book
+  deleteModalInstance?.show()
+}
 
+const confirmDeleteSach = async () => {
+  if (!bookToDelete.value) return
+  isDeleting.value = true
   try {
-    await SachService.delete(book._id)
+    await SachService.delete(bookToDelete.value._id)
+    deleteModalInstance?.hide()
     notificationMessage.value = "Xóa sách thành công!"
     await retrieveBooks()
     toastInstance?.show()
   } catch (error) {
     console.error("Lỗi xóa sách:", error)
-    alert("Lỗi khi xóa sách")
+    notificationMessage.value = error.response?.data?.message || "Lỗi khi xóa sách"
+    toastInstance?.show()
+  } finally {
+    isDeleting.value = false
+    bookToDelete.value = null
   }
 }
 
@@ -833,6 +885,7 @@ onMounted(async () => {
   }
   detailModalInstance = new Modal(document.getElementById("sachDetailModal"))
   sachModalInstance = new Modal(document.getElementById("sachModal"))
+  deleteModalInstance = new Modal(document.getElementById("deleteConfirmModal"))
   toastInstance = new Toast(document.getElementById("successToast"))
 })
 </script>
