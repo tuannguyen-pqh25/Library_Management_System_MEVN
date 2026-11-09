@@ -52,8 +52,23 @@
               </div>
             </div>
 
-            <div v-if="errorMessage" class="alert alert-danger py-2 mb-3 font-body small">
-              {{ errorMessage }}
+            <!-- Error message alert -->
+            <div v-if="errorMessage" class="alert alert-danger p-3 mb-3 font-body small rounded-3 border-danger border-opacity-25 shadow-sm text-start">
+              <div class="d-flex align-items-start gap-2">
+                <i class="fas fa-user-lock text-danger mt-1 fs-5 flex-shrink-0" v-if="isAccountLocked"></i>
+                <i class="fas fa-exclamation-circle text-danger mt-1 fs-6 flex-shrink-0" v-else></i>
+                <div class="flex-grow-1">
+                  <div v-if="isAccountLocked">
+                    <div class="fw-bold text-danger mb-1 fs-6">Tài khoản đã bị khóa</div>
+                    <div class="mb-2 text-dark">{{ cleanLockedMessage }}</div>
+                    <div class="pt-2 border-top border-danger border-opacity-25 small text-muted-custom">
+                      <div><i class="fas fa-envelope text-danger me-1"></i> Email hỗ trợ: <a href="mailto:thuvien@ctu.edu.vn" class="fw-semibold text-danger text-decoration-none">thuvien@ctu.edu.vn</a></div>
+                      <div class="mt-1"><i class="fas fa-phone text-danger me-1"></i> Hotline hỗ trợ: <a href="tel:02923832663" class="fw-semibold text-danger text-decoration-none">0292.3832.663</a></div>
+                    </div>
+                  </div>
+                  <span v-else>{{ errorMessage }}</span>
+                </div>
+              </div>
             </div>
 
             <BaseButton
@@ -103,7 +118,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AuthService from '@/services/auth.service'
 import eventBus from '@/services/eventBus'
@@ -123,6 +138,15 @@ const form = reactive({
 const errorMessage = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
+
+const isAccountLocked = computed(() => {
+  return (errorMessage.value || '').toLowerCase().includes('bị khóa')
+})
+
+const cleanLockedMessage = computed(() => {
+  if (!errorMessage.value) return ''
+  return errorMessage.value.replace(/^Tài khoản (của bạn )?(đã )?bị khóa[\.\:\s\-]*/i, '').trim() || 'Tài khoản của bạn hiện đang bị tạm khóa do vi phạm quy định mượn trả.'
+})
 
 onMounted(() => {
   if (route.query.error) {

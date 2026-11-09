@@ -16,6 +16,9 @@ exports.getBySach = async (req, res, next) => {
         const result = await getService().getBySach(sachId, { page, limit });
         res.json(result);
     } catch (error) {
+        if (error.message && error.message.includes("bị khóa")) {
+            return res.status(403).json({ message: error.message });
+        }
         next(error);
     }
 };
@@ -33,6 +36,9 @@ exports.getMyReview = async (req, res, next) => {
         const review = await getService().getMyReview(docGiaId, sachId);
         res.json(review || null);
     } catch (error) {
+        if (error.message && error.message.includes("bị khóa")) {
+            return res.status(403).json({ message: error.message });
+        }
         next(error);
     }
 };
@@ -50,6 +56,9 @@ exports.upsert = async (req, res, next) => {
         const result = await getService().upsert(docGiaId, sachId, req.body);
         res.json(result);
     } catch (error) {
+        if (error.message && error.message.includes("bị khóa")) {
+            return res.status(403).json({ message: error.message });
+        }
         if (error.message && error.message.includes("Bạn phải mượn sách")) {
             return res.status(400).json({ message: error.message });
         }
@@ -70,6 +79,9 @@ exports.delete = async (req, res, next) => {
         const result = await getService().delete(id, docGiaId);
         res.json({ message: "Đã xóa đánh giá", data: result });
     } catch (error) {
+        if (error.message && error.message.includes("bị khóa")) {
+            return res.status(403).json({ message: error.message });
+        }
         next(error);
     }
 };
