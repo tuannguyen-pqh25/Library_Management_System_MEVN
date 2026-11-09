@@ -96,13 +96,28 @@ const { passport, isGoogleConfigured } = require("../../config/passport");
  * Khởi tạo quá trình đăng nhập Google OAuth 2.0
  */
 exports.googleAuth = (req, res, next) => {
-    if (!isGoogleConfigured()) {
-        const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
-        return res.redirect(`${redirectUrl}?error=${encodeURIComponent("Tính năng Google OAuth chưa được cấu hình Client ID / Secret trên máy chủ.")}`);
+    let clientOrigin = null;
+    if (req.query.origin) {
+        clientOrigin = req.query.origin;
+    } else if (req.headers.referer) {
+        try {
+            clientOrigin = new URL(req.headers.referer).origin;
+        } catch (e) {
+            clientOrigin = null;
+        }
     }
+
+    if (!isGoogleConfigured()) {
+        const fallbackBase = (clientOrigin && (clientOrigin.startsWith("http://localhost") || clientOrigin.startsWith("http://127.0.0.1")))
+            ? `${clientOrigin.replace(/\/$/, "")}/oauth-callback`
+            : (config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback");
+        return res.redirect(`${fallbackBase}?error=${encodeURIComponent("Tính năng Google OAuth chưa được cấu hình Client ID / Secret trên máy chủ.")}`);
+    }
+
     return passport.authenticate("google", {
         scope: ["profile", "email"],
         session: false,
+        state: clientOrigin ? Buffer.from(clientOrigin).toString("base64") : undefined,
     })(req, res, next);
 };
 
@@ -110,7 +125,20 @@ exports.googleAuth = (req, res, next) => {
  * Xử lý callback sau khi xác thực Google thành công
  */
 exports.googleCallback = (req, res, next) => {
-    const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+    let clientOrigin = null;
+    if (req.query.state) {
+        try {
+            clientOrigin = Buffer.from(req.query.state, "base64").toString("utf-8");
+        } catch (e) {
+            clientOrigin = null;
+        }
+    }
+
+    // Xác thực an toàn: chỉ chấp nhận origin cục bộ hoặc domain hợp lệ
+    let redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+    if (clientOrigin && (clientOrigin.startsWith("http://localhost") || clientOrigin.startsWith("http://127.0.0.1"))) {
+        redirectUrl = `${clientOrigin.replace(/\/$/, "")}/oauth-callback`;
+    }
 
     passport.authenticate("google", { session: false }, (err, user) => {
         if (err || !user) {
@@ -137,7 +165,21 @@ exports.googleCallback = (req, res, next) => {
  * Chế độ Demo/Mock OAuth phục vụ kiểm thử và báo cáo khi chưa có credentials thực tế
  */
 exports.mockOAuth = async (req, res) => {
-    const redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+    let clientOrigin = null;
+    if (req.query.origin) {
+        clientOrigin = req.query.origin;
+    } else if (req.headers.referer) {
+        try {
+            clientOrigin = new URL(req.headers.referer).origin;
+        } catch (e) {
+            clientOrigin = null;
+        }
+    }
+
+    let redirectUrl = config.oauth.clientRedirectUrl || "http://localhost:5173/oauth-callback";
+    if (clientOrigin && (clientOrigin.startsWith("http://localhost") || clientOrigin.startsWith("http://127.0.0.1"))) {
+        redirectUrl = `${clientOrigin.replace(/\/$/, "")}/oauth-callback`;
+    }
 
     try {
         const docGiaService = new DocGiaService(MongoDB.client);
