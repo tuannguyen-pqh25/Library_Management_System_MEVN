@@ -9,6 +9,8 @@
   "scripts": {
     "start": "nodemon server.js",
     "db:indexes": "node createIndexes.js",
+    "seed:dashboard": "node seed_dashboard.js",
+    "seed:danhgia": "node seed_danhgia.js",
     "test": "node ../tests/run-api-tests.js"
   },
   "dependencies": {

@@ -520,7 +520,7 @@ const fetchUserBorrowQuota = async () => {
   try {
     const res = await MuonSachService.getHistory()
     const records = res.data || []
-    const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'đang chờ trả', 'quá hạn']
+    const activeStatuses = ['chờ duyệt', 'đã duyệt', 'đang mượn', 'chờ gia hạn', 'đang chờ trả', 'quá hạn']
     const activeRecords = records.filter(r => activeStatuses.includes(r.trangThai))
     const totalHolding = activeRecords.reduce((sum, r) => sum + (r.soLuong || 1), 0)
 
