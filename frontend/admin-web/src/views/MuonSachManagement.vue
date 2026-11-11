@@ -398,7 +398,7 @@
               <i class="fas fa-hand-holding me-2"></i>Giao sách
             </button>
             <button
-              v-if="['đang chờ trả', 'đã duyệt', 'đang mượn', 'quá hạn'].includes(selectedRecord.trangThai)"
+              v-if="['đang chờ trả', 'đang mượn', 'quá hạn'].includes(selectedRecord.trangThai)"
               class="btn btn-warning rounded-pill px-4 fw-bold"
               :disabled="processingId === selectedRecord._id"
               @click="handleAction(selectedRecord, 'confirm-return', true)"
@@ -576,8 +576,7 @@ const getActionOptions = (trangThai, record = null) => {
       ]
     case 'đã duyệt':
       return [
-        { value: 'handover',       label: 'Giao sách' },
-        { value: 'confirm-return', label: 'Xác nhận trả' },
+        { value: 'handover', label: 'Giao sách' },
       ]
     case 'đang mượn':
       return [
