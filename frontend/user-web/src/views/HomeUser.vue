@@ -20,7 +20,7 @@
             <div class="summary-box">
               <div class="d-flex justify-content-between mb-3">
                 <span class="text-muted-custom">Tổng số đầu sách</span>
-                <strong>{{ books.length }}</strong>
+                <strong>{{ totalBooks }}</strong>
               </div>
               <div class="d-flex justify-content-between mb-3">
                 <span class="text-muted-custom">Mượn sách nhanh</span>
@@ -166,6 +166,7 @@ export default {
     return {
       books: [],
       newBooks: [],
+      totalBooks: 0,
       isLoggedIn: false,
       currentUser: null
     }
@@ -182,6 +183,7 @@ export default {
     try {
       const response = await SachService.getAll()
       const allBooks = Array.isArray(response.data) ? response.data : []
+      this.totalBooks = allBooks.length
       this.books = allBooks.slice(0, 4)
       const getLatestTimestamp = (item) => {
         const tUpdated = item.updatedAt ? new Date(item.updatedAt).getTime() : 0

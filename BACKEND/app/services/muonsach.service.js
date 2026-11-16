@@ -554,6 +554,7 @@ class MuonSachService {
         updateData.updatedAt = new Date().toISOString();
 
         if (newTrangThai === "đã duyệt") {
+            updateData.ngayDuyet = new Date().toISOString();
             const stock = await this.Sach.updateOne(
                 { _id: sachId, SoQuyen: { $gte: soLuong } },
                 { $inc: { SoQuyen: -soLuong } }

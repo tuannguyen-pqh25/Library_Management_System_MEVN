@@ -4,19 +4,24 @@
     <AppHeader />
 
     <!-- Main Content Area -->
-    <main class="flex-grow-1 bg-body">
+    <main class="flex-grow-1 bg-body w-100">
       <router-view />
     </main>
+
+    <!-- Component Footer tái sử dụng -->
+    <AppFooter />
   </div>
 </template>
 
 <script>
 import AppHeader from '@/components/AppHeader.vue'
+import AppFooter from '@/components/AppFooter.vue'
 
 export default {
   name: 'App',
   components: {
-    AppHeader
+    AppHeader,
+    AppFooter
   }
 }
 </script>

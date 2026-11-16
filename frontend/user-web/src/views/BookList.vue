@@ -413,7 +413,9 @@ const startVoiceSearch = () => {
 
     voiceRecognitionInstance.onresult = (event) => {
       if (event.results && event.results[0] && event.results[0][0]) {
-        const transcript = event.results[0][0].transcript
+        let transcript = event.results[0][0].transcript || ''
+        // Loại bỏ dấu câu ở cuối (dấu chấm, phẩy, chấm hỏi, chấm than...) do Web Speech API tự động gắn vào
+        transcript = transcript.trim().replace(/[.,?!:;…]+$/g, '').trim()
         searchText.value = transcript
         toast.value.show = false
         showSuggestions.value = false

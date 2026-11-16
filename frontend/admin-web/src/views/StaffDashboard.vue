@@ -60,8 +60,10 @@
                 <div class="kpi-label">Tổng Độc Giả</div>
                 <div class="kpi-value">{{ stats.tongQuan?.tongDocGia || 0 }}</div>
                 <div class="kpi-sub">
-                  <span class="text-danger fw-semibold">{{ stats.tongQuan?.docGiaBiKhoa || 0 }}</span>
-                  <span class="text-muted"> bị khóa</span>
+                  <router-link to="/docgia?status=BiKhoa" class="text-decoration-none" title="Xem danh sách tài khoản độc giả bị khóa">
+                    <span class="text-danger fw-semibold">{{ stats.tongQuan?.docGiaBiKhoa || 0 }}</span>
+                    <span class="text-muted"> bị khóa</span>
+                  </router-link>
                 </div>
               </div>
             </div>
@@ -74,9 +76,11 @@
                 <i class="fas fa-book-reader fa-lg"></i>
               </div>
               <div class="kpi-body">
-                <div class="kpi-label">Đang Mượn</div>
-                <div class="kpi-value">{{ stats.tongQuan?.dangMuon || 0 }}</div>
-                <div class="kpi-sub text-muted">{{ stats.tongQuan?.tongSoQuyenDangMuon || 0 }} quyển ngoài kho</div>
+                <router-link to="/muonsach?status=đang mượn" class="text-decoration-none text-dark" title="Xem danh sách sách đang mượn">
+                  <div class="kpi-label">Đang Mượn</div>
+                  <div class="kpi-value">{{ stats.tongQuan?.dangMuon || 0 }}</div>
+                  <div class="kpi-sub text-muted">{{ stats.tongQuan?.tongSoQuyenDangMuon || 0 }} quyển ngoài kho</div>
+                </router-link>
               </div>
             </div>
           </div>
@@ -91,10 +95,14 @@
                 <div class="kpi-label">Cần Xử Lý</div>
                 <div class="kpi-value">{{ (stats.tongQuan?.choDuyet || 0) + (stats.tongQuan?.quaHan || 0) }}</div>
                 <div class="kpi-sub">
-                  <span class="text-warning fw-semibold">{{ stats.tongQuan?.choDuyet || 0 }}</span>
-                  <span class="text-muted"> chờ</span> &bull;
-                  <span class="text-danger fw-semibold">{{ stats.tongQuan?.quaHan || 0 }}</span>
-                  <span class="text-muted"> quá hạn</span>
+                  <router-link to="/muonsach?status=chờ duyệt" class="text-decoration-none" title="Xem danh sách phiếu chờ duyệt">
+                    <span class="text-warning fw-semibold">{{ stats.tongQuan?.choDuyet || 0 }}</span>
+                    <span class="text-muted"> chờ</span>
+                  </router-link> &bull;
+                  <router-link to="/muonsach?status=quá hạn" class="text-decoration-none" title="Xem danh sách phiếu quá hạn">
+                    <span class="text-danger fw-semibold">{{ stats.tongQuan?.quaHan || 0 }}</span>
+                    <span class="text-muted"> quá hạn</span>
+                  </router-link>
                 </div>
               </div>
             </div>
@@ -205,14 +213,16 @@
               </div>
               <div class="chart-body">
                 <div class="status-list">
-                  <div
+                  <router-link
                     v-for="item in statusDetailList"
                     :key="item.key"
-                    class="status-row"
+                    :to="'/muonsach?status=' + item.key"
+                    class="status-row text-decoration-none d-block cursor-pointer"
+                    :title="'Lọc phiếu mượn ' + item.label"
                   >
                     <div class="d-flex align-items-center gap-2 mb-1">
                       <span class="status-dot" :style="{ background: item.color }"></span>
-                      <span class="status-name">{{ item.label }}</span>
+                      <span class="status-name text-dark">{{ item.label }}</span>
                       <div class="ms-auto text-end">
                         <span class="status-count fw-bold" :style="{ color: item.color }">
                           {{ item.count }}
@@ -231,7 +241,7 @@
                         }"
                       ></div>
                     </div>
-                  </div>
+                  </router-link>
 
                   <div class="mt-3 pt-3 border-top text-center">
                     <small class="text-muted">
@@ -249,15 +259,19 @@
           <div class="col-12">
             <div class="quick-actions-bar">
               <span class="quick-title">Lối tắt nhanh:</span>
-              <router-link to="/muonsach" class="quick-btn">
+              <router-link to="/muonsach?status=chờ duyệt" class="quick-btn">
                 <i class="fas fa-clock me-1"></i>Phiếu chờ duyệt
                 <span v-if="stats.tongQuan?.choDuyet" class="badge bg-warning text-dark ms-1">{{ stats.tongQuan.choDuyet }}</span>
               </router-link>
-              <router-link to="/muonsach" class="quick-btn">
+              <router-link to="/muonsach?status=đã duyệt" class="quick-btn">
+                <i class="fas fa-hand-holding me-1 text-info"></i>Chờ nhận sách
+                <span v-if="stats.tongQuan?.daDuyet" class="badge bg-info ms-1">{{ stats.tongQuan.daDuyet }}</span>
+              </router-link>
+              <router-link to="/muonsach?status=quá hạn" class="quick-btn">
                 <i class="fas fa-exclamation-triangle me-1 text-danger"></i>Quá hạn
                 <span v-if="stats.tongQuan?.quaHan" class="badge bg-danger ms-1">{{ stats.tongQuan.quaHan }}</span>
               </router-link>
-              <router-link to="/docgia" class="quick-btn">
+              <router-link to="/docgia?status=BiKhoa" class="quick-btn">
                 <i class="fas fa-user-lock me-1 text-secondary"></i>Tài khoản bị khóa
                 <span v-if="stats.tongQuan?.docGiaBiKhoa" class="badge bg-secondary ms-1">{{ stats.tongQuan.docGiaBiKhoa }}</span>
               </router-link>

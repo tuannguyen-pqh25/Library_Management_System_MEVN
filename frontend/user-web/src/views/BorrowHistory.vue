@@ -6,6 +6,11 @@
           <h2 class="font-display fw-bold text-dark mb-1">Lịch sử mượn sách</h2>
           <p class="text-muted-custom mb-0">Theo dõi trạng thái các phiếu mượn sách của bạn</p>
         </div>
+        <div v-if="totalOverdueFine > 0" class="d-flex align-items-center">
+          <span class="badge bg-danger text-white border border-danger rounded-pill px-3 py-2 shadow-sm fw-semibold" style="font-size:0.85rem;">
+            <i class="fas fa-exclamation-triangle me-1"></i>{{ countOverdue }} phiếu quá hạn — Tổng phạt: {{ formatCurrency(totalOverdueFine) }}
+          </span>
+        </div>
       </div>
 
       <div v-if="loading" class="text-center py-5">
@@ -67,17 +72,41 @@
                   <span :class="isOverdueLoan(record) ? 'text-danger fw-bold' : 'text-dark'">
                     {{ formatDate(record.ngayTra) }}
                   </span>
-                  <span v-if="isOverdueLoan(record)" class="badge bg-danger-subtle text-danger border border-danger-subtle d-block mt-1" style="font-size:0.7rem; width:fit-content;">
-                    <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
-                  </span>
+                  <div v-if="isOverdueLoan(record)" class="mt-1" style="font-size:0.72rem;">
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                      <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn <span v-if="getOverdueDays(record) > 0">({{ getOverdueDays(record) }} ngày)</span>
+                    </span>
+                    <div
+                      class="text-danger fw-bold mt-1"
+                      style="font-size:0.75rem;"
+                      :title="'Phí phạt: 5.000 VNĐ × ' + getOverdueDays(record) + ' ngày × ' + (record.soLuong || 1) + ' quyển'"
+                    >
+                      <i class="fas fa-coins text-warning me-1"></i>{{ formatCurrency(record.tienPhat || getOverdueFine(record)) }}
+                      <small v-if="(record.soLuong || 1) > 1" class="text-muted fw-normal ms-1">({{ record.soLuong }} quyển)</small>
+                    </div>
+                  </div>
                 </td>
                 <td class="text-center">
                   <span class="badge rounded-pill px-3 py-2 fw-bold" :class="statusClass(record.trangThai)" style="font-size: 0.75rem;">
                     <i class="fas me-1" :class="statusIcon(record.trangThai)"></i>
                     {{ formatStatus(record.trangThai) }}
                   </span>
+                  <!-- Tiền phạt quá hạn -->
+                  <div v-if="getOverdueFine(record) > 0" class="mt-1">
+                    <span
+                      class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill fw-bold"
+                      style="font-size:0.72rem;"
+                      :title="'Phí phạt: 5.000 VNĐ × ' + getOverdueDays(record) + ' ngày × ' + (record.soLuong || 1) + ' quyển'"
+                    >
+                      <i class="fas fa-coins text-warning me-1"></i>Phạt: {{ formatCurrency(getOverdueFine(record)) }}
+                    </span>
+                  </div>
                   <small v-if="record.trangThai === 'đang chờ trả' && isOverdueLoan(record)" class="text-danger d-block mt-1 fw-medium" style="font-size:0.72rem;">
                     <i class="fas fa-info-circle me-1"></i>Chờ thủ thư xác nhận trả
+                  </small>
+                  <!-- Nếu sách đã trả mà có tiền phạt đã nộp -->
+                  <small v-else-if="record.trangThai === 'đã trả' && record.tienPhat > 0" class="text-muted d-block mt-1" style="font-size:0.72rem;">
+                    <i class="fas fa-receipt me-1"></i>Đã nộp phạt: {{ formatCurrency(record.tienPhat) }}
                   </small>
                 </td>
                 <td class="text-center pe-4" style="min-width:170px;">
@@ -164,6 +193,14 @@
             <div class="p-3 rounded-3 bg-light border border-light-subtle mb-3">
               <span class="text-muted small fw-medium d-block mb-1">Tên sách hoàn trả:</span>
               <div class="fw-bold text-dark">{{ returnTarget?.TenSach }}</div>
+            </div>
+            <div v-if="isOverdueLoan(returnTarget)" class="alert alert-danger py-2 px-3 small rounded-3 mb-3 d-flex align-items-center justify-content-between">
+              <div>
+                <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn: <strong>{{ getOverdueDays(returnTarget) }} ngày</strong>
+              </div>
+              <div class="fw-bold text-danger">
+                Phí phạt: {{ formatCurrency(getOverdueFine(returnTarget)) }}
+              </div>
             </div>
             <div class="mb-2">
               <label class="form-label small fw-semibold text-dark">
@@ -464,6 +501,47 @@ const isOverdueLoan = (record) => {
     if (returnDateStr < todayDateStr) return true
   }
   return false
+}
+
+// Tính số ngày quá hạn
+const getOverdueDays = (record) => {
+  if (!record || !record.ngayTra) return 0
+  const returnDate = new Date(record.ngayTra)
+  if (isNaN(returnDate.getTime())) return 0
+
+  const d1 = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate())
+  const compareDate = record.ngayTraThucTe ? new Date(record.ngayTraThucTe) : new Date()
+  const d2 = new Date(compareDate.getFullYear(), compareDate.getMonth(), compareDate.getDate())
+
+  const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24))
+  if (diffDays > 0) return diffDays
+  if (record.trangThai === 'quá hạn' || record.daTungQuaHan) return 1
+  return 0
+}
+
+// Tính tiền phạt trễ hạn (5.000 VNĐ * ngày * số lượng)
+const getOverdueFine = (record) => {
+  if (!record) return 0
+  if (record.tienPhat !== undefined && record.tienPhat !== null && Number(record.tienPhat) > 0) {
+    return Number(record.tienPhat)
+  }
+  if (!isOverdueLoan(record)) return 0
+  const days = getOverdueDays(record)
+  const qty = record.soLuong || 1
+  return days * 5000 * qty
+}
+
+const countOverdue = computed(() => {
+  return records.value.filter(isOverdueLoan).length
+})
+
+const totalOverdueFine = computed(() => {
+  return records.value.reduce((sum, r) => sum + getOverdueFine(r), 0)
+})
+
+const formatCurrency = (value) => {
+  if (!value) return '0 VNĐ'
+  return `${Number(value).toLocaleString('vi-VN')} VNĐ`
 }
 
 // Kiểm tra điều kiện gia hạn (phải gia hạn trước 3 ngày, đang mượn, tối đa 2 lần)

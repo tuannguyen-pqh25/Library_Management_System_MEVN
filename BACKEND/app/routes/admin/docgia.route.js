@@ -5,9 +5,10 @@ const requireRole = require("../../middlewares/requireRole");
 
 const router = express.Router();
 
-// Tất cả route đều cần admin token + role Admin
+// Tất cả route đều cần admin token
 router.use(verifyAdminToken);
-router.use(requireRole(["Admin"]));
+// Cho phép Admin và Thủ thư Duyệt mượn truy cập danh sách, xem chi tiết và xử lý trạng thái độc giả
+router.use(requireRole(["Admin", "NhanVienDuyetMuon"]));
 
 // GET /api/admin/docgia — Danh sách tất cả độc giả (hỗ trợ ?search=...&trangThai=...)
 router.get("/", docgia.findAll);
@@ -24,7 +25,7 @@ router.get("/:id/history", docgia.getBorrowHistory);
 // PUT /api/admin/docgia/:id/reset-password — Đặt lại mật khẩu về mặc định
 router.put("/:id/reset-password", docgia.resetPassword);
 
-// DELETE /api/admin/docgia/:id — Xóa tài khoản độc giả
-router.delete("/:id", docgia.delete);
+// DELETE /api/admin/docgia/:id — Xóa tài khoản độc giả (Chỉ Admin)
+router.delete("/:id", requireRole(["Admin"]), docgia.delete);
 
 module.exports = router;
