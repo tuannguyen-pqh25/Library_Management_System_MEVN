@@ -1,7 +1,7 @@
 <template>
   <div class="page-shell py-5">
     <div class="container">
-      <div v-if="book" class="row justify-content-center">
+      <div v-if="book" class="row justify-content-center g-4">
         <div class="col-lg-10">
           <BaseCard class="overflow-hidden shadow-sm border-0">
             <div class="row g-0">
@@ -156,9 +156,11 @@
               </div>
             </div>
           </BaseCard>
+        </div>
 
-          <!-- ===== REVIEWS SECTION ===== -->
-          <div id="reviews-section" class="reviews-section mt-4" style="scroll-margin-top: 80px;">
+        <!-- ===== REVIEWS SECTION ===== -->
+        <div class="col-lg-10">
+          <div id="reviews-section" class="reviews-section" style="scroll-margin-top: 80px;">
             <BaseCard class="shadow-sm border-0">
               <div class="p-4">
                 <!-- Reviews Header -->
@@ -780,6 +782,7 @@ const confirmBorrow = async () => {
     await fetchUserBorrowQuota()
   } catch (err) {
     modalError.value = err?.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.'
+    await fetchUserBorrowQuota()
   } finally {
     loading.value = false
   }

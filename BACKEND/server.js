@@ -22,7 +22,7 @@ async function startServer() {
         // Khởi động server
         const PORT = config.app.port;
         app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}.`);
+            console.log(`Yeah Server is running on port ${PORT}.`);
         });
     } catch (error) {
         console.error("Cannot connect to the database or Redis!", error);

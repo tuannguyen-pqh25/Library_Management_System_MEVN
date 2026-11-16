@@ -78,6 +78,15 @@
                     >
                       <i class="fas fa-check-double me-1"></i>Đã đọc
                     </button>
+                    <button
+                      v-if="hasReadNotifs"
+                      class="btn btn-link btn-sm text-decoration-none p-0 text-danger hover-danger"
+                      style="font-size:0.72rem;"
+                      title="Xóa tất cả thông báo đã đọc"
+                      @click.stop="clearReadNotifs"
+                    >
+                      <i class="fas fa-trash-alt me-1"></i>Xóa đã đọc
+                    </button>
                     <span v-if="hasApproved" class="badge rounded-pill bg-success" style="font-size:0.68rem;">Có tin mới</span>
                     <span v-if="notifCount > 0" class="badge rounded-pill" :class="hasApproved ? 'bg-success' : 'bg-danger'" style="font-size:0.7rem;">{{ notifCount }}</span>
                   </div>
@@ -91,7 +100,7 @@
                 </div>
 
                 <!-- Empty state -->
-                <div v-else-if="notifications.length === 0" class="notif-empty py-4 text-center px-3">
+                <div v-else-if="visibleNotifications.length === 0" class="notif-empty py-4 text-center px-3">
                   <div class="notif-empty-icon mb-2">
                     <i class="fas fa-check-circle text-success" style="font-size:2rem;"></i>
                   </div>
@@ -102,7 +111,7 @@
                 <!-- Notification list -->
                 <ul v-else class="notif-list mb-0 ps-0">
                   <li
-                    v-for="item in notifications"
+                    v-for="item in visibleNotifications"
                     :key="item.notifId || item._id"
                     class="notif-item d-flex align-items-start gap-3 position-relative"
                     :class="{
@@ -146,69 +155,81 @@
                         <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size:0.82rem; max-width: 155px;" :title="item.title || item.TenSach">
                           {{ item.alertType === 'account_locked' ? 'Tài khoản bị khóa' : (['lock_warning_urgent', 'lock_warning', 'fine_warning_75k', 'fine_warning_50k'].includes(item.alertType) ? (item.title || 'Cảnh báo khóa tài khoản') : (item.TenSach || (item.sachInfo && item.sachInfo.TenSach) || 'Sách mượn')) }}
                         </p>
-                        <!-- Chip / Badge -->
-                        <span
-                          v-if="item.alertType === 'account_locked'"
-                          class="notif-chip chip-overdue flex-shrink-0"
-                        >
-                          <i class="fas fa-lock me-1"></i>Bị khóa
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'lock_warning_urgent'"
-                          class="notif-chip chip-overdue flex-shrink-0"
-                        >
-                          <i class="fas fa-hourglass-end me-1"></i>Sắp khóa (24h)
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'lock_warning'"
-                          class="notif-chip chip-soon flex-shrink-0"
-                          style="background-color: #ffeeba; color: #856404;"
-                        >
-                          <i class="fas fa-shield-alt me-1"></i>Nguy cơ khóa
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'fine_warning_75k' || item.alertType === 'fine_warning_50k'"
-                          class="notif-chip chip-soon flex-shrink-0"
-                          style="background-color: #fff3cd; color: #664d03;"
-                        >
-                          <i class="fas fa-coins me-1"></i>Tiền phạt
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'approved'"
-                          class="notif-chip chip-approved flex-shrink-0"
-                        >
-                          <i class="fas fa-check me-1"></i>Đã duyệt
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'extension_approved'"
-                          class="notif-chip chip-approved flex-shrink-0"
-                        >
-                          <i class="fas fa-calendar-check me-1"></i>Duyệt gia hạn
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'extension_rejected'"
-                          class="notif-chip chip-rejected flex-shrink-0"
-                        >
-                          <i class="fas fa-calendar-times me-1"></i>Từ chối gia hạn
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'rejected'"
-                          class="notif-chip chip-rejected flex-shrink-0"
-                        >
-                          <i class="fas fa-times me-1"></i>Từ chối
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'overdue'"
-                          class="notif-chip chip-overdue flex-shrink-0"
-                        >
-                          <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
-                        </span>
-                        <span
-                          v-else-if="item.alertType === 'soon'"
-                          class="notif-chip chip-soon flex-shrink-0"
-                        >
-                          <i class="fas fa-clock me-1"></i>Sắp hết hạn
-                        </span>
+                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                          <!-- Chip / Badge -->
+                          <span
+                            v-if="item.alertType === 'account_locked'"
+                            class="notif-chip chip-overdue flex-shrink-0"
+                          >
+                            <i class="fas fa-lock me-1"></i>Bị khóa
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'lock_warning_urgent'"
+                            class="notif-chip chip-overdue flex-shrink-0"
+                          >
+                            <i class="fas fa-hourglass-end me-1"></i>Sắp khóa (24h)
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'lock_warning'"
+                            class="notif-chip chip-soon flex-shrink-0"
+                            style="background-color: #ffeeba; color: #856404;"
+                          >
+                            <i class="fas fa-shield-alt me-1"></i>Nguy cơ khóa
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'fine_warning_75k' || item.alertType === 'fine_warning_50k'"
+                            class="notif-chip chip-soon flex-shrink-0"
+                            style="background-color: #fff3cd; color: #664d03;"
+                          >
+                            <i class="fas fa-coins me-1"></i>Tiền phạt
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'approved'"
+                            class="notif-chip chip-approved flex-shrink-0"
+                          >
+                            <i class="fas fa-check me-1"></i>Đã duyệt
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'extension_approved'"
+                            class="notif-chip chip-approved flex-shrink-0"
+                          >
+                            <i class="fas fa-calendar-check me-1"></i>Duyệt gia hạn
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'extension_rejected'"
+                            class="notif-chip chip-rejected flex-shrink-0"
+                          >
+                            <i class="fas fa-calendar-times me-1"></i>Từ chối gia hạn
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'rejected'"
+                            class="notif-chip chip-rejected flex-shrink-0"
+                          >
+                            <i class="fas fa-times me-1"></i>Từ chối
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'overdue'"
+                            class="notif-chip chip-overdue flex-shrink-0"
+                          >
+                            <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
+                          </span>
+                          <span
+                            v-else-if="item.alertType === 'soon'"
+                            class="notif-chip chip-soon flex-shrink-0"
+                          >
+                            <i class="fas fa-clock me-1"></i>Sắp hết hạn
+                          </span>
+
+                          <!-- Nút xóa thông báo riêng lẻ -->
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 notif-delete-btn text-muted"
+                            title="Xóa thông báo này"
+                            @click.stop="deleteNotif(item)"
+                          >
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
                       </div>
 
                       <p v-if="!['account_locked', 'lock_warning_urgent', 'lock_warning', 'fine_warning_75k', 'fine_warning_50k'].includes(item.alertType)" class="mb-1 text-muted" style="font-size:0.75rem;">
@@ -488,6 +509,7 @@ export default {
       // Notification bell
       notifications: [],
       readNotifIds: [],
+      deletedNotifIds: [],
       notifDropdownOpen: false,
       notifLoading: false,
       _notifTimer: null,
@@ -499,14 +521,20 @@ export default {
     }
   },
   computed: {
+    visibleNotifications() {
+      return this.notifications.filter(n => !this.isNotifDeleted(n))
+    },
     unreadNotifications() {
-      return this.notifications.filter(n => !this.isNotifRead(n))
+      return this.visibleNotifications.filter(n => !this.isNotifRead(n))
     },
     notifCount() {
       return this.unreadNotifications.length
     },
     hasApproved() {
       return this.unreadNotifications.some(n => n.alertType === 'approved' || n.alertType === 'extension_approved')
+    },
+    hasReadNotifs() {
+      return this.visibleNotifications.some(n => this.isNotifRead(n))
     },
     displayName() {
       const user = this.currentUser || {}
@@ -522,6 +550,11 @@ export default {
       const id = user._id || user.MaDocGia || user.Email || 'default_user'
       return `read_notifs_${id}`
     },
+    getDeletedNotifStorageKey() {
+      const user = this.currentUser || {}
+      const id = user._id || user.MaDocGia || user.Email || 'default_user'
+      return `deleted_notifs_${id}`
+    },
     loadReadNotifs() {
       const key = this.getNotifStorageKey()
       try {
@@ -531,6 +564,15 @@ export default {
         this.readNotifIds = []
       }
     },
+    loadDeletedNotifs() {
+      const key = this.getDeletedNotifStorageKey()
+      try {
+        const raw = localStorage.getItem(key)
+        this.deletedNotifIds = raw ? JSON.parse(raw) : []
+      } catch (_) {
+        this.deletedNotifIds = []
+      }
+    },
     saveReadNotifs() {
       const key = this.getNotifStorageKey()
       try {
@@ -538,10 +580,22 @@ export default {
         localStorage.setItem(key, JSON.stringify(trimmed))
       } catch (_) {}
     },
+    saveDeletedNotifs() {
+      const key = this.getDeletedNotifStorageKey()
+      try {
+        const trimmed = this.deletedNotifIds.slice(-200)
+        localStorage.setItem(key, JSON.stringify(trimmed))
+      } catch (_) {}
+    },
     isNotifRead(item) {
       if (!item) return false
       const id = String(item.notifId || item._id)
       return this.readNotifIds.includes(id)
+    },
+    isNotifDeleted(item) {
+      if (!item) return false
+      const id = String(item.notifId || item._id)
+      return this.deletedNotifIds.includes(id)
     },
     markAsRead(item) {
       if (!item) return
@@ -552,9 +606,26 @@ export default {
       }
     },
     markAllAsRead() {
-      const allIds = this.notifications.map(n => String(n.notifId || n._id)).filter(Boolean)
+      const allIds = this.visibleNotifications.map(n => String(n.notifId || n._id)).filter(Boolean)
       this.readNotifIds = Array.from(new Set([...this.readNotifIds, ...allIds]))
       this.saveReadNotifs()
+    },
+    deleteNotif(item) {
+      if (!item) return
+      const id = String(item.notifId || item._id)
+      if (!this.deletedNotifIds.includes(id)) {
+        this.deletedNotifIds = [...this.deletedNotifIds, id]
+        this.saveDeletedNotifs()
+      }
+    },
+    clearReadNotifs() {
+      const readIds = this.visibleNotifications
+        .filter(n => this.isNotifRead(n))
+        .map(n => String(n.notifId || n._id))
+        .filter(Boolean)
+      if (readIds.length === 0) return
+      this.deletedNotifIds = Array.from(new Set([...this.deletedNotifIds, ...readIds]))
+      this.saveDeletedNotifs()
     },
     handleNotifClick(item) {
       this.markAsRead(item)
@@ -564,12 +635,14 @@ export default {
       this.currentUser = AuthService.getCurrentUser()
       if (this.currentUser) {
         this.loadReadNotifs()
+        this.loadDeletedNotifs()
         this.fetchWishlistCount()
         this.fetchNotifications()
       } else {
         this.wishlistCount = 0
         this.notifications = []
         this.readNotifIds = []
+        this.deletedNotifIds = []
         this.approvedToast = null
         this._hasFetchedBefore = false
         this._knownApprovedIds.clear()
@@ -1077,6 +1150,26 @@ export default {
 /* Bell button pulse when approved */
 .notif-has-approved {
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.notif-delete-btn {
+  opacity: 0.35;
+  transition: all 0.15s ease;
+  line-height: 1;
+  padding: 1px 4px !important;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.notif-item:hover .notif-delete-btn {
+  opacity: 0.8;
+}
+.notif-delete-btn:hover {
+  opacity: 1 !important;
+  color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+.hover-danger:hover {
+  color: #dc3545 !important;
 }
 
 /* Floating Live Toast */

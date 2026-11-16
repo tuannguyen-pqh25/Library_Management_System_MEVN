@@ -44,7 +44,7 @@
             <span class="fw-medium">Quản lý Nhân Viên</span>
           </router-link>
         </li>
-        <li v-if="isAdmin" class="nav-item">
+        <li v-if="canManageReaders" class="nav-item">
           <router-link to="/docgia" class="nav-link rounded-3 d-flex align-items-center gap-3 py-2 px-3" active-class="active">
             <i class="fas fa-user-graduate" style="width: 20px; text-align: center;"></i>
             <span class="fw-medium">Quản lý Độc Giả</span>
@@ -56,11 +56,12 @@
 </template>
 
 <script setup>
-import { BOOK_ROLES, BORROW_ROLES, ROLES, readAdminSession } from '@/services/adminRoles'
+import { BOOK_ROLES, BORROW_ROLES, READER_ROLES, ROLES, readAdminSession } from '@/services/adminRoles'
 
 const role = readAdminSession()?.role
 const canBorrow = BORROW_ROLES.includes(role)
 const canManageBooks = BOOK_ROLES.includes(role)
+const canManageReaders = READER_ROLES.includes(role)
 const isAdmin = role === ROLES.admin
 </script>
 

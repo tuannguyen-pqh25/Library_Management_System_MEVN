@@ -148,7 +148,7 @@
             <button class="btn btn-sm btn-outline-success" @click="bulkUnlock" :disabled="actionLoading">
               <i class="fas fa-unlock me-1"></i> Mở khóa đã chọn
             </button>
-            <button class="btn btn-sm btn-danger" @click="openBulkDeleteModal" :disabled="actionLoading">
+            <button v-if="isAdmin" class="btn btn-sm btn-danger" @click="openBulkDeleteModal" :disabled="actionLoading">
               <i class="fas fa-trash-alt me-1"></i> Xóa đã chọn
             </button>
             <button class="btn btn-sm btn-outline-secondary" @click="selectedIds = []" :disabled="actionLoading">
@@ -295,7 +295,7 @@
                           <span>Mở khóa tài khoản</span>
                         </button>
                       </li>
-                      <li>
+                      <li v-if="isAdmin">
                         <button class="dropdown-item py-2 d-flex align-items-center gap-2 small text-danger" @click="openDeleteModal(dg); closeDropdown()" :disabled="actionLoading">
                           <i class="fas fa-trash-alt text-danger text-center" style="width: 18px;"></i>
                           <span>Xóa độc giả</span>
@@ -760,10 +760,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import DocGiaService from '@/services/docgia.service'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { Modal } from 'bootstrap'
+import { ROLES, readAdminSession } from '@/services/adminRoles'
+
+const route = useRoute()
+
+const currentRole = readAdminSession()?.role
+const isAdmin = computed(() => currentRole === ROLES.admin)
 
 // =========== STATE ===========
 const docGiaList = ref([])
@@ -1237,9 +1244,23 @@ const closeModal = (id) => {
 
 // =========== LIFECYCLE ===========
 onMounted(() => {
+  if (route.query.status) {
+    statusFilter.value = route.query.status
+  }
   fetchDocGia()
   document.addEventListener('click', closeDropdown)
 })
+
+watch(
+  () => route.query.status,
+  (newStatus) => {
+    if (newStatus !== undefined) {
+      statusFilter.value = newStatus || ''
+      currentPage.value = 1
+      fetchDocGia()
+    }
+  }
+)
 
 onUnmounted(() => {
   document.removeEventListener('click', closeDropdown)

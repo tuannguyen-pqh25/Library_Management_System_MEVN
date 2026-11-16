@@ -7,7 +7,11 @@ exports.findAll = async (req, res, next) => {
     try {
         const { TenSach, TheLoai } = req.query;
         
-        const cacheKey = `user:sach:all:${TenSach || "all"}:${TheLoai || "all"}`;
+        // Chuẩn hóa từ khóa tìm kiếm: loại bỏ dấu câu (.,?!:;…) và khoảng trắng thừa
+        const cleanSearch = TenSach ? String(TenSach).replace(/[.,?!:;…]+/g, ' ').trim() : "";
+        const cleanCategory = TheLoai ? String(TheLoai).trim() : "";
+
+        const cacheKey = `user:sach:all:${cleanSearch || "all"}:${cleanCategory || "all"}`;
         const cachedData = await Redis.get(cacheKey);
         
         if (cachedData) {
@@ -16,20 +20,21 @@ exports.findAll = async (req, res, next) => {
 
         const sachService = new SachService(MongoDB.client);
         const filter = {};
-        if (TenSach) {
-            const trimmed = TenSach.trim();
-            const words = trimmed.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        if (cleanSearch) {
+            const words = cleanSearch.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
             if (words.length > 0) {
-                // Hỗ trợ tìm kiếm theo từng ký tự và từng từ (tất cả các từ đều khớp trong Tên sách hoặc Tác giả)
-                const pattern = words.map(w => `(?=.*${w})`).join('');
-                filter.$or = [
-                    { TenSach: { $regex: new RegExp(pattern, "i") } },
-                    { TacGia: { $regex: new RegExp(pattern, "i") } }
-                ];
+                // Hỗ trợ tìm kiếm theo từng từ: mỗi từ khóa đều xuất hiện trong Tên Sách HOẶC Tác Giả HOẶC Thể Loại
+                filter.$and = words.map(w => ({
+                    $or: [
+                        { TenSach: { $regex: new RegExp(w, "i") } },
+                        { TacGia: { $regex: new RegExp(w, "i") } },
+                        { TheLoai: { $regex: new RegExp(w, "i") } }
+                    ]
+                }));
             }
         }
-        if (TheLoai) {
-            filter.TheLoai = TheLoai;
+        if (cleanCategory) {
+            filter.TheLoai = cleanCategory;
         }
 
         const documents = await sachService.find(filter);

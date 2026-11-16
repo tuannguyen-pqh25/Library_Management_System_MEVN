@@ -1,5 +1,5 @@
 <template>
-  <div class="card card-surface border-0 h-100">
+  <div class="card card-surface border-0">
     <slot name="img-top"></slot>
     <div class="card-body" :class="bodyClass">
       <h5 v-if="title" class="card-title font-display">{{ title }}</h5>

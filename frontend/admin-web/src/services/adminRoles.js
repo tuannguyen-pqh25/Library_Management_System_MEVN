@@ -7,6 +7,7 @@ export const ROLES = {
 export const ALL_ROLES = Object.values(ROLES)
 export const BOOK_ROLES = [ROLES.admin, ROLES.books]
 export const BORROW_ROLES = [ROLES.admin, ROLES.borrowing]
+export const READER_ROLES = [ROLES.admin, ROLES.borrowing]
 
 export function readAdminSession() {
   const token = localStorage.getItem('token')

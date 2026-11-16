@@ -9,7 +9,7 @@ import SachEdit from "@/views/SachEdit.vue";
 import MuonSachManagement from "@/views/MuonSachManagement.vue";
 import NhanVienManagement from "@/views/NhanVienManagement.vue";
 import DocGiaManagement from "@/views/DocGiaManagement.vue";
-import { ALL_ROLES, BOOK_ROLES, BORROW_ROLES, ROLES, readAdminSession, defaultAdminPath } from "@/services/adminRoles";
+import { ALL_ROLES, BOOK_ROLES, BORROW_ROLES, READER_ROLES, ROLES, readAdminSession, defaultAdminPath } from "@/services/adminRoles";
 
 const routes = [
   {
@@ -73,7 +73,7 @@ const routes = [
         path: "docgia",
         name: "DocGiaManagement",
         component: DocGiaManagement,
-        meta: { roles: [ROLES.admin] },
+        meta: { roles: READER_ROLES },
       }
     ]
   }
