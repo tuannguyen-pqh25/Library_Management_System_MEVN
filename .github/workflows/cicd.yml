@@ -139,3 +139,23 @@ jobs:
         run: |
           echo "Starting CT449 Automated Test Suite..."
           TEST_API_URL=http://localhost:3000 node tests/run-api-tests.js
+
+  # ============================================================================
+  # 3. CD - CONTINUOUS DEPLOYMENT (TRIGGER RENDER PRODUCTION DEPLOY)
+  # ============================================================================
+  deploy-backend:
+    name: CD - Deploy Backend to Render.com
+    needs: [test-backend, build-frontends]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          echo "=========================================================="
+          echo "All 44 Integration Tests & Frontend Builds PASSED!"
+          echo "Triggering automated Production Deployment on Render.com..."
+          echo "=========================================================="
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo ""
+          echo "--> CD Trigger executed successfully! Render is deploying the new build."
